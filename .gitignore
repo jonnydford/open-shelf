@@ -1,0 +1,19 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserdata
+*.xcworkspace
+xcuserdata/
+
+# Xcode project - keep xcodeproj but ignore user-specific files
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Swift Package Manager
+.build/
+Packages/
