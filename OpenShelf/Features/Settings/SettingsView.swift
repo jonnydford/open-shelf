@@ -1,9 +1,11 @@
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 struct SettingsView: View {
     @Query(sort: \ReadingGoal.year, order: .reverse) private var goals: [ReadingGoal]
     @Query private var books: [Book]
+    @Query(sort: \FollowedAuthor.dateFollowed, order: .reverse) private var followedAuthors: [FollowedAuthor]
 
     @State private var showImportView = false
     @State private var showExportView = false
@@ -11,6 +13,7 @@ struct SettingsView: View {
 
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
+    @AppStorage("streakReminderEnabled") private var streakReminderEnabled: Bool = false
 
     private var currentYear: Int {
         Calendar.current.component(.year, from: .now)
@@ -20,6 +23,8 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 readingGoalSection
+                notificationsSection
+                followedAuthorsSection
                 librarySection
                 importSection
                 exportSection
@@ -69,6 +74,111 @@ struct SettingsView: View {
                     showSetGoal = true
                 } label: {
                     Label("Set Reading Goal for \(String(currentYear))", systemImage: "target")
+                }
+            }
+        }
+    }
+
+    // MARK: - Notifications Section
+
+    @Environment(\.modelContext) private var modelContext
+
+    private var notificationsSection: some View {
+        Section("Notifications") {
+            Toggle("Streak reminder", isOn: $streakReminderEnabled)
+                .onChange(of: streakReminderEnabled) { _, enabled in
+                    if enabled {
+                        requestNotificationPermission()
+                    } else {
+                        cancelStreakReminder()
+                    }
+                }
+
+            if streakReminderEnabled {
+                Text("Reminds you at 8pm if you haven't opened the app and have a streak over 3 days")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func requestNotificationPermission() {
+        let centre = UNUserNotificationCenter.current()
+        centre.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            if granted {
+                scheduleStreakReminder()
+            } else {
+                Task { @MainActor in
+                    streakReminderEnabled = false
+                }
+            }
+        }
+    }
+
+    private func scheduleStreakReminder() {
+        let streak = StatsCalculator.currentStreak(from: books)
+        guard streak > 3 else { return }
+
+        let centre = UNUserNotificationCenter.current()
+        centre.removeAllPendingNotificationRequests()
+
+        let content = UNMutableNotificationContent()
+        content.title = "Don't break your streak!"
+        content.body = "You're on a \(streak)-day reading streak. Open a book to keep it going."
+        content.sound = .default
+
+        var dateComponents = DateComponents()
+        dateComponents.hour = 20
+        dateComponents.minute = 0
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        let request = UNNotificationRequest(
+            identifier: "streakReminder",
+            content: content,
+            trigger: trigger
+        )
+
+        centre.add(request)
+    }
+
+    private func cancelStreakReminder() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["streakReminder"]
+        )
+    }
+
+    // MARK: - Followed Authors Section
+
+    @ViewBuilder
+    private var followedAuthorsSection: some View {
+        if !followedAuthors.isEmpty {
+            Section("Followed Authors") {
+                ForEach(followedAuthors) { author in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(author.authorName)
+                                .font(.body)
+                            if let lastChecked = author.lastCheckedDate {
+                                Text("Last checked: \(lastChecked, format: .dateTime.month().day())")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                Text("Not yet checked")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                        Text("Following")
+                            .font(.caption)
+                            .foregroundStyle(.accentColor)
+                    }
+                }
+                .onDelete { offsets in
+                    for index in offsets {
+                        modelContext.delete(followedAuthors[index])
+                    }
+                    try? modelContext.save()
                 }
             }
         }

@@ -115,7 +115,10 @@ struct StatsView: View {
         ScrollView {
             VStack(spacing: 16) {
                 goalSection
+                unwrappedBanner
                 summaryHeader
+                streakHeader
+                badgesSection
                 booksPerMonthSection
                 pagesPerMonthSection
                 genreSection
@@ -124,6 +127,33 @@ struct StatsView: View {
             .padding()
         }
     }
+
+    // MARK: - Badges
+
+    private var badges: [Badge] {
+        let streak = StatsCalculator.currentStreak(from: books)
+        let goalMet: Bool = {
+            guard let goal = goalForSelectedYear else { return false }
+            return readBooks.count >= goal.target
+        }()
+        return BadgeEngine.evaluateBadges(books: books, streak: streak, goalMet: goalMet)
+    }
+
+    private var unlockedBadgeCount: Int {
+        badges.filter(\.isUnlocked).count
+    }
+
+    // MARK: - Unwrapped years
+
+    private var unwrappedYears: [Int] {
+        let yearCounts = Dictionary(
+            grouping: books.filter { $0.shelf == .read && $0.dateFinished != nil },
+            by: { Calendar.current.component(.year, from: $0.dateFinished!) }
+        )
+        return yearCounts.filter { $0.value.count >= 5 }.keys.sorted(by: >)
+    }
+
+    @State private var showUnwrapped = false
 
     // MARK: - Goal Section
 
@@ -154,6 +184,130 @@ struct StatsView: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Unwrapped Banner
+
+    @ViewBuilder
+    private var unwrappedBanner: some View {
+        if case .year(let year) = filter, unwrappedYears.contains(year) {
+            Button {
+                showUnwrapped = true
+            } label: {
+                HStack {
+                    Image(systemName: "gift.fill")
+                        .font(.title2)
+                        .foregroundStyle(.accent)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Your \(String(year)) Unwrapped")
+                            .font(.subheadline.bold())
+                        Text("See your year in review")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+            .fullScreenCover(isPresented: $showUnwrapped) {
+                UnwrappedView(year: year)
+            }
+        } else if unwrappedYears.count > 1 {
+            NavigationLink {
+                PastUnwrappedListView(availableYears: unwrappedYears)
+            } label: {
+                HStack {
+                    Image(systemName: "gift.fill")
+                        .font(.title2)
+                        .foregroundStyle(.accent)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Past Unwrapped")
+                            .font(.subheadline.bold())
+                        Text("Review previous years")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Streak Header
+
+    private var streakHeader: some View {
+        let streak = StatsCalculator.currentStreak(from: books)
+        let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
+        let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
+
+        return HStack(spacing: 12) {
+            Image(systemName: flameIcon)
+                .font(flameSize)
+                .foregroundStyle(.orange)
+                .symbolEffect(.bounce, value: streak)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(streak) day streak")
+                    .font(.headline)
+                Text(streak == 0 ? "Start reading to build a streak" : "Keep it going!")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Reading streak: \(streak) days")
+    }
+
+    // MARK: - Badges Section
+
+    private var badgesSection: some View {
+        NavigationLink {
+            BadgesView(badges: badges)
+        } label: {
+            HStack {
+                Image(systemName: "medal.fill")
+                    .font(.title2)
+                    .foregroundStyle(.accent)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Badges")
+                        .font(.subheadline.bold())
+                    Text("\(unlockedBadgeCount) of \(BadgeEngine.totalBadgeCount) badges earned")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Charts
@@ -308,9 +462,15 @@ struct StatsView: View {
     }
 
     private var streakCard: some View {
-        StatCard(title: "Reading Streak") {
-            let streak = StatsCalculator.currentStreak(from: books)
+        let streak = StatsCalculator.currentStreak(from: books)
+        let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
+        let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
+
+        return StatCard(title: "Reading Streak") {
             VStack(spacing: 4) {
+                Image(systemName: flameIcon)
+                    .font(flameSize)
+                    .foregroundStyle(.orange)
                 Text("\(streak)")
                     .font(.title.bold())
                 Text("day\(streak == 1 ? "" : "s")")

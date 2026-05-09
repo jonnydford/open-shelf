@@ -369,6 +369,12 @@ final class BookRepository {
         try await apiClient.fetchWorkDetail(key: key)
     }
 
+    // MARK: - Author Works
+
+    nonisolated func fetchAuthorWorks(authorKey: String, limit: Int = 5) async throws -> AuthorWorksResponse {
+        try await apiClient.fetchAuthorWorks(authorKey: authorKey, limit: limit)
+    }
+
     // MARK: - Cover cache access
 
     nonisolated var imageCache: CoverImageCache {
