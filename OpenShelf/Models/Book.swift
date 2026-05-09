@@ -35,6 +35,7 @@ final class Book {
     var isFavourite: Bool
     var notes: String?
     var tags: [String]
+    var queuePosition: Int?
 
     @Relationship(deleteRule: .cascade, inverse: \ReadEntry.book)
     var reads: [ReadEntry]
@@ -64,6 +65,7 @@ final class Book {
         isFavourite: Bool = false,
         notes: String? = nil,
         tags: [String] = [],
+        queuePosition: Int? = nil,
         reads: [ReadEntry] = []
     ) {
         self.olWorkKey = olWorkKey
@@ -90,6 +92,7 @@ final class Book {
         self.isFavourite = isFavourite
         self.notes = notes
         self.tags = tags
+        self.queuePosition = queuePosition
         self.reads = reads
     }
 }

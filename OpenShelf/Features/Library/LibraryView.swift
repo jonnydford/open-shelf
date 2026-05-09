@@ -263,11 +263,96 @@ struct LibraryView: View {
         }
     }
 
+    // MARK: - Up Next Queue
+
+    private var queuedBooks: [Book] {
+        filteredBooks
+            .filter { $0.queuePosition != nil }
+            .sorted { $0.queuePosition! < $1.queuePosition! }
+    }
+
+    private var nonQueuedBooks: [Book] {
+        filteredBooks.filter { $0.queuePosition == nil }
+    }
+
+    private var isWantToReadShelf: Bool {
+        if case .shelf(.wantToRead) = selectedFilter { return true }
+        return false
+    }
+
     // MARK: - Book List
 
     private var bookList: some View {
         List {
-            ForEach(filteredBooks) { book in
+            if isWantToReadShelf && !queuedBooks.isEmpty {
+                upNextSection
+            }
+
+            regularBooksSection
+        }
+        .listStyle(.plain)
+        .refreshable {
+            // No-op for local data — satisfies pull-to-refresh UX expectation
+        }
+    }
+
+    private var upNextSection: some View {
+        Section {
+            ForEach(queuedBooks) { book in
+                NavigationLink {
+                    BookDetailView(book: book)
+                } label: {
+                    HStack {
+                        BookRow(book: book)
+                        if book.queuePosition == 0 {
+                            Spacer()
+                            Text("Reading Next")
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.accentColor.opacity(0.15))
+                                .foregroundStyle(.accentColor)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        bookToDelete = book
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                    Button {
+                        repository.removeFromQueue(book)
+                    } label: {
+                        Label("Remove from Up Next", systemImage: "minus.circle")
+                    }
+                    .tint(.orange)
+                }
+                .contextMenu {
+                    contextMenuItems(for: book)
+                }
+            }
+            .onMove { source, destination in
+                var reordered = queuedBooks
+                reordered.move(fromOffsets: source, toOffset: destination)
+                repository.reorderQueue(reordered)
+            }
+        } header: {
+            Label("Up Next", systemImage: "text.line.first.and.arrowtriangle.forward")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+        }
+    }
+
+    private var regularBooksSection: some View {
+        Section {
+            let books = isWantToReadShelf ? nonQueuedBooks : filteredBooks
+            ForEach(books) { book in
                 NavigationLink {
                     BookDetailView(book: book)
                 } label: {
@@ -288,10 +373,6 @@ struct LibraryView: View {
                     contextMenuItems(for: book)
                 }
             }
-        }
-        .listStyle(.plain)
-        .refreshable {
-            // No-op for local data — satisfies pull-to-refresh UX expectation
         }
     }
 
@@ -334,6 +415,23 @@ struct LibraryView: View {
                     }
                 }
                 .disabled(book.shelf == shelf)
+            }
+        }
+
+        // Up Next queue actions
+        if book.shelf == .wantToRead {
+            if book.queuePosition != nil {
+                Button {
+                    repository.removeFromQueue(book)
+                } label: {
+                    Label("Remove from Up Next", systemImage: "minus.circle")
+                }
+            } else {
+                Button {
+                    repository.addToQueue(book)
+                } label: {
+                    Label("Add to Up Next", systemImage: "text.line.first.and.arrowtriangle.forward")
+                }
             }
         }
 

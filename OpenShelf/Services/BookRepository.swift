@@ -60,6 +60,11 @@ final class BookRepository {
     }
 
     func updateShelf(_ book: Book, to shelf: Shelf) {
+        // Remove from queue when leaving want-to-read
+        if shelf != .wantToRead {
+            removeFromQueue(book)
+        }
+
         book.shelf = shelf
 
         switch shelf {
@@ -111,6 +116,52 @@ final class BookRepository {
     func allBooks() -> [Book] {
         let descriptor = FetchDescriptor<Book>()
         return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    // MARK: - Up Next Queue
+
+    func addToQueue(_ book: Book) {
+        guard book.queuePosition == nil else { return }
+        let currentMax = allQueuedBooks().map(\.queuePosition!).max() ?? -1
+        book.queuePosition = currentMax + 1
+        try? modelContext.save()
+    }
+
+    func removeFromQueue(_ book: Book) {
+        guard book.queuePosition != nil else { return }
+        book.queuePosition = nil
+        // Compact remaining positions
+        let remaining = allQueuedBooks().sorted { $0.queuePosition! < $1.queuePosition! }
+        for (index, b) in remaining.enumerated() {
+            b.queuePosition = index
+        }
+        try? modelContext.save()
+    }
+
+    func reorderQueue(_ books: [Book]) {
+        for (index, book) in books.enumerated() {
+            book.queuePosition = index
+        }
+        try? modelContext.save()
+    }
+
+    func nextInQueue() -> Book? {
+        allQueuedBooks()
+            .filter { $0.queuePosition != nil }
+            .min { $0.queuePosition! < $1.queuePosition! }
+    }
+
+    func allQueuedBooks() -> [Book] {
+        let descriptor = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.queuePosition != nil }
+        )
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    // MARK: - Author Search
+
+    nonisolated func searchByAuthor(name: String) async throws -> [SearchResult] {
+        try await apiClient.searchByAuthor(name: name)
     }
 
     // MARK: - Import

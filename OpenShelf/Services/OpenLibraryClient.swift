@@ -78,6 +78,28 @@ actor OpenLibraryClient {
         return response.docs
     }
 
+    // MARK: - Author Search
+
+    func searchByAuthor(name: String) async throws -> [SearchResult] {
+        guard var components = URLComponents(string: "\(baseURL)/search.json") else {
+            throw OpenLibraryError.invalidURL
+        }
+
+        components.queryItems = [
+            URLQueryItem(name: "author", value: name),
+            URLQueryItem(name: "fields", value: searchFields),
+            URLQueryItem(name: "limit", value: "10"),
+            URLQueryItem(name: "sort", value: "editions")
+        ]
+
+        guard let url = components.url else {
+            throw OpenLibraryError.invalidURL
+        }
+
+        let response: SearchResponse = try await performRequest(url: url)
+        return response.docs
+    }
+
     // MARK: - ISBN Lookup
 
     func lookupISBN(_ isbn: String) async throws -> EditionDetail {

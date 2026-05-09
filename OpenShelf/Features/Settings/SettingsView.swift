@@ -9,6 +9,9 @@ struct SettingsView: View {
     @State private var showExportView = false
     @State private var showSetGoal = false
 
+    @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
+    @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
+
     private var currentYear: Int {
         Calendar.current.component(.year, from: .now)
     }
@@ -17,6 +20,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 readingGoalSection
+                librarySection
                 importSection
                 exportSection
                 goalHistorySection
@@ -65,6 +69,37 @@ struct SettingsView: View {
                     showSetGoal = true
                 } label: {
                     Label("Set Reading Goal for \(String(currentYear))", systemImage: "target")
+                }
+            }
+        }
+    }
+
+    // MARK: - Library Section
+
+    private var selectedLibraryService: Binding<LibraryService> {
+        Binding(
+            get: { LibraryService(rawValue: preferredLibraryService) ?? .libby },
+            set: { preferredLibraryService = $0.rawValue }
+        )
+    }
+
+    private var librarySection: some View {
+        Section("Library") {
+            Picker("Preferred library service", selection: selectedLibraryService) {
+                ForEach(LibraryService.allCases) { service in
+                    Text(service.rawValue).tag(service)
+                }
+            }
+
+            if selectedLibraryService.wrappedValue == .custom {
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("URL template", text: $customLibraryURLTemplate)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+                    Text("Use {isbn} as a placeholder. e.g. https://example.com/search?q={isbn}")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
