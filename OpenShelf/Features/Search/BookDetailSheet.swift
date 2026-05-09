@@ -14,7 +14,7 @@ struct BookDetailSheet: View {
     @State private var selectedShelf: Shelf = .wantToRead
     @State private var isAdding = false
     @State private var showRatingPrompt = false
-    @State private var rating: Double = 0
+    @State private var rating: Double?
     @State private var alreadyInLibrary = false
 
     var body: some View {
@@ -204,7 +204,7 @@ struct BookDetailSheet: View {
                 VStack(spacing: 16) {
                     Text("Rate This Book")
                         .font(.headline)
-                    RatingPicker(rating: $rating)
+                    RatingPicker(rating: $rating, mode: .interactive)
                 }
                 .padding(24)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -253,7 +253,7 @@ struct BookDetailSheet: View {
         )
         if let book = (try? modelContext.fetch(descriptor))?.first {
             repository.updateShelf(book, to: selectedShelf)
-            if let rating, rating > 0 {
+            if let rating {
                 repository.updateRating(book, rating: rating)
             }
         }

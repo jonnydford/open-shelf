@@ -55,7 +55,7 @@ struct LibraryView: View {
     @State private var showDeleteConfirmation = false
     @State private var bookForRating: Book?
     @State private var showRatingPrompt = false
-    @State private var pendingRating: Double = 0
+    @State private var pendingRating: Double?
     @State private var bookForDNF: Book?
     @State private var showDNFPrompt = false
     @State private var dnfPage: String = ""
@@ -261,21 +261,25 @@ struct LibraryView: View {
     private var bookList: some View {
         List {
             ForEach(filteredBooks) { book in
-                BookRow(book: book)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            bookToDelete = book
-                            showDeleteConfirmation = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+                NavigationLink {
+                    BookDetailView(book: book)
+                } label: {
+                    BookRow(book: book)
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        bookToDelete = book
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
                     }
-                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        shelfSwipeActions(for: book)
-                    }
-                    .contextMenu {
-                        contextMenuItems(for: book)
-                    }
+                }
+                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                    shelfSwipeActions(for: book)
+                }
+                .contextMenu {
+                    contextMenuItems(for: book)
+                }
             }
         }
         .listStyle(.plain)
@@ -383,7 +387,7 @@ struct LibraryView: View {
                 VStack(spacing: 16) {
                     Text("Rate This Book")
                         .font(.headline)
-                    RatingPicker(rating: $pendingRating)
+                    RatingPicker(rating: $pendingRating, mode: .interactive)
                 }
                 .padding(24)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -417,15 +421,15 @@ struct LibraryView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         if let book = bookForDNF {
+                            let entry = ReadEntry(
+                                book: book,
+                                startDate: book.dateStarted,
+                                finishDate: .now,
+                                dnfPage: Int(dnfPage),
+                                dnfReason: dnfReason.isEmpty ? nil : dnfReason
+                            )
+                            modelContext.insert(entry)
                             repository.updateShelf(book, to: .dnf)
-                            if let page = Int(dnfPage) {
-                                book.currentPage = page
-                            }
-                            if !dnfReason.isEmpty {
-                                let existing = book.notes ?? ""
-                                let separator = existing.isEmpty ? "" : "\n"
-                                book.notes = existing + separator + "DNF: \(dnfReason)"
-                            }
                             try? modelContext.save()
                         }
                         showDNFPrompt = false
@@ -445,7 +449,7 @@ struct LibraryView: View {
         switch shelf {
         case .read:
             bookForRating = book
-            pendingRating = 0
+            pendingRating = nil
             showRatingPrompt = true
         case .dnf:
             bookForDNF = book
@@ -459,8 +463,20 @@ struct LibraryView: View {
 
     private func finalizeShelfMove(_ book: Book?, to shelf: Shelf, rating: Double?) {
         guard let book else { return }
+
+        // Create ReadEntry when marking as read
+        if shelf == .read {
+            let entry = ReadEntry(
+                book: book,
+                startDate: book.dateStarted,
+                finishDate: .now,
+                rating: rating
+            )
+            modelContext.insert(entry)
+        }
+
         repository.updateShelf(book, to: shelf)
-        if let rating, rating > 0 {
+        if let rating {
             repository.updateRating(book, rating: rating)
         }
     }
