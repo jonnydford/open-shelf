@@ -8,20 +8,7 @@ struct OpenShelfApp: App {
 
     init() {
         do {
-            let schema = Schema([
-                Book.self,
-                ReadEntry.self,
-                UserTag.self,
-                ReadingGoal.self
-            ])
-            let configuration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false
-            )
-            let container = try ModelContainer(
-                for: schema,
-                configurations: [configuration]
-            )
+            let container = try SharedModelContainer.makeContainer()
             self.modelContainer = container
             self.repository = BookRepository(
                 modelContext: container.mainContext

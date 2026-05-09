@@ -36,6 +36,15 @@ struct GenreBreakdownChart: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Genre Breakdown chart")
+        .accessibilityValue(genreAccessibilityValue)
+    }
+
+    private var genreAccessibilityValue: String {
+        if genres.isEmpty { return "No genre data" }
+        let parts = genres.map { "\($0.genre): \($0.count) book\($0.count == 1 ? "" : "s") (\(percentage($0.count)))" }
+        return parts.joined(separator: ", ")
     }
 
     private var donutChart: some View {
