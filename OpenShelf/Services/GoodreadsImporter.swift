@@ -39,7 +39,8 @@ struct CSVParser {
                     index = text.index(after: index)
                 }
             } else {
-                if char == "\"" {
+                if char == "\"" && currentField.isEmpty {
+                    // Only enter quoted mode when quote is the first character of the field
                     insideQuotes = true
                     index = text.index(after: index)
                 } else if char == "," {

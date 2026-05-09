@@ -35,6 +35,9 @@ struct ImportView: View {
 
     @State private var importState: ImportState = .instructions
     @State private var showDocumentPicker = false
+    @State private var importTask: Task<Void, Never>?
+    @State private var selectedUnmatchedBook: String?
+    @State private var resolvedBooks: Set<String> = []
 
     var body: some View {
         NavigationStack {
@@ -67,6 +70,10 @@ struct ImportView: View {
                 allowsMultipleSelection: false
             ) { result in
                 handleFileSelection(result)
+            }
+            .onDisappear {
+                importTask?.cancel()
+                importTask = nil
             }
         }
     }
@@ -217,9 +224,10 @@ struct ImportView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    if unmatched > 0 {
+                    let remainingUnmatched = errors.filter { !resolvedBooks.contains($0) }.count
+                    if remainingUnmatched > 0 {
                         VStack {
-                            Text("\(unmatched)")
+                            Text("\(remainingUnmatched)")
                                 .font(.title)
                                 .fontWeight(.bold)
                                 .foregroundStyle(.orange)
@@ -231,21 +239,47 @@ struct ImportView: View {
                 }
 
                 if !errors.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Unmatched Books")
-                            .font(.headline)
-
-                        ForEach(errors, id: \.self) { error in
-                            Text(error)
+                    let unresolvedErrors = errors.filter { !resolvedBooks.contains($0) }
+                    if !unresolvedErrors.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Unmatched Books")
+                                .font(.headline)
+                            Text("Tap to search, or skip.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+
+                            ForEach(unresolvedErrors, id: \.self) { bookDescription in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(bookDescription)
+                                            .font(.subheadline)
+                                    }
+                                    Spacer()
+                                    Button("Skip") {
+                                        resolvedBooks.insert(bookDescription)
+                                    }
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    Image(systemName: "magnifyingglass")
+                                        .font(.caption)
+                                        .foregroundStyle(.tint)
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedUnmatchedBook = bookDescription
+                                }
+
+                                if bookDescription != unresolvedErrors.last {
+                                    Divider()
+                                }
+                            }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .padding(.horizontal)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .padding(.horizontal)
                 }
 
                 Button("Done") {
@@ -255,6 +289,11 @@ struct ImportView: View {
                 .padding(.top, 8)
             }
             .padding(.bottom, 32)
+        }
+        .sheet(item: $selectedUnmatchedBook) { bookDescription in
+            UnmatchedBookSearchSheet(bookDescription: bookDescription) {
+                resolvedBooks.insert(bookDescription)
+            }
         }
     }
 
@@ -297,7 +336,8 @@ struct ImportView: View {
                 return
             }
 
-            Task {
+            importTask?.cancel()
+            importTask = Task {
                 await processCSVFile(at: url)
             }
 
@@ -326,12 +366,17 @@ struct ImportView: View {
                 }
             }
 
+            guard !Task.isCancelled else { return }
+
             importState = .complete(
                 matched: result.matchedCount,
                 unmatched: result.unmatchedCount,
                 errors: result.errors
             )
+        } catch is CancellationError {
+            // Import was cancelled; do nothing
         } catch let error as ImportError {
+            guard !Task.isCancelled else { return }
             switch error {
             case .invalidCSV:
                 importState = .error("The file does not appear to be a valid CSV.")
@@ -341,7 +386,131 @@ struct ImportView: View {
                 importState = .error("Import is not yet available.")
             }
         } catch {
+            guard !Task.isCancelled else { return }
             importState = .error("An unexpected error occurred: \(error.localizedDescription)")
+        }
+    }
+}
+
+// MARK: - String Identifiable conformance for sheet binding
+
+extension String: @retroactive Identifiable {
+    public var id: String { self }
+}
+
+// MARK: - Unmatched Book Search Sheet
+
+struct UnmatchedBookSearchSheet: View {
+    let bookDescription: String
+    let onResolved: () -> Void
+
+    @Environment(BookRepository.self) private var repository
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var searchText: String = ""
+    @State private var results: [SearchResult] = []
+    @State private var isSearching = false
+    @State private var hasSearched = false
+    @State private var searchTask: Task<Void, Never>?
+    @State private var selectedResult: SearchResult?
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if results.isEmpty && !isSearching && !hasSearched {
+                    ContentUnavailableView(
+                        "Search Open Library",
+                        systemImage: "magnifyingglass",
+                        description: Text("Find the correct match for \"\(bookDescription)\".")
+                    )
+                } else if results.isEmpty && !isSearching && hasSearched {
+                    ContentUnavailableView(
+                        "No Books Found",
+                        systemImage: "book.closed",
+                        description: Text("No results for '\(searchText)'. Try a different search.")
+                    )
+                } else if isSearching && results.isEmpty {
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .controlSize(.large)
+                        Text("Searching...")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List(results) { result in
+                        Button {
+                            selectedResult = result
+                        } label: {
+                            HStack(spacing: 12) {
+                                CoverImage(coverID: result.coverI, size: .small)
+                                    .frame(width: 50, height: 75)
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(result.title)
+                                        .font(.headline)
+                                        .lineLimit(2)
+                                    Text(result.primaryAuthor)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .navigationTitle("Resolve Match")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "Title, author, or ISBN")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+            .onAppear {
+                // Pre-fill search with the book title (strip "by Author" suffix)
+                let titlePart = bookDescription.components(separatedBy: " by ").first ?? bookDescription
+                searchText = titlePart
+            }
+            .onChange(of: searchText) {
+                searchTask?.cancel()
+                let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+                guard trimmed.count >= 2 else {
+                    results = []
+                    hasSearched = false
+                    return
+                }
+                searchTask = Task {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    guard !Task.isCancelled else { return }
+                    await performSearch()
+                }
+            }
+            .sheet(item: $selectedResult) { result in
+                BookDetailSheet(searchResult: result) {
+                    onResolved()
+                    dismiss()
+                }
+            }
+        }
+    }
+
+    private func performSearch() async {
+        isSearching = true
+        defer { isSearching = false }
+
+        do {
+            let searchResults = try await repository.search(query: searchText)
+            guard !Task.isCancelled else { return }
+            results = searchResults
+            hasSearched = true
+        } catch {
+            guard !Task.isCancelled else { return }
+            results = []
+            hasSearched = true
         }
     }
 }

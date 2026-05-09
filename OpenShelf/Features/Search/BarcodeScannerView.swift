@@ -272,7 +272,10 @@ struct DataScannerRepresentable: UIViewControllerRepresentable {
             for item in addedItems {
                 if case .barcode(let barcode) = item {
                     if let isbn = barcode.payloadStringValue {
-                        onBarcodeScanned(isbn)
+                        let callback = onBarcodeScanned
+                        Task { @MainActor in
+                            callback(isbn)
+                        }
                     }
                 }
             }
