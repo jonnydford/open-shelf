@@ -1,7 +1,16 @@
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @Environment(\.modelContext) private var modelContext
+    @Environment(BookRepository.self) private var repository
+
+    @State private var deepLinkBookKey: String?
+    @State private var showDeepLinkBook = false
+    @State private var deepLinkBook: Book?
+    @State private var deepLinkSearchResult: SearchResult?
+    @State private var isLoadingDeepLink = false
 
     var body: some View {
         TabView {
@@ -26,6 +35,106 @@ struct ContentView: View {
             set: { newValue in hasCompletedOnboarding = !newValue }
         )) {
             OnboardingView()
+        }
+        .onOpenURL { url in
+            handleDeepLink(url)
+        }
+        .sheet(isPresented: $showDeepLinkBook) {
+            deepLinkSheet
+        }
+    }
+
+    // MARK: - Deep Link Handling
+
+    private func handleDeepLink(_ url: URL) {
+        // Handle openshelf://book/{olWorkKey}
+        guard url.scheme == "openshelf",
+              url.host == "book" else { return }
+
+        // The work key path: e.g. openshelf://book/works/OL12345W -> /works/OL12345W
+        let pathComponents = url.pathComponents.filter { $0 != "/" }
+        guard !pathComponents.isEmpty else { return }
+
+        let workKey = "/works/" + pathComponents.joined(separator: "/")
+        deepLinkBookKey = workKey
+
+        // Check if book exists in library
+        let key = workKey
+        let descriptor = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.olWorkKey == key }
+        )
+
+        if let existingBook = (try? modelContext.fetch(descriptor))?.first {
+            deepLinkBook = existingBook
+            showDeepLinkBook = true
+        } else {
+            // Search Open Library for this work key
+            isLoadingDeepLink = true
+            showDeepLinkBook = true
+            Task {
+                do {
+                    let detail = try await repository.fetchDetail(for: workKey)
+                    let searchResult = SearchResult(
+                        key: workKey,
+                        title: detail.title,
+                        authorName: nil,
+                        firstPublishYear: nil,
+                        numberOfPagesMedian: nil,
+                        coverI: detail.primaryCoverID,
+                        editionCount: nil,
+                        isbn: nil,
+                        subject: detail.subjects,
+                        idGoodreads: nil
+                    )
+                    deepLinkSearchResult = searchResult
+                } catch {
+                    // If fetch fails, just dismiss
+                }
+                isLoadingDeepLink = false
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var deepLinkSheet: some View {
+        if let book = deepLinkBook {
+            NavigationStack {
+                BookDetailView(book: book)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close") {
+                                showDeepLinkBook = false
+                                deepLinkBook = nil
+                            }
+                        }
+                    }
+            }
+        } else if let result = deepLinkSearchResult {
+            // BookDetailSheet provides its own NavigationStack
+            BookDetailSheet(searchResult: result) {
+                showDeepLinkBook = false
+                deepLinkSearchResult = nil
+            }
+        } else if isLoadingDeepLink {
+            NavigationStack {
+                ProgressView("Loading book...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        } else {
+            NavigationStack {
+                ContentUnavailableView {
+                    Label("Book Not Found", systemImage: "book.closed")
+                } description: {
+                    Text("This book could not be found.")
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close") {
+                            showDeepLinkBook = false
+                        }
+                    }
+                }
+            }
         }
     }
 }

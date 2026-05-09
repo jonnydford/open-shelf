@@ -21,6 +21,16 @@ struct BookDetailView: View {
     @State private var dnfReason: String = ""
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    // Social/sharing state
+    @State private var showShareCardSheet = false
+    @State private var showRecommendSheet = false
+    @State private var shareCardItems: [Any] = []
+    @State private var recommendText: String = ""
+    @State private var showAddToListSheet = false
+    @State private var coverImageForShare: UIImage?
+
+    @Query(sort: \ReadingList.dateCreated, order: .reverse) private var readingLists: [ReadingList]
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -33,6 +43,7 @@ struct BookDetailView: View {
                     .padding(.horizontal)
                 ReadHistorySection(entries: book.reads)
                     .padding(.horizontal)
+                socialSection
                 actionsSection
             }
             .padding(.bottom, 32)
@@ -42,8 +53,27 @@ struct BookDetailView: View {
         .sheet(isPresented: $showProgressEditor) {
             ProgressEditor(book: book)
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    generateShareCard()
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .accessibilityLabel("Share book card")
+            }
+        }
         .sheet(isPresented: $showDNFSheet) {
             dnfSheet
+        }
+        .sheet(isPresented: $showShareCardSheet) {
+            ActivityView(activityItems: shareCardItems, applicationActivities: nil)
+        }
+        .sheet(isPresented: $showRecommendSheet) {
+            ActivityView(activityItems: [recommendText], applicationActivities: nil)
+        }
+        .sheet(isPresented: $showAddToListSheet) {
+            addToListSheet
         }
         .alert("Delete Book", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -431,6 +461,96 @@ struct BookDetailView: View {
         ["Lost interest", "Too slow", "Not for me", "Will try again later"]
     }
 
+    // MARK: - Social Section
+
+    private var socialSection: some View {
+        VStack(spacing: 12) {
+            Divider()
+                .padding(.horizontal)
+
+            Button {
+                generateShareCard()
+            } label: {
+                Label("Share Book Card", systemImage: "square.and.arrow.up")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal)
+
+            Button {
+                generateRecommendation()
+            } label: {
+                Label("Recommend to a Friend", systemImage: "person.wave.2")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal)
+
+            Button {
+                showAddToListSheet = true
+            } label: {
+                Label("Add to Reading List", systemImage: "list.bullet.rectangle")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal)
+        }
+    }
+
+    // MARK: - Add to List Sheet
+
+    private var addToListSheet: some View {
+        NavigationStack {
+            AddBookToListSheet(book: book, readingLists: readingLists)
+                .navigationTitle("Add to List")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") {
+                            showAddToListSheet = false
+                        }
+                    }
+                }
+        }
+    }
+
+    // MARK: - Share Card Generation
+
+    private func generateShareCard() {
+        Task {
+            var coverImage: UIImage?
+            if let coverID = book.coverImageID {
+                coverImage = await repository.imageCache.image(for: coverID, size: .large)
+            }
+            let image = ShareCardRenderer.renderImage(for: book, coverImage: coverImage)
+            if let image {
+                shareCardItems = [image]
+                showShareCardSheet = true
+            }
+        }
+    }
+
+    // MARK: - Recommendation Generation
+
+    private func generateRecommendation() {
+        var message = "I think you'd enjoy \"\(book.title)\" by \(book.authorName)"
+
+        if let rating = book.userRating {
+            let ratingText: String
+            if rating == floor(rating) {
+                ratingText = String(format: "%.0f", rating)
+            } else {
+                ratingText = String(format: "%.1f", rating)
+            }
+            message += "\nI rated it \u{2B50} \(ratingText)/5"
+        }
+
+        message += "\n\nFind it on Open Library: https://openlibrary.org\(book.olWorkKey)"
+
+        recommendText = message
+        showRecommendSheet = true
+    }
+
     // MARK: - Actions
 
     private func startReread() {
@@ -483,5 +603,98 @@ struct BookDetailView: View {
         default:
             repository.updateShelf(book, to: shelf)
         }
+    }
+}
+
+// MARK: - Add Book to List Sheet
+
+struct AddBookToListSheet: View {
+    let book: Book
+    let readingLists: [ReadingList]
+
+    @Environment(\.modelContext) private var modelContext
+    @State private var showNewListAlert = false
+    @State private var newListName = ""
+
+    var body: some View {
+        Group {
+            if readingLists.isEmpty {
+                ContentUnavailableView {
+                    Label("No Lists", systemImage: "list.bullet.rectangle")
+                } description: {
+                    Text("Create a reading list first.")
+                } actions: {
+                    Button("Create a List") {
+                        newListName = ""
+                        showNewListAlert = true
+                    }
+                }
+            } else {
+                List {
+                    Section {
+                        ForEach(readingLists) { list in
+                            Button {
+                                toggleBookInList(list)
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(list.name)
+                                            .font(.headline)
+                                        Text("\(list.bookKeys.count) \(list.bookKeys.count == 1 ? "book" : "books")")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    if list.bookKeys.contains(book.olWorkKey) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundStyle(.green)
+                                    } else {
+                                        Image(systemName: "circle")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                            }
+                            .tint(.primary)
+                        }
+                    }
+
+                    Section {
+                        Button {
+                            newListName = ""
+                            showNewListAlert = true
+                        } label: {
+                            Label("New List", systemImage: "plus")
+                        }
+                    }
+                }
+            }
+        }
+        .alert("New Reading List", isPresented: $showNewListAlert) {
+            TextField("List name", text: $newListName)
+            Button("Cancel", role: .cancel) {}
+            Button("Create") {
+                createListAndAdd()
+            }
+        } message: {
+            Text("Enter a name for your new reading list.")
+        }
+    }
+
+    private func toggleBookInList(_ list: ReadingList) {
+        if list.bookKeys.contains(book.olWorkKey) {
+            list.bookKeys.removeAll { $0 == book.olWorkKey }
+        } else {
+            list.bookKeys.append(book.olWorkKey)
+        }
+        try? modelContext.save()
+    }
+
+    private func createListAndAdd() {
+        let trimmed = newListName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let list = ReadingList(name: trimmed, bookKeys: [book.olWorkKey])
+        modelContext.insert(list)
+        try? modelContext.save()
     }
 }
