@@ -50,21 +50,8 @@ struct BookDetailSheet: View {
                 await loadDetail()
                 checkDuplicate()
             }
-            .alert("Rate This Book", isPresented: $showRatingPrompt) {
-                Button("Skip") {
-                    addBookToLibrary(rating: nil)
-                }
-                Button("Save Rating") {
-                    addBookToLibrary(rating: rating)
-                }
-            } message: {
-                Text("You marked this as Read. Would you like to rate it?")
-            }
-            // Rating picker shown via overlay when rating prompt is active
-            .overlay {
-                if showRatingPrompt {
-                    ratingOverlay
-                }
+            .sheet(isPresented: $showRatingPrompt) {
+                ratingSheet
             }
         }
     }
@@ -195,21 +182,41 @@ struct BookDetailSheet: View {
         }
     }
 
-    // MARK: - Rating Overlay
+    // MARK: - Rating Sheet
 
-    private var ratingOverlay: some View {
-        Color.clear
-            .contentShape(Rectangle())
-            .overlay(alignment: .center) {
-                VStack(spacing: 16) {
-                    Text("Rate This Book")
-                        .font(.headline)
-                    RatingPicker(rating: $rating, mode: .interactive)
-                }
-                .padding(24)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    private var ratingSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Spacer()
+
+                Text("Rate This Book")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("You marked this as Read. Would you like to rate it?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                RatingPicker(rating: $rating, mode: .interactive)
+
+                Spacer()
             }
-            .allowsHitTesting(true)
+            .padding()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") {
+                        addBookToLibrary(rating: nil)
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save Rating") {
+                        addBookToLibrary(rating: rating)
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 
     // MARK: - Actions

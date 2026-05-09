@@ -284,7 +284,7 @@ struct BookDetailView: View {
 
             if book.shelf == .dnf {
                 Button {
-                    startTryAgain()
+                    startReread()
                 } label: {
                     Label("Try Again", systemImage: "arrow.counterclockwise")
                         .frame(maxWidth: .infinity)
@@ -425,13 +425,16 @@ struct BookDetailView: View {
     // MARK: - Actions
 
     private func startReread() {
-        book.dateStarted = .now
-        book.dateFinished = nil
-        book.currentPage = nil
-        repository.updateShelf(book, to: .reading)
-    }
+        // Snapshot the current rating onto the most recent ReadEntry if it has none
+        if let currentRating = book.userRating {
+            let latestEntry = book.reads
+                .sorted { ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast) }
+                .first
+            if let entry = latestEntry, entry.rating == nil {
+                entry.rating = currentRating
+            }
+        }
 
-    private func startTryAgain() {
         book.dateStarted = .now
         book.dateFinished = nil
         book.currentPage = nil

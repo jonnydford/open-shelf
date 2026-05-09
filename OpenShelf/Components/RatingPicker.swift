@@ -10,7 +10,6 @@ struct RatingPicker: View {
     var mode: RatingPickerMode = .interactive
 
     @State private var dragRating: Double?
-    @GestureState private var isDragging = false
 
     private var starSize: CGFloat {
         switch mode {
@@ -54,7 +53,9 @@ struct RatingPicker: View {
                 handleAccessibilityAdjust(direction)
             }
         }
-        .sensoryFeedback(.selection, trigger: rating)
+        .if(mode == .interactive) { view in
+            view.sensoryFeedback(.selection, trigger: rating)
+        }
     }
 
     // MARK: - Star Image
@@ -89,7 +90,7 @@ struct RatingPicker: View {
     // MARK: - Drag Gesture
 
     private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 0)
+        DragGesture(minimumDistance: 5)
             .onChanged { value in
                 let totalWidth = CGFloat(5) * starSize + CGFloat(4) * starSpacing
                 let newRating = ratingFromX(value.location.x, totalWidth: totalWidth)

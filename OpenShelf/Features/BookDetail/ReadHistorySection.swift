@@ -4,6 +4,7 @@ import SwiftData
 struct ReadHistorySection: View {
     let entries: [ReadEntry]
 
+    @Environment(\.modelContext) private var modelContext
     @State private var expandedEntryID: PersistentIdentifier?
 
     private var sortedEntries: [ReadEntry] {
@@ -150,14 +151,54 @@ struct ReadHistorySection: View {
                 }
             }
 
-            if let notes = entry.notes, !notes.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Notes:")
+            // Editable per-read notes
+            ReadEntryNotesEditor(entry: entry)
+        }
+    }
+}
+
+// MARK: - Read Entry Notes Editor
+
+private struct ReadEntryNotesEditor: View {
+    let entry: ReadEntry
+    @Environment(\.modelContext) private var modelContext
+    @FocusState private var isFocused: Bool
+
+    private var notesBinding: Binding<String> {
+        Binding(
+            get: { entry.notes ?? "" },
+            set: { entry.notes = $0.isEmpty ? nil : $0 }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Notes:")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: notesBinding)
+                    .focused($isFocused)
+                    .font(.caption)
+                    .frame(minHeight: 60)
+                    .scrollContentBackground(.hidden)
+                    .background(Color(.systemGray5))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                if entry.notes == nil || entry.notes?.isEmpty == true {
+                    Text("Notes for this read...")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(notes)
-                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 8)
+                        .allowsHitTesting(false)
                 }
+            }
+        }
+        .onChange(of: isFocused) { _, focused in
+            if !focused {
+                try? modelContext.save()
             }
         }
     }

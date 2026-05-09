@@ -7,10 +7,12 @@ struct ProgressEditor: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var pageInput: String = ""
+    @State private var percentageValue: Double = 0
     @State private var showFinishedAlert = false
-    @State private var showRatingPrompt = false
+    @State private var showRatingSheet = false
     @State private var finishRating: Double?
     @State private var validationError: String?
+    @State private var useSlider = false
 
     var body: some View {
         NavigationStack {
@@ -18,6 +20,10 @@ struct ProgressEditor: View {
                 currentProgressSection
 
                 inputSection
+
+                if book.pageCount != nil {
+                    percentageSection
+                }
 
                 if let error = validationError {
                     Section {
@@ -47,30 +53,19 @@ struct ProgressEditor: View {
                     dismiss()
                 }
                 Button("Yes, Finished!") {
-                    showRatingPrompt = true
+                    showRatingSheet = true
                 }
             } message: {
                 Text("You've reached the last page. Mark this book as finished?")
             }
-            .alert("Rate This Book", isPresented: $showRatingPrompt) {
-                Button("Skip") {
-                    finishBook(rating: nil)
-                }
-                Button("Save Rating") {
-                    finishBook(rating: finishRating)
-                }
-            } message: {
-                Text("How would you rate this book?")
-            }
-            .overlay {
-                if showRatingPrompt {
-                    ratingOverlay
-                }
+            .sheet(isPresented: $showRatingSheet) {
+                ratingSheet
             }
             .onAppear {
                 if let page = book.currentPage {
                     pageInput = String(page)
                 }
+                syncSliderFromPage()
             }
         }
         .presentationDetents([.medium])
@@ -109,6 +104,9 @@ struct ProgressEditor: View {
         Section("Page Number") {
             TextField("Enter current page", text: $pageInput)
                 .keyboardType(.numberPad)
+                .onChange(of: pageInput) { _, newValue in
+                    syncSliderFromPage()
+                }
                 .toolbar {
                     ToolbarItemGroup(placement: .keyboard) {
                         Spacer()
@@ -129,21 +127,85 @@ struct ProgressEditor: View {
         }
     }
 
-    // MARK: - Rating Overlay
+    // MARK: - Percentage Slider
 
-    private var ratingOverlay: some View {
-        Color.clear
-            .contentShape(Rectangle())
-            .overlay(alignment: .center) {
-                VStack(spacing: 16) {
-                    Text("Rate This Book")
-                        .font(.headline)
-                    RatingPicker(rating: $finishRating, mode: .interactive)
+    private var percentageSection: some View {
+        Section("Percentage") {
+            VStack(spacing: 8) {
+                Slider(value: $percentageValue, in: 0...100, step: 1) {
+                    Text("Progress")
+                } minimumValueLabel: {
+                    Text("0%")
+                        .font(.caption2)
+                } maximumValueLabel: {
+                    Text("100%")
+                        .font(.caption2)
                 }
-                .padding(24)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                .onChange(of: percentageValue) { _, newValue in
+                    syncPageFromSlider()
+                }
+
+                Text("\(Int(percentageValue))%")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
-            .allowsHitTesting(true)
+        }
+    }
+
+    // MARK: - Slider <-> Page Sync
+
+    private func syncSliderFromPage() {
+        guard let pageCount = book.pageCount, pageCount > 0,
+              let page = Int(pageInput) else { return }
+        let pct = min(Double(page) / Double(pageCount) * 100, 100)
+        if abs(percentageValue - pct) > 0.5 {
+            percentageValue = pct
+        }
+    }
+
+    private func syncPageFromSlider() {
+        guard let pageCount = book.pageCount, pageCount > 0 else { return }
+        let page = Int(round(percentageValue / 100.0 * Double(pageCount)))
+        let newPageStr = String(page)
+        if pageInput != newPageStr {
+            pageInput = newPageStr
+        }
+    }
+
+    // MARK: - Rating Sheet
+
+    private var ratingSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Spacer()
+
+                Text("Rate This Book")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("How would you rate this book?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                RatingPicker(rating: $finishRating, mode: .interactive)
+
+                Spacer()
+            }
+            .padding()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") {
+                        finishBook(rating: nil)
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save Rating") {
+                        finishBook(rating: finishRating)
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 
     // MARK: - Actions
@@ -197,6 +259,7 @@ struct ProgressEditor: View {
         }
 
         try? modelContext.save()
+        showRatingSheet = false
         dismiss()
     }
 }

@@ -136,26 +136,11 @@ struct LibraryView: View {
                     Text("Are you sure you want to remove \"\(book.title)\" from your library? This cannot be undone.")
                 }
             }
-            .alert("Rate This Book", isPresented: $showRatingPrompt) {
-                Button("Skip") {
-                    finalizeShelfMove(bookForRating, to: .read, rating: nil)
-                    bookForRating = nil
-                }
-                Button("Save") {
-                    finalizeShelfMove(bookForRating, to: .read, rating: pendingRating)
-                    bookForRating = nil
-                }
-            } message: {
-                Text("Would you like to rate this book?")
+            .sheet(isPresented: $showRatingPrompt) {
+                ratingSheet
             }
             .sheet(isPresented: $showDNFPrompt) {
                 dnfSheet
-            }
-            // Overlay the rating picker when alert is shown
-            .overlay {
-                if showRatingPrompt {
-                    ratingPickerOverlay
-                }
             }
         }
     }
@@ -378,21 +363,44 @@ struct LibraryView: View {
         }
     }
 
-    // MARK: - Rating Picker Overlay
+    // MARK: - Rating Sheet
 
-    private var ratingPickerOverlay: some View {
-        Color.clear
-            .contentShape(Rectangle())
-            .overlay(alignment: .center) {
-                VStack(spacing: 16) {
-                    Text("Rate This Book")
-                        .font(.headline)
-                    RatingPicker(rating: $pendingRating, mode: .interactive)
-                }
-                .padding(24)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    private var ratingSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Spacer()
+
+                Text("Rate This Book")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("Would you like to rate this book?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                RatingPicker(rating: $pendingRating, mode: .interactive)
+
+                Spacer()
             }
-            .allowsHitTesting(true)
+            .padding()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") {
+                        finalizeShelfMove(bookForRating, to: .read, rating: nil)
+                        bookForRating = nil
+                        showRatingPrompt = false
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save Rating") {
+                        finalizeShelfMove(bookForRating, to: .read, rating: pendingRating)
+                        bookForRating = nil
+                        showRatingPrompt = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 
     // MARK: - DNF Sheet
