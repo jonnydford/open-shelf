@@ -6,66 +6,162 @@ struct SearchView: View {
     @State private var results: [SearchResult] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
+    @State private var errorMessage: String?
+    @State private var hasSearched = false
+    @State private var selectedResult: SearchResult?
 
     var body: some View {
         NavigationStack {
             Group {
-                if results.isEmpty && !isSearching {
-                    ContentUnavailableView(
-                        "Search Open Library",
-                        systemImage: "magnifyingglass",
-                        description: Text("Find books by title, author, or ISBN.")
-                    )
-                } else if isSearching {
-                    ProgressView("Searching...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if let errorMessage {
+                    errorState(message: errorMessage)
+                } else if results.isEmpty && !isSearching && !hasSearched {
+                    initialState
+                } else if results.isEmpty && !isSearching && hasSearched {
+                    noResultsState
+                } else if isSearching && results.isEmpty {
+                    loadingState
                 } else {
-                    List(results) { result in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(result.title)
-                                .font(.headline)
-                                .lineLimit(2)
-                            Text(result.primaryAuthor)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            if let year = result.firstPublishYear {
-                                Text(String(year))
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                            }
-                        }
-                    }
+                    resultsList
                 }
             }
             .navigationTitle("Search")
             .searchable(text: $searchText, prompt: "Title, author, or ISBN")
             .onChange(of: searchText) {
                 searchTask?.cancel()
-                guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else {
+
+                let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+                guard trimmed.count >= 2 else {
                     results = []
+                    hasSearched = false
+                    errorMessage = nil
                     return
                 }
+
                 searchTask = Task {
-                    // 300ms debounce
                     try? await Task.sleep(for: .milliseconds(300))
                     guard !Task.isCancelled else { return }
                     await performSearch()
                 }
             }
+            .sheet(item: $selectedResult) { result in
+                BookDetailSheet(searchResult: result) {
+                    // Book was added -- could show confirmation
+                }
+            }
         }
     }
 
+    // MARK: - States
+
+    private var initialState: some View {
+        ContentUnavailableView(
+            "Search Open Library",
+            systemImage: "magnifyingglass",
+            description: Text("Find books by title, author, or ISBN.")
+        )
+    }
+
+    private var noResultsState: some View {
+        ContentUnavailableView(
+            "No Books Found",
+            systemImage: "book.closed",
+            description: Text("No books found for '\(searchText)'. Try a different search.")
+        )
+    }
+
+    private func errorState(message: String) -> some View {
+        ContentUnavailableView(
+            "Search Unavailable",
+            systemImage: "wifi.exclamationmark",
+            description: Text(message)
+        )
+    }
+
+    private var loadingState: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .controlSize(.large)
+            Text("Searching...")
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Results List
+
+    private var resultsList: some View {
+        List(results) { result in
+            Button {
+                selectedResult = result
+            } label: {
+                searchResultRow(result)
+            }
+            .buttonStyle(.plain)
+        }
+        .overlay {
+            if isSearching {
+                VStack {
+                    ProgressView()
+                        .padding(8)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    Spacer()
+                }
+                .padding(.top, 8)
+            }
+        }
+    }
+
+    private func searchResultRow(_ result: SearchResult) -> some View {
+        HStack(spacing: 12) {
+            CoverImage(coverID: result.coverI, size: .small)
+                .frame(width: 50, height: 75)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(result.title)
+                    .font(.headline)
+                    .lineLimit(2)
+
+                Text(result.primaryAuthor)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                HStack(spacing: 12) {
+                    if let year = result.firstPublishYear {
+                        Text(String(year))
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    if let editions = result.editionCount {
+                        Text("\(editions) editions")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Search
+
     private func performSearch() async {
         isSearching = true
+        errorMessage = nil
         defer { isSearching = false }
 
         do {
             let searchResults = try await repository.search(query: searchText)
             guard !Task.isCancelled else { return }
             results = searchResults
+            hasSearched = true
         } catch {
             guard !Task.isCancelled else { return }
             results = []
+            hasSearched = true
+            errorMessage = "Search unavailable \u{2014} check your connection."
         }
     }
 }

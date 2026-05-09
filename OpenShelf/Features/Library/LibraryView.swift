@@ -1,38 +1,467 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Sort Option
+
+enum LibrarySortOption: String, CaseIterable {
+    case dateAdded = "Date Added"
+    case titleAZ = "Title A\u{2013}Z"
+    case authorAZ = "Author A\u{2013}Z"
+    case rating = "Rating"
+    case dateFinished = "Date Finished"
+}
+
+// MARK: - Shelf Filter (includes "All")
+
+enum ShelfFilter: Hashable, CaseIterable {
+    case all
+    case shelf(Shelf)
+
+    static var allCases: [ShelfFilter] {
+        [.all] + Shelf.allCases.map { .shelf($0) }
+    }
+
+    var displayName: String {
+        switch self {
+        case .all: "All"
+        case .shelf(let shelf): shelf.displayName
+        }
+    }
+
+    var shortName: String {
+        switch self {
+        case .all: "All"
+        case .shelf(.wantToRead): "Want"
+        case .shelf(.reading): "Reading"
+        case .shelf(.read): "Read"
+        case .shelf(.dnf): "DNF"
+        }
+    }
+}
+
+// MARK: - Library View
+
 struct LibraryView: View {
-    @Query(sort: \Book.dateAdded, order: .reverse) private var books: [Book]
+    @Environment(BookRepository.self) private var repository
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Book.dateAdded, order: .reverse) private var allBooks: [Book]
+
+    @State private var selectedFilter: ShelfFilter = .all
+    @State private var sortOption: LibrarySortOption = .dateAdded
+    @State private var localSearchText = ""
+
+    // Shelf management states
+    @State private var bookToDelete: Book?
+    @State private var showDeleteConfirmation = false
+    @State private var bookForRating: Book?
+    @State private var showRatingPrompt = false
+    @State private var pendingRating: Double = 0
+    @State private var bookForDNF: Book?
+    @State private var showDNFPrompt = false
+    @State private var dnfPage: String = ""
+    @State private var dnfReason: String = ""
+
+    private var filteredBooks: [Book] {
+        var books = allBooks
+
+        // Filter by shelf
+        switch selectedFilter {
+        case .all:
+            break
+        case .shelf(let shelf):
+            books = books.filter { $0.shelf == shelf }
+        }
+
+        // Filter by local search
+        if !localSearchText.isEmpty {
+            let query = localSearchText.lowercased()
+            books = books.filter {
+                $0.title.lowercased().contains(query) ||
+                $0.authorName.lowercased().contains(query)
+            }
+        }
+
+        // Sort
+        switch sortOption {
+        case .dateAdded:
+            books.sort { $0.dateAdded > $1.dateAdded }
+        case .titleAZ:
+            books.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .authorAZ:
+            books.sort { $0.authorName.localizedCaseInsensitiveCompare($1.authorName) == .orderedAscending }
+        case .rating:
+            books.sort { ($0.userRating ?? 0) > ($1.userRating ?? 0) }
+        case .dateFinished:
+            books.sort { ($0.dateFinished ?? .distantPast) > ($1.dateFinished ?? .distantPast) }
+        }
+
+        return books
+    }
 
     var body: some View {
         NavigationStack {
-            Group {
-                if books.isEmpty {
-                    ContentUnavailableView(
-                        "No Books Yet",
-                        systemImage: "books.vertical",
-                        description: Text("Search for books to add to your library.")
-                    )
-                } else {
-                    List(books) { book in
-                        HStack(spacing: 12) {
-                            CoverImage(coverID: book.coverImageID, size: .small)
-                                .frame(width: 50, height: 75)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
+            VStack(spacing: 0) {
+                shelfPicker
 
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(book.title)
-                                    .font(.headline)
-                                    .lineLimit(2)
-                                Text(book.authorName)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+                Group {
+                    if filteredBooks.isEmpty {
+                        emptyState
+                    } else {
+                        bookList
                     }
                 }
             }
             .navigationTitle("Library")
+            .searchable(text: $localSearchText, prompt: "Filter by title or author")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    addButton
+                }
+                ToolbarItem(placement: .secondaryAction) {
+                    sortMenu
+                }
+            }
+            .alert("Delete Book", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    bookToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    if let book = bookToDelete {
+                        repository.deleteBook(book)
+                        bookToDelete = nil
+                    }
+                }
+            } message: {
+                if let book = bookToDelete {
+                    Text("Are you sure you want to remove \"\(book.title)\" from your library? This cannot be undone.")
+                }
+            }
+            .alert("Rate This Book", isPresented: $showRatingPrompt) {
+                Button("Skip") {
+                    finalizeShelfMove(bookForRating, to: .read, rating: nil)
+                    bookForRating = nil
+                }
+                Button("Save") {
+                    finalizeShelfMove(bookForRating, to: .read, rating: pendingRating)
+                    bookForRating = nil
+                }
+            } message: {
+                Text("Would you like to rate this book?")
+            }
+            .sheet(isPresented: $showDNFPrompt) {
+                dnfSheet
+            }
+            // Overlay the rating picker when alert is shown
+            .overlay {
+                if showRatingPrompt {
+                    ratingPickerOverlay
+                }
+            }
+        }
+    }
+
+    // MARK: - Shelf Picker
+
+    private var shelfPicker: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(ShelfFilter.allCases, id: \.self) { filter in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedFilter = filter
+                        }
+                    } label: {
+                        Text(filter.shortName)
+                            .font(.subheadline)
+                            .fontWeight(selectedFilter == filter ? .semibold : .regular)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                selectedFilter == filter ? Color.accentColor : Color.clear
+                            )
+                            .foregroundStyle(selectedFilter == filter ? .white : .primary)
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .strokeBorder(
+                                        selectedFilter == filter ? Color.clear : Color.secondary.opacity(0.3),
+                                        lineWidth: 1
+                                    )
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        ContentUnavailableView {
+            Label(emptyStateTitle, systemImage: emptyStateIcon)
+        } description: {
+            Text(emptyStateMessage)
+        } actions: {
+            if !localSearchText.isEmpty {
+                Button("Clear Search") {
+                    localSearchText = ""
+                }
+            } else {
+                NavigationLink {
+                    SearchView()
+                } label: {
+                    Text("Add your first book")
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var emptyStateTitle: String {
+        if !localSearchText.isEmpty {
+            return "No Matches"
+        }
+        switch selectedFilter {
+        case .all: return "No Books Yet"
+        case .shelf(.wantToRead): return "Nothing on Your Wishlist"
+        case .shelf(.reading): return "Not Reading Anything"
+        case .shelf(.read): return "No Books Finished"
+        case .shelf(.dnf): return "No Abandoned Books"
+        }
+    }
+
+    private var emptyStateIcon: String {
+        switch selectedFilter {
+        case .all: "books.vertical"
+        case .shelf(.wantToRead): "bookmark"
+        case .shelf(.reading): "book.fill"
+        case .shelf(.read): "checkmark.circle"
+        case .shelf(.dnf): "xmark.circle"
+        }
+    }
+
+    private var emptyStateMessage: String {
+        if !localSearchText.isEmpty {
+            return "No books match '\(localSearchText)'."
+        }
+        switch selectedFilter {
+        case .all: return "Search for books to add to your library."
+        case .shelf(.wantToRead): return "Books you want to read will appear here."
+        case .shelf(.reading): return "Books you are currently reading will appear here."
+        case .shelf(.read): return "Books you have finished will appear here."
+        case .shelf(.dnf): return "Books you did not finish will appear here."
+        }
+    }
+
+    // MARK: - Book List
+
+    private var bookList: some View {
+        List {
+            ForEach(filteredBooks) { book in
+                BookRow(book: book)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            bookToDelete = book
+                            showDeleteConfirmation = true
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                        shelfSwipeActions(for: book)
+                    }
+                    .contextMenu {
+                        contextMenuItems(for: book)
+                    }
+            }
+        }
+        .listStyle(.plain)
+        .refreshable {
+            // No-op for local data — satisfies pull-to-refresh UX expectation
+        }
+    }
+
+    // MARK: - Swipe Actions
+
+    @ViewBuilder
+    private func shelfSwipeActions(for book: Book) -> some View {
+        ForEach(Shelf.allCases.filter { $0 != book.shelf }, id: \.self) { shelf in
+            Button {
+                moveBook(book, to: shelf)
+            } label: {
+                Label(shelf.displayName, systemImage: shelf.systemImage)
+            }
+            .tint(shelfTint(shelf))
+        }
+    }
+
+    private func shelfTint(_ shelf: Shelf) -> Color {
+        switch shelf {
+        case .wantToRead: .blue
+        case .reading: .green
+        case .read: .gray
+        case .dnf: .orange
+        }
+    }
+
+    // MARK: - Context Menu
+
+    @ViewBuilder
+    private func contextMenuItems(for book: Book) -> some View {
+        Menu("Move to Shelf") {
+            ForEach(Shelf.allCases, id: \.self) { shelf in
+                Button {
+                    moveBook(book, to: shelf)
+                } label: {
+                    if book.shelf == shelf {
+                        Label(shelf.displayName, systemImage: "checkmark")
+                    } else {
+                        Label(shelf.displayName, systemImage: shelf.systemImage)
+                    }
+                }
+                .disabled(book.shelf == shelf)
+            }
+        }
+
+        Button {
+            book.isFavourite.toggle()
+            try? modelContext.save()
+        } label: {
+            Label(
+                book.isFavourite ? "Unfavourite" : "Favourite",
+                systemImage: book.isFavourite ? "heart.slash" : "heart"
+            )
+        }
+
+        Divider()
+
+        Button(role: .destructive) {
+            bookToDelete = book
+            showDeleteConfirmation = true
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
+    }
+
+    // MARK: - Toolbar Items
+
+    private var addButton: some View {
+        NavigationLink {
+            SearchView()
+        } label: {
+            Image(systemName: "plus")
+        }
+    }
+
+    private var sortMenu: some View {
+        Menu {
+            ForEach(LibrarySortOption.allCases, id: \.self) { option in
+                Button {
+                    sortOption = option
+                } label: {
+                    if sortOption == option {
+                        Label(option.rawValue, systemImage: "checkmark")
+                    } else {
+                        Text(option.rawValue)
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "arrow.up.arrow.down")
+        }
+    }
+
+    // MARK: - Rating Picker Overlay
+
+    private var ratingPickerOverlay: some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .overlay(alignment: .center) {
+                VStack(spacing: 16) {
+                    Text("Rate This Book")
+                        .font(.headline)
+                    RatingPicker(rating: $pendingRating)
+                }
+                .padding(24)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            }
+            .allowsHitTesting(true)
+    }
+
+    // MARK: - DNF Sheet
+
+    private var dnfSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Page stopped at (optional)") {
+                    TextField("Page number", text: $dnfPage)
+                        .keyboardType(.numberPad)
+                }
+                Section("Reason (optional)") {
+                    TextField("Why did you stop?", text: $dnfReason, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+            }
+            .navigationTitle("Did Not Finish")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        showDNFPrompt = false
+                        bookForDNF = nil
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if let book = bookForDNF {
+                            repository.updateShelf(book, to: .dnf)
+                            if let page = Int(dnfPage) {
+                                book.currentPage = page
+                            }
+                            if !dnfReason.isEmpty {
+                                let existing = book.notes ?? ""
+                                let separator = existing.isEmpty ? "" : "\n"
+                                book.notes = existing + separator + "DNF: \(dnfReason)"
+                            }
+                            try? modelContext.save()
+                        }
+                        showDNFPrompt = false
+                        bookForDNF = nil
+                        dnfPage = ""
+                        dnfReason = ""
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    // MARK: - Shelf Move Logic
+
+    private func moveBook(_ book: Book, to shelf: Shelf) {
+        switch shelf {
+        case .read:
+            bookForRating = book
+            pendingRating = 0
+            showRatingPrompt = true
+        case .dnf:
+            bookForDNF = book
+            dnfPage = ""
+            dnfReason = ""
+            showDNFPrompt = true
+        default:
+            repository.updateShelf(book, to: shelf)
+        }
+    }
+
+    private func finalizeShelfMove(_ book: Book?, to shelf: Shelf, rating: Double?) {
+        guard let book else { return }
+        repository.updateShelf(book, to: shelf)
+        if let rating, rating > 0 {
+            repository.updateRating(book, rating: rating)
         }
     }
 }
