@@ -5,7 +5,7 @@ import SwiftData
 final class Book {
     // MARK: - Identity
 
-    var olWorkKey: String
+    @Attribute(.unique) var olWorkKey: String
     var olEditionKey: String?
     var isbn13: String?
     var isbn10: String?

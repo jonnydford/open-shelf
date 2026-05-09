@@ -2,8 +2,9 @@ import Foundation
 import SwiftData
 import Observation
 
+@MainActor
 @Observable
-final class BookRepository: @unchecked Sendable {
+final class BookRepository {
     private let modelContext: ModelContext
     private let apiClient: OpenLibraryClient
     private let coverCache: CoverImageCache
@@ -20,7 +21,6 @@ final class BookRepository: @unchecked Sendable {
 
     // MARK: - Local operations
 
-    @MainActor
     func addBook(from searchResult: SearchResult, detail: WorkDetail?, shelf: Shelf) {
         let book = Book(
             olWorkKey: searchResult.key,
@@ -45,21 +45,17 @@ final class BookRepository: @unchecked Sendable {
         if let coverID = book.coverImageID {
             Task {
                 await coverCache.prefetch(coverID: coverID, size: .medium)
-                await MainActor.run {
-                    book.coverCached = true
-                    try? self.modelContext.save()
-                }
+                book.coverCached = true
+                try? self.modelContext.save()
             }
         }
     }
 
-    @MainActor
     func deleteBook(_ book: Book) {
         modelContext.delete(book)
         try? modelContext.save()
     }
 
-    @MainActor
     func updateShelf(_ book: Book, to shelf: Shelf) {
         book.shelf = shelf
 
@@ -83,13 +79,11 @@ final class BookRepository: @unchecked Sendable {
         try? modelContext.save()
     }
 
-    @MainActor
     func updateRating(_ book: Book, rating: Double?) {
         book.userRating = rating
         try? modelContext.save()
     }
 
-    @MainActor
     func updateProgress(_ book: Book, page: Int) {
         book.currentPage = page
 
@@ -102,13 +96,32 @@ final class BookRepository: @unchecked Sendable {
         try? modelContext.save()
     }
 
+    func booksOnShelf(_ shelf: Shelf) -> [Book] {
+        let descriptor = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.shelf == shelf }
+        )
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    func allBooks() -> [Book] {
+        let descriptor = FetchDescriptor<Book>()
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    // MARK: - Import
+
+    func importFromGoodreads(csv: Data) async throws -> ImportResult {
+        // TODO: Implement Goodreads CSV import (issue #19, M4)
+        throw ImportError.notImplemented
+    }
+
     // MARK: - API operations
 
-    func search(query: String) async throws -> [SearchResult] {
+    nonisolated func search(query: String) async throws -> [SearchResult] {
         try await apiClient.search(query: query)
     }
 
-    func lookupISBN(_ isbn: String) async throws -> EditionDetail? {
+    nonisolated func lookupISBN(_ isbn: String) async throws -> EditionDetail? {
         do {
             return try await apiClient.lookupISBN(isbn)
         } catch OpenLibraryError.notFound {
@@ -116,13 +129,27 @@ final class BookRepository: @unchecked Sendable {
         }
     }
 
-    func fetchDetail(for key: String) async throws -> WorkDetail {
+    nonisolated func fetchDetail(for key: String) async throws -> WorkDetail {
         try await apiClient.fetchWorkDetail(key: key)
     }
 
     // MARK: - Cover cache access
 
-    var imageCache: CoverImageCache {
+    nonisolated var imageCache: CoverImageCache {
         coverCache
     }
+}
+
+// MARK: - Import types
+
+struct ImportResult: Sendable {
+    let matchedCount: Int
+    let unmatchedCount: Int
+    let errors: [String]
+}
+
+enum ImportError: Error {
+    case notImplemented
+    case invalidCSV
+    case parsingFailed(String)
 }
