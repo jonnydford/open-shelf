@@ -9,6 +9,7 @@ struct SearchView: View {
     @State private var errorMessage: String?
     @State private var hasSearched = false
     @State private var selectedResult: SearchResult?
+    @State private var showManualEntry = false
 
     var body: some View {
         NavigationStack {
@@ -49,6 +50,9 @@ struct SearchView: View {
                     // Book was added -- could show confirmation
                 }
             }
+            .sheet(isPresented: $showManualEntry) {
+                ManualEntryView()
+            }
         }
     }
 
@@ -63,11 +67,15 @@ struct SearchView: View {
     }
 
     private var noResultsState: some View {
-        ContentUnavailableView(
-            "No Books Found",
-            systemImage: "book.closed",
-            description: Text("No books found for '\(searchText)'. Try a different search.")
-        )
+        ContentUnavailableView {
+            Label("No Books Found", systemImage: "book.closed")
+        } description: {
+            Text("No books found for '\(searchText)'. Try a different search.")
+        } actions: {
+            Button("Add Manually") {
+                showManualEntry = true
+            }
+        }
     }
 
     private func errorState(message: String) -> some View {
@@ -91,13 +99,26 @@ struct SearchView: View {
     // MARK: - Results List
 
     private var resultsList: some View {
-        List(results) { result in
-            Button {
-                selectedResult = result
-            } label: {
-                searchResultRow(result)
+        List {
+            ForEach(results) { result in
+                Button {
+                    selectedResult = result
+                } label: {
+                    searchResultRow(result)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+
+            Section {
+                Button {
+                    showManualEntry = true
+                } label: {
+                    Label("Can't find your book? Add it manually", systemImage: "plus.circle")
+                        .font(.subheadline)
+                        .foregroundStyle(.tint)
+                }
+                .buttonStyle(.plain)
+            }
         }
         .overlay {
             if isSearching {
