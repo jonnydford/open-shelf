@@ -61,6 +61,10 @@ struct LibraryView: View {
     @State private var dnfPage: String = ""
     @State private var dnfReason: String = ""
 
+    // Add-book flow states
+    @State private var showBarcodeScanner = false
+    @State private var showManualEntry = false
+
     private var filteredBooks: [Book] {
         var books = allBooks
 
@@ -141,6 +145,12 @@ struct LibraryView: View {
             }
             .sheet(isPresented: $showDNFPrompt) {
                 dnfSheet
+            }
+            .sheet(isPresented: $showBarcodeScanner) {
+                BarcodeScannerView()
+            }
+            .sheet(isPresented: $showManualEntry) {
+                ManualEntryView()
             }
         }
     }
@@ -338,8 +348,26 @@ struct LibraryView: View {
     // MARK: - Toolbar Items
 
     private var addButton: some View {
-        NavigationLink {
-            SearchView()
+        Menu {
+            NavigationLink {
+                SearchView()
+            } label: {
+                Label("Search Open Library", systemImage: "magnifyingglass")
+            }
+
+            #if !targetEnvironment(simulator)
+            Button {
+                showBarcodeScanner = true
+            } label: {
+                Label("Scan Barcode", systemImage: "barcode.viewfinder")
+            }
+            #endif
+
+            Button {
+                showManualEntry = true
+            } label: {
+                Label("Add Manually", systemImage: "square.and.pencil")
+            }
         } label: {
             Image(systemName: "plus")
         }

@@ -37,3 +37,5 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_PREVIEWS: YES
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+        INFOPLIST_KEY_NSCameraUsageDescription: "Open Shelf uses your camera to scan book barcodes for quick adding."
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Open Shelf lets you pick a cover image from your photos for manually added books."
