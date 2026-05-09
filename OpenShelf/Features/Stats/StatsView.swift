@@ -55,11 +55,39 @@ struct StatsView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        ContentUnavailableView(
-            "Not Enough Data",
-            systemImage: "chart.bar",
-            description: Text("Read a few more books to unlock your stats.")
-        )
+        VStack(spacing: 24) {
+            ContentUnavailableView(
+                "Not Enough Data",
+                systemImage: "chart.bar",
+                description: Text("Read a few more books to unlock your stats.")
+            )
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Stats you'll unlock")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.tertiary)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    statsPreviewRow(icon: "chart.bar.fill", label: "Books per month chart")
+                    statsPreviewRow(icon: "chart.pie.fill", label: "Genre breakdown")
+                    statsPreviewRow(icon: "gauge.medium", label: "Reading pace")
+                    statsPreviewRow(icon: "flame.fill", label: "Reading streak")
+                    statsPreviewRow(icon: "star.fill", label: "Average rating")
+                    statsPreviewRow(icon: "book.closed.fill", label: "Longest & shortest reads")
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .opacity(0.5)
+            .padding(.horizontal)
+        }
+    }
+
+    private func statsPreviewRow(icon: String, label: String) -> some View {
+        Label(label, systemImage: icon)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
     }
 
     // MARK: - Year Menu

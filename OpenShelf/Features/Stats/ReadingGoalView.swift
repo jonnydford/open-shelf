@@ -7,6 +7,8 @@ struct ReadingGoalView: View {
     let goal: ReadingGoal?
 
     @State private var showSetGoal = false
+    @State private var celebrationScale: CGFloat = 1.0
+    @State private var celebrationOpacity: Double = 1.0
 
     private var progress: Double {
         guard let goal, goal.target > 0 else { return 0 }
@@ -62,16 +64,36 @@ struct ReadingGoalView: View {
                 }
             }
             .frame(width: 120, height: 120)
+            .scaleEffect(goalMet ? celebrationScale : 1.0)
 
             if goalMet {
                 Label("Goal reached!", systemImage: "party.popper.fill")
                     .font(.subheadline.bold())
                     .foregroundStyle(.green)
+                    .opacity(celebrationOpacity)
+                    .onAppear {
+                        withAnimation(
+                            .spring(duration: 0.6, bounce: 0.5)
+                        ) {
+                            celebrationScale = 1.15
+                        }
+                        withAnimation(
+                            .spring(duration: 0.4, bounce: 0.3).delay(0.6)
+                        ) {
+                            celebrationScale = 1.0
+                        }
+                        withAnimation(
+                            .easeInOut(duration: 0.8)
+                                .repeatForever(autoreverses: true)
+                        ) {
+                            celebrationOpacity = 0.6
+                        }
+                    }
             } else {
                 paceLabel
             }
 
-            Button("Edit Goal") {
+            Button(goalMet ? "Increase Goal" : "Edit Goal") {
                 showSetGoal = true
             }
             .font(.caption)
