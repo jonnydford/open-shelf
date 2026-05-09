@@ -123,6 +123,9 @@ struct LibraryView: View {
                     addButton
                 }
                 ToolbarItem(placement: .secondaryAction) {
+                    readingListsButton
+                }
+                ToolbarItem(placement: .secondaryAction) {
                     sortMenu
                 }
             }
@@ -380,6 +383,15 @@ struct LibraryView: View {
         } label: {
             Image(systemName: "plus")
         }
+    }
+
+    private var readingListsButton: some View {
+        NavigationLink {
+            ReadingListsView()
+        } label: {
+            Image(systemName: "list.bullet.rectangle")
+        }
+        .accessibilityLabel("Reading lists")
     }
 
     private var sortMenu: some View {
