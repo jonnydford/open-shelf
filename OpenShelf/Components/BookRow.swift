@@ -3,10 +3,13 @@ import SwiftUI
 struct BookRow: View {
     let book: Book
 
+    @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 60
+    @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 90
+
     var body: some View {
         HStack(spacing: 12) {
             CoverImage(coverID: book.coverImageID, size: .small)
-                .frame(width: 60, height: 90)
+                .frame(width: coverWidth, height: coverHeight)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
 
             VStack(alignment: .leading, spacing: 4) {

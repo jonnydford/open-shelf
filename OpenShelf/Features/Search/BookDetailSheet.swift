@@ -209,7 +209,7 @@ struct BookDetailSheet: View {
                 .padding(24)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
-            .allowsHitTesting(false)
+            .allowsHitTesting(true)
     }
 
     // MARK: - Actions
@@ -246,37 +246,15 @@ struct BookDetailSheet: View {
 
         repository.addBook(from: searchResult, detail: workDetail, shelf: selectedShelf)
 
-        // Apply shelf-specific logic
-        if selectedShelf == .reading {
-            // dateStarted is set by addBook indirectly via updateShelf logic,
-            // but addBook sets it via init. Let's update the most recently added book.
-            let key = searchResult.key
-            let descriptor = FetchDescriptor<Book>(
-                predicate: #Predicate { $0.olWorkKey == key }
-            )
-            if let book = (try? modelContext.fetch(descriptor))?.first {
-                if selectedShelf == .reading {
-                    book.dateStarted = .now
-                }
-                if selectedShelf == .read {
-                    book.dateFinished = .now
-                }
-                if let rating, rating > 0 {
-                    book.userRating = rating
-                }
-                try? modelContext.save()
-            }
-        } else if selectedShelf == .read || rating != nil {
-            let key = searchResult.key
-            let descriptor = FetchDescriptor<Book>(
-                predicate: #Predicate { $0.olWorkKey == key }
-            )
-            if let book = (try? modelContext.fetch(descriptor))?.first {
-                book.dateFinished = .now
-                if let rating, rating > 0 {
-                    book.userRating = rating
-                }
-                try? modelContext.save()
+        // Apply shelf-specific dates and rating via repository helpers
+        let key = searchResult.key
+        let descriptor = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.olWorkKey == key }
+        )
+        if let book = (try? modelContext.fetch(descriptor))?.first {
+            repository.updateShelf(book, to: selectedShelf)
+            if let rating, rating > 0 {
+                repository.updateRating(book, rating: rating)
             }
         }
 

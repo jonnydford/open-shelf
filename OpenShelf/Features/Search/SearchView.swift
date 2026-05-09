@@ -32,11 +32,9 @@ struct SearchView: View {
 
                 let trimmed = searchText.trimmingCharacters(in: .whitespaces)
                 guard trimmed.count >= 2 else {
-                    if trimmed.isEmpty {
-                        results = []
-                        hasSearched = false
-                        errorMessage = nil
-                    }
+                    results = []
+                    hasSearched = false
+                    errorMessage = nil
                     return
                 }
 

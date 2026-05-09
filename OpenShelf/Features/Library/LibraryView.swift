@@ -49,7 +49,6 @@ struct LibraryView: View {
     @State private var selectedFilter: ShelfFilter = .all
     @State private var sortOption: LibrarySortOption = .dateAdded
     @State private var localSearchText = ""
-    @State private var selectedTab: Int = 0
 
     // Shelf management states
     @State private var bookToDelete: Book?
@@ -211,8 +210,8 @@ struct LibraryView: View {
                     localSearchText = ""
                 }
             } else {
-                Button {
-                    selectedTab = 1
+                NavigationLink {
+                    SearchView()
                 } label: {
                     Text("Add your first book")
                 }
@@ -389,7 +388,7 @@ struct LibraryView: View {
                 .padding(24)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
-            .allowsHitTesting(false)
+            .allowsHitTesting(true)
     }
 
     // MARK: - DNF Sheet
@@ -423,7 +422,9 @@ struct LibraryView: View {
                                 book.currentPage = page
                             }
                             if !dnfReason.isEmpty {
-                                book.notes = (book.notes ?? "") + "\nDNF: \(dnfReason)"
+                                let existing = book.notes ?? ""
+                                let separator = existing.isEmpty ? "" : "\n"
+                                book.notes = existing + separator + "DNF: \(dnfReason)"
                             }
                             try? modelContext.save()
                         }
