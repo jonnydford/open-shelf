@@ -6,7 +6,6 @@ struct Badge: Identifiable, Sendable {
     let description: String
     let icon: String
     let isUnlocked: Bool
-    let dateUnlocked: Date?
 }
 
 @MainActor
@@ -39,8 +38,7 @@ struct BadgeEngine {
             title: "First Book",
             description: "Finish your first book",
             icon: "book.closed.fill",
-            isUnlocked: readCount >= 1,
-            dateUnlocked: nil
+            isUnlocked: readCount >= 1
         )
     }
 
@@ -50,8 +48,7 @@ struct BadgeEngine {
             title: "Bookworm",
             description: "Read 10 books",
             icon: "books.vertical.fill",
-            isUnlocked: readCount >= 10,
-            dateUnlocked: nil
+            isUnlocked: readCount >= 10
         )
     }
 
@@ -61,8 +58,7 @@ struct BadgeEngine {
             title: "Centurion",
             description: "Read 100 books",
             icon: "star.circle.fill",
-            isUnlocked: readCount >= 100,
-            dateUnlocked: nil
+            isUnlocked: readCount >= 100
         )
     }
 
@@ -78,8 +74,7 @@ struct BadgeEngine {
             title: "Speed Reader",
             description: "Finish a book in under 3 days",
             icon: "hare.fill",
-            isUnlocked: hasSpeedRead,
-            dateUnlocked: nil
+            isUnlocked: hasSpeedRead
         )
     }
 
@@ -90,8 +85,7 @@ struct BadgeEngine {
             title: "Marathon Reader",
             description: "Finish a book over 500 pages",
             icon: "figure.walk",
-            isUnlocked: hasMarathon,
-            dateUnlocked: nil
+            isUnlocked: hasMarathon
         )
     }
 
@@ -102,8 +96,7 @@ struct BadgeEngine {
             title: "Genre Explorer",
             description: "Read books in 5+ genres",
             icon: "globe",
-            isUnlocked: genres.count >= 5,
-            dateUnlocked: nil
+            isUnlocked: genres.count >= 5
         )
     }
 
@@ -119,8 +112,7 @@ struct BadgeEngine {
             title: "Loyal Fan",
             description: "Read 3+ books by the same author",
             icon: "heart.fill",
-            isUnlocked: hasLoyalFan,
-            dateUnlocked: nil
+            isUnlocked: hasLoyalFan
         )
     }
 
@@ -130,8 +122,7 @@ struct BadgeEngine {
             title: "Streak Master",
             description: "Maintain a 30-day reading streak",
             icon: "flame.fill",
-            isUnlocked: streak >= 30,
-            dateUnlocked: nil
+            isUnlocked: streak >= 30
         )
     }
 
@@ -141,8 +132,7 @@ struct BadgeEngine {
             title: "Goal Crusher",
             description: "Hit your annual reading goal",
             icon: "trophy.fill",
-            isUnlocked: goalMet,
-            dateUnlocked: nil
+            isUnlocked: goalMet
         )
     }
 }

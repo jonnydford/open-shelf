@@ -28,6 +28,7 @@ struct SettingsView: View {
                 librarySection
                 importSection
                 exportSection
+                pastUnwrappedSection
                 goalHistorySection
                 aboutSection
             }
@@ -120,7 +121,7 @@ struct SettingsView: View {
         guard streak > 3 else { return }
 
         let centre = UNUserNotificationCenter.current()
-        centre.removeAllPendingNotificationRequests()
+        centre.removePendingNotificationRequests(withIdentifiers: ["streakReminder"])
 
         let content = UNMutableNotificationContent()
         content.title = "Don't break your streak!"
@@ -153,7 +154,7 @@ struct SettingsView: View {
     private var followedAuthorsSection: some View {
         if !followedAuthors.isEmpty {
             Section("Followed Authors") {
-                ForEach(followedAuthors) { author in
+                ForEach(Array(followedAuthors.enumerated()), id: \.element.id) { index, author in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(author.authorName)
@@ -171,14 +172,16 @@ struct SettingsView: View {
                         Spacer()
                         Text("Following")
                             .font(.caption)
-                            .foregroundStyle(.accentColor)
+                            .foregroundStyle(Color.accentColor)
                     }
-                }
-                .onDelete { offsets in
-                    for index in offsets {
-                        modelContext.delete(followedAuthors[index])
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            modelContext.delete(author)
+                            try? modelContext.save()
+                        } label: {
+                            Label("Unfollow", systemImage: "trash")
+                        }
                     }
-                    try? modelContext.save()
                 }
             }
         }
@@ -235,6 +238,29 @@ struct SettingsView: View {
                 showExportView = true
             } label: {
                 Label("Export Library", systemImage: "square.and.arrow.up")
+            }
+        }
+    }
+
+    // MARK: - Past Unwrapped Section
+
+    private var pastUnwrappedYears: [Int] {
+        let yearCounts = Dictionary(
+            grouping: books.filter { $0.shelf == .read && $0.dateFinished != nil },
+            by: { Calendar.current.component(.year, from: $0.dateFinished!) }
+        )
+        return yearCounts.filter { $0.value.count >= 5 }.keys.sorted(by: >)
+    }
+
+    @ViewBuilder
+    private var pastUnwrappedSection: some View {
+        if !pastUnwrappedYears.isEmpty {
+            Section("Unwrapped") {
+                NavigationLink {
+                    PastUnwrappedListView(availableYears: pastUnwrappedYears)
+                } label: {
+                    Label("View past Unwrapped", systemImage: "gift.fill")
+                }
             }
         }
     }

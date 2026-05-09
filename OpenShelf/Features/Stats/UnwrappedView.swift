@@ -9,6 +9,7 @@ struct UnwrappedView: View {
     @Query private var goals: [ReadingGoal]
 
     @State private var currentPage = 0
+    @State private var autoAdvanceActive = true
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -81,12 +82,54 @@ struct UnwrappedView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .always))
+
+            // Tap targets on left/right edges for tap-to-navigate
+            HStack(spacing: 0) {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        autoAdvanceActive = false
+                        withAnimation {
+                            currentPage = max(currentPage - 1, 0)
+                        }
+                    }
+                    .frame(width: 60)
+
+                Spacer()
+
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        autoAdvanceActive = false
+                        withAnimation {
+                            currentPage = min(currentPage + 1, totalCards - 1)
+                        }
+                    }
+                    .frame(width: 60)
+            }
+            .allowsHitTesting(true)
         }
         .overlay(alignment: .topTrailing) {
             closeButton
         }
         .overlay(alignment: .bottomTrailing) {
             shareButton
+        }
+        .onReceive(
+            Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+        ) { _ in
+            guard autoAdvanceActive else { return }
+            withAnimation {
+                if currentPage < totalCards - 1 {
+                    currentPage += 1
+                } else {
+                    autoAdvanceActive = false
+                }
+            }
+        }
+        .onChange(of: currentPage) { _, _ in
+            // Any manual swipe pauses auto-advance
+            autoAdvanceActive = false
         }
         .statusBarHidden()
     }
@@ -105,11 +148,12 @@ struct UnwrappedView: View {
     }
 
     private var shareButton: some View {
-        ShareLink(
-            item: cardSnapshot(),
+        let snapshot = cardSnapshot()
+        return ShareLink(
+            item: snapshot,
             preview: SharePreview(
                 "My \(year) in Books",
-                image: cardSnapshot()
+                image: snapshot
             )
         ) {
             Label("Share", systemImage: "square.and.arrow.up")
@@ -168,7 +212,7 @@ struct UnwrappedView: View {
                 Spacer()
                 Image(systemName: "books.vertical.fill")
                     .font(.system(size: 64))
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
                     .symbolEffect(.bounce, options: reduceMotion ? .nonRepeating : .repeating.speed(0.3))
 
                 Text("Your \(String(year))\nin Books")
@@ -188,7 +232,7 @@ struct UnwrappedView: View {
                 VStack(spacing: 8) {
                     Text("\(readBooks.count)")
                         .font(.system(size: 72, weight: .bold, design: .rounded))
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color.accentColor)
                     Text("books read")
                         .font(.title3)
                 }
@@ -277,7 +321,7 @@ struct UnwrappedView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "tag.fill")
                             .font(.system(size: 48))
-                            .foregroundStyle(.accent)
+                            .foregroundStyle(Color.accentColor)
 
                         Text(genre.genre)
                             .font(.largeTitle.bold())
@@ -311,7 +355,7 @@ struct UnwrappedView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "person.fill")
                             .font(.system(size: 48))
-                            .foregroundStyle(.accent)
+                            .foregroundStyle(Color.accentColor)
 
                         Text(author)
                             .font(.largeTitle.bold())
@@ -343,7 +387,7 @@ struct UnwrappedView: View {
                     VStack(spacing: 8) {
                         Text("\(avg)")
                             .font(.system(size: 72, weight: .bold, design: .rounded))
-                            .foregroundStyle(.accent)
+                            .foregroundStyle(Color.accentColor)
                         Text("days per book on average")
                             .font(.title3)
                     }
@@ -461,7 +505,7 @@ struct UnwrappedView: View {
                     VStack(spacing: 12) {
                         Image(systemName: met ? "trophy.fill" : "target")
                             .font(.system(size: 48))
-                            .foregroundStyle(met ? .yellow : .accent)
+                            .foregroundStyle(met ? Color.yellow : Color.accentColor)
 
                         Text("\(readBooks.count) of \(goal.target)")
                             .font(.system(size: 48, weight: .bold, design: .rounded))
@@ -492,7 +536,7 @@ struct UnwrappedView: View {
 
                 Image(systemName: "sparkles")
                     .font(.system(size: 48))
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
 
                 Text("See you in\n\(String(year + 1))")
                     .font(.largeTitle.bold())

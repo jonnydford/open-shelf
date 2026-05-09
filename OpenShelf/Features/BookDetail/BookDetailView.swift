@@ -165,7 +165,7 @@ struct BookDetailView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(isFollowingAuthor ? Color.accentColor.opacity(0.15) : Color(.systemGray5))
-            .foregroundStyle(isFollowingAuthor ? .accentColor : .primary)
+            .foregroundStyle(isFollowingAuthor ? Color.accentColor : Color.primary)
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)

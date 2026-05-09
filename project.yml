@@ -42,6 +42,8 @@ targets:
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Open Shelf lets you pick a cover image from your photos for manually added books."
     info:
       properties:
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.openshelf.authorcheck
         CFBundleURLTypes:
           - CFBundleURLName: "com.openshelf.app"
             CFBundleURLSchemes:

@@ -74,7 +74,7 @@ private struct BadgeCell: View {
 
                 Image(systemName: badge.icon)
                     .font(.title2)
-                    .foregroundStyle(badge.isUnlocked ? .accentColor : .gray.opacity(0.4))
+                    .foregroundStyle(badge.isUnlocked ? Color.accentColor : .gray.opacity(0.4))
             }
             .scaleEffect(isNewlyViewed && !reduceMotion ? 1.0 : (badge.isUnlocked ? 0.8 : 1.0))
 

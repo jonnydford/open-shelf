@@ -295,7 +295,10 @@ struct StatsCalculator {
             }
 
             var day = startDay
+            var iterations = 0
             while day <= endDay {
+                iterations += 1
+                if iterations > 366 { break }
                 let dayYear = calendar.component(.year, from: day)
                 if dayYear == year {
                     allDates.insert(day)

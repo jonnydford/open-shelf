@@ -172,7 +172,7 @@ struct LibraryView: View {
         ForEach(pendingNewBooks) { pending in
             HStack {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("New book by \(pending.authorName)")
@@ -338,7 +338,7 @@ struct LibraryView: View {
 
     private var upNextSection: some View {
         Section {
-            ForEach(queuedBooks) { book in
+            ForEach(Array(queuedBooks.enumerated()), id: \.element.id) { _, book in
                 NavigationLink {
                     BookDetailView(book: book)
                 } label: {
@@ -352,7 +352,7 @@ struct LibraryView: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
                                 .background(Color.accentColor.opacity(0.15))
-                                .foregroundStyle(.accentColor)
+                                .foregroundStyle(Color.accentColor)
                                 .clipShape(Capsule())
                         }
                     }
@@ -376,11 +376,6 @@ struct LibraryView: View {
                 .contextMenu {
                     contextMenuItems(for: book)
                 }
-            }
-            .onMove { source, destination in
-                var reordered = queuedBooks
-                reordered.move(fromOffsets: source, toOffset: destination)
-                repository.reorderQueue(reordered)
             }
         } header: {
             Label("Up Next", systemImage: "text.line.first.and.arrowtriangle.forward")

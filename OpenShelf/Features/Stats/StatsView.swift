@@ -188,6 +188,10 @@ struct StatsView: View {
 
     // MARK: - Unwrapped Banner
 
+    private func booksReadInYear(_ year: Int) -> Int {
+        StatsCalculator.booksRead(from: books, filter: .year(year)).count
+    }
+
     @ViewBuilder
     private var unwrappedBanner: some View {
         if case .year(let year) = filter, unwrappedYears.contains(year) {
@@ -197,7 +201,7 @@ struct StatsView: View {
                 HStack {
                     Image(systemName: "gift.fill")
                         .font(.title2)
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color.accentColor)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Your \(String(year)) Unwrapped")
@@ -220,6 +224,26 @@ struct StatsView: View {
             .fullScreenCover(isPresented: $showUnwrapped) {
                 UnwrappedView(year: year)
             }
+        } else if case .year(let year) = filter, !unwrappedYears.contains(year), booksReadInYear(year) > 0 {
+            // User has some books but fewer than 5 -- show teaser at reduced opacity
+            HStack {
+                Image(systemName: "gift.fill")
+                    .font(.title2)
+                    .foregroundStyle(Color.accentColor)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Books Unwrapped")
+                        .font(.subheadline.bold())
+                    Text("Read more to unlock your Books Unwrapped")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .opacity(0.5)
         } else if unwrappedYears.count > 1 {
             NavigationLink {
                 PastUnwrappedListView(availableYears: unwrappedYears)
@@ -227,7 +251,7 @@ struct StatsView: View {
                 HStack {
                     Image(systemName: "gift.fill")
                         .font(.title2)
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color.accentColor)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Past Unwrapped")
@@ -288,7 +312,7 @@ struct StatsView: View {
             HStack {
                 Image(systemName: "medal.fill")
                     .font(.title2)
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Badges")
