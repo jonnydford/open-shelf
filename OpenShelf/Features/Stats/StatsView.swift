@@ -325,6 +325,7 @@ struct StatsView: View {
 
 struct StatCard<Content: View>: View {
     let title: String
+    var accessibilityValueText: String? = nil
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -337,6 +338,22 @@ struct StatCard<Content: View>: View {
         .frame(maxWidth: .infinity, minHeight: 100)
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+        .if(accessibilityValueText != nil) { view in
+            view.accessibilityLabel(title)
+                .accessibilityValue(accessibilityValueText!)
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }
 
@@ -356,6 +373,23 @@ struct PagesPerMonthChart: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Pages Per Month chart")
+        .accessibilityValue(pagesChartAccessibilityValue)
+    }
+
+    private var pagesChartAccessibilityValue: String {
+        switch filter {
+        case .year:
+            let data = StatsCalculator.pagesPerMonth(books)
+            let nonZero = data.filter { $0.pages > 0 }
+            if nonZero.isEmpty { return "No pages read" }
+            let parts = nonZero.map { "\($0.monthName): \($0.pages) pages" }
+            return parts.joined(separator: ", ")
+        case .allTime:
+            let total = books.compactMap(\.pageCount).reduce(0, +)
+            return "\(total) pages read across all years"
+        }
     }
 
     @ViewBuilder

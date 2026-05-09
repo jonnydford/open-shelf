@@ -51,6 +51,7 @@ struct LibraryView: View {
     @State private var localSearchText = ""
 
     // Shelf management states
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var bookToDelete: Book?
     @State private var showDeleteConfirmation = false
     @State private var bookForRating: Book?
@@ -162,8 +163,12 @@ struct LibraryView: View {
             HStack(spacing: 8) {
                 ForEach(ShelfFilter.allCases, id: \.self) { filter in
                     Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        if reduceMotion {
                             selectedFilter = filter
+                        } else {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedFilter = filter
+                            }
                         }
                     } label: {
                         Text(filter.shortName)
@@ -185,11 +190,15 @@ struct LibraryView: View {
                             )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Filter: \(filter.displayName)")
+                    .accessibilityAddTraits(selectedFilter == filter ? .isSelected : [])
                 }
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Shelf filter")
     }
 
     // MARK: - Empty State

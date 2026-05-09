@@ -18,6 +18,23 @@ struct BooksPerMonthChart: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Books Per Month chart")
+        .accessibilityValue(chartAccessibilityValue)
+    }
+
+    private var chartAccessibilityValue: String {
+        switch filter {
+        case .year:
+            let data = StatsCalculator.booksPerMonth(books)
+            let nonZero = data.filter { $0.count > 0 }
+            if nonZero.isEmpty { return "No books read" }
+            let parts = nonZero.map { "\($0.monthName): \($0.count)" }
+            return parts.joined(separator: ", ")
+        case .allTime:
+            let total = books.count
+            return "\(total) books read across all years"
+        }
     }
 
     @ViewBuilder

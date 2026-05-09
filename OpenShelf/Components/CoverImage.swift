@@ -3,6 +3,7 @@ import SwiftUI
 struct CoverImage: View {
     let coverID: Int?
     var size: CoverSize = .medium
+    var accessibilityTitle: String? = nil
     @State private var image: UIImage?
     @State private var isLoading = false
     @Environment(BookRepository.self) private var repository
@@ -20,6 +21,7 @@ struct CoverImage: View {
                 placeholder
             }
         }
+        .accessibilityLabel(accessibilityTitle.map { "Book cover for \($0)" } ?? "Book cover")
         .task(id: coverID) {
             await loadImage()
         }

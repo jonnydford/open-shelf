@@ -19,6 +19,7 @@ struct BookDetailView: View {
     // DNF state
     @State private var dnfPage: String = ""
     @State private var dnfReason: String = ""
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollView {
@@ -59,7 +60,7 @@ struct BookDetailView: View {
 
     private var headerSection: some View {
         VStack(spacing: 12) {
-            CoverImage(coverID: book.coverImageID, size: .large)
+            CoverImage(coverID: book.coverImageID, size: .large, accessibilityTitle: book.title)
                 .frame(width: 200, height: 300)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .shadow(radius: 4)
@@ -97,14 +98,20 @@ struct BookDetailView: View {
                     .background(shelfColor.opacity(0.15))
                     .foregroundStyle(shelfColor)
                     .clipShape(Capsule())
+                    .accessibilityLabel("Shelf: \(book.shelf.displayName)")
 
                 Spacer()
 
                 // Favourite toggle
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    if reduceMotion {
                         book.isFavourite.toggle()
                         try? modelContext.save()
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            book.isFavourite.toggle()
+                            try? modelContext.save()
+                        }
                     }
                 } label: {
                     Image(systemName: book.isFavourite ? "heart.fill" : "heart")
@@ -113,6 +120,7 @@ struct BookDetailView: View {
                 }
                 .buttonStyle(.plain)
                 .sensoryFeedback(.selection, trigger: book.isFavourite)
+                .accessibilityLabel(book.isFavourite ? "Remove from favourites" : "Add to favourites")
             }
             .padding(.horizontal)
 
@@ -153,6 +161,7 @@ struct BookDetailView: View {
                         ProgressView(value: progress)
                             .tint(.green)
                             .padding(.horizontal)
+                            .accessibilityLabel("Reading progress: \(percentage) percent")
 
                         Text("Page \(currentPage) of \(pageCount) (\(percentage)%)")
                             .font(.subheadline)

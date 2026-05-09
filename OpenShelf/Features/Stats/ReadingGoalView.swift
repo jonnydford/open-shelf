@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct ReadingGoalView: View {
     let booksReadCount: Int
@@ -9,6 +10,7 @@ struct ReadingGoalView: View {
     @State private var showSetGoal = false
     @State private var celebrationScale: CGFloat = 1.0
     @State private var celebrationOpacity: Double = 1.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var progress: Double {
         guard let goal, goal.target > 0 else { return 0 }
@@ -64,14 +66,18 @@ struct ReadingGoalView: View {
                 }
             }
             .frame(width: 120, height: 120)
-            .scaleEffect(goalMet ? celebrationScale : 1.0)
+            .scaleEffect(goalMet && !reduceMotion ? celebrationScale : 1.0)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Reading goal progress")
+            .accessibilityValue("\(booksReadCount) of \(target) books, \(Int(progress * 100)) percent")
 
             if goalMet {
                 Label("Goal reached!", systemImage: "party.popper.fill")
                     .font(.subheadline.bold())
                     .foregroundStyle(.green)
-                    .opacity(celebrationOpacity)
+                    .opacity(reduceMotion ? 1.0 : celebrationOpacity)
                     .onAppear {
+                        guard !reduceMotion else { return }
                         withAnimation(
                             .spring(duration: 0.6, bounce: 0.5)
                         ) {
@@ -190,6 +196,7 @@ struct SetReadingGoalSheet: View {
             modelContext.insert(goal)
         }
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
 }

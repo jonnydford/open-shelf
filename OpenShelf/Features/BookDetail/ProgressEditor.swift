@@ -83,6 +83,7 @@ struct ProgressEditor: View {
                 VStack(alignment: .leading, spacing: 8) {
                     ProgressView(value: progress)
                         .tint(.green)
+                        .accessibilityLabel("Reading progress: \(percentage) percent")
 
                     Text("Page \(currentPage) of \(pageCount) (\(percentage)%)")
                         .font(.subheadline)

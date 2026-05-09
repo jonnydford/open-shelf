@@ -28,6 +28,7 @@ targets:
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: "NO"
         CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGN_ENTITLEMENTS: OpenShelf/OpenShelf.entitlements
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
@@ -39,3 +40,23 @@ targets:
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
         INFOPLIST_KEY_NSCameraUsageDescription: "Open Shelf uses your camera to scan book barcodes for quick adding."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Open Shelf lets you pick a cover image from your photos for manually added books."
+
+  OpenShelfWidget:
+    type: appExtension
+    platform: iOS
+    sources:
+      - path: OpenShelfWidget
+        type: group
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.openshelf.app.widget
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGN_ENTITLEMENTS: OpenShelfWidget/OpenShelfWidget.entitlements
+        INFOPLIST_KEY_CFBundleDisplayName: OpenShelf Widget
+        INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    dependencies:
+      - target: OpenShelf
+        embed: false

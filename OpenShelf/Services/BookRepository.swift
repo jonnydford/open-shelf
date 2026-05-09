@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import Observation
+import WidgetKit
 
 @MainActor
 @Observable
@@ -40,6 +41,7 @@ final class BookRepository {
 
         modelContext.insert(book)
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
 
         // Prefetch cover in background
         if let coverID = book.coverImageID {
@@ -54,6 +56,7 @@ final class BookRepository {
     func deleteBook(_ book: Book) {
         modelContext.delete(book)
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     func updateShelf(_ book: Book, to shelf: Shelf) {
@@ -77,6 +80,7 @@ final class BookRepository {
         }
 
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     func updateRating(_ book: Book, rating: Double?) {
@@ -94,6 +98,7 @@ final class BookRepository {
         }
 
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     func booksOnShelf(_ shelf: Shelf) -> [Book] {
@@ -244,6 +249,7 @@ final class BookRepository {
         }.value
 
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
 
         return result
     }

@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Query private var books: [Book]
 
     @State private var showImportView = false
+    @State private var showExportView = false
     @State private var showSetGoal = false
 
     private var currentYear: Int {
@@ -17,12 +18,16 @@ struct SettingsView: View {
             List {
                 readingGoalSection
                 importSection
+                exportSection
                 goalHistorySection
                 aboutSection
             }
             .navigationTitle("Settings")
             .sheet(isPresented: $showImportView) {
                 ImportView()
+            }
+            .sheet(isPresented: $showExportView) {
+                ExportView()
             }
             .sheet(isPresented: $showSetGoal) {
                 SetReadingGoalSheet(
@@ -77,6 +82,18 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Export Section
+
+    private var exportSection: some View {
+        Section("Export") {
+            Button {
+                showExportView = true
+            } label: {
+                Label("Export Library", systemImage: "square.and.arrow.up")
+            }
+        }
+    }
+
     // MARK: - Goal History Section
 
     @ViewBuilder
@@ -119,7 +136,7 @@ struct SettingsView: View {
             HStack {
                 Text("Privacy")
                 Spacer()
-                Text("All data stays on your device")
+                Text("Data syncs via iCloud when signed in")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
