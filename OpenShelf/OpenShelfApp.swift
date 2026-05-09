@@ -11,7 +11,8 @@ struct OpenShelfApp: App {
             let schema = Schema([
                 Book.self,
                 ReadEntry.self,
-                UserTag.self
+                UserTag.self,
+                ReadingGoal.self
             ])
             let configuration = ModelConfiguration(
                 schema: schema,
