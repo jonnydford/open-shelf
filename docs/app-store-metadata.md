@@ -4,7 +4,7 @@
 Open Shelf
 
 ## Subtitle
-Track your reading life
+Track your reading. Privately.
 
 ## Description
 Open Shelf is a simple, private book tracker for readers who want to organise their library without giving up their data.
@@ -23,7 +23,10 @@ Open Shelf is a simple, private book tracker for readers who want to organise th
 All data stays on your device and in your iCloud account. No third-party analytics, no ads, no accounts required.
 
 ## Keywords
-books, reading, tracker, library, bookshelf, reading list, book log, goodreads, reading goal, book widget
+books, reading, tracker, library, bookshelf, reading list, book log, goodreads, reading goal, book widget, no ads, private, DNF tracker, goodreads alternative
+
+## Price
+£2.99 (Tier 1)
 
 ## Category
 Books

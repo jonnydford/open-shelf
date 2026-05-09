@@ -1,6 +1,7 @@
 import WidgetKit
 import SwiftUI
 import SwiftData
+import UIKit
 
 // MARK: - Timeline Entry
 
@@ -11,6 +12,7 @@ struct CurrentlyReadingEntry: TimelineEntry {
     let currentPage: Int?
     let pageCount: Int?
     let dateStarted: Date?
+    let coverImageID: Int?
 
     var progress: Double {
         guard let currentPage, let pageCount, pageCount > 0 else { return 0 }
@@ -34,7 +36,8 @@ struct CurrentlyReadingEntry: TimelineEntry {
             authorName: "F. Scott Fitzgerald",
             currentPage: 120,
             pageCount: 218,
-            dateStarted: Calendar.current.date(byAdding: .day, value: -5, to: .now)
+            dateStarted: Calendar.current.date(byAdding: .day, value: -5, to: .now),
+            coverImageID: nil
         )
     }
 
@@ -45,7 +48,8 @@ struct CurrentlyReadingEntry: TimelineEntry {
             authorName: nil,
             currentPage: nil,
             pageCount: nil,
-            dateStarted: nil
+            dateStarted: nil,
+            coverImageID: nil
         )
     }
 }
@@ -96,7 +100,8 @@ struct CurrentlyReadingProvider: TimelineProvider {
                 authorName: book.authorName,
                 currentPage: book.currentPage,
                 pageCount: book.pageCount,
-                dateStarted: book.dateStarted
+                dateStarted: book.dateStarted,
+                coverImageID: book.coverImageID
             )
         } catch {
             return .empty
@@ -130,6 +135,16 @@ struct CurrentlyReadingWidget: Widget {
 struct CurrentlyReadingWidgetView: View {
     @Environment(\.widgetFamily) var family
     let entry: CurrentlyReadingEntry
+
+    /// Loads a cover image from the shared App Group cache directory.
+    private func loadCoverImage() -> UIImage? {
+        guard let coverID = entry.coverImageID else { return nil }
+        guard let groupURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.com.openshelf.shared"
+        ) else { return nil }
+        let path = groupURL.appendingPathComponent("Covers/\(coverID)_M.jpg")
+        return UIImage(contentsOfFile: path.path)
+    }
 
     var body: some View {
         switch family {
@@ -192,15 +207,23 @@ struct CurrentlyReadingWidgetView: View {
 
     private var mediumView: some View {
         HStack(spacing: 12) {
-            // Cover placeholder with SF Symbol
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.quaternary)
-                Image(systemName: "book.closed.fill")
-                    .font(.title)
-                    .foregroundStyle(.secondary)
+            // Cover image from shared cache, or SF Symbol placeholder
+            if let uiImage = loadCoverImage() {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 70, height: 100)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.quaternary)
+                    Image(systemName: "book.closed.fill")
+                        .font(.title)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: 70, height: 100)
             }
-            .frame(width: 70, height: 100)
 
             if let title = entry.title {
                 VStack(alignment: .leading, spacing: 4) {

@@ -25,7 +25,7 @@ struct DataExporter {
                 book.isbn13 ?? "",
                 book.shelf.displayName,
                 book.userRating.map { String(format: "%.1f", $0) } ?? "",
-                book.dateAdded.map { dateFormatter.string(from: $0) } ?? "",
+                dateFormatter.string(from: book.dateAdded),
                 book.dateStarted.map { dateFormatter.string(from: $0) } ?? "",
                 book.dateFinished.map { dateFormatter.string(from: $0) } ?? "",
                 book.currentPage.map { String($0) } ?? "",

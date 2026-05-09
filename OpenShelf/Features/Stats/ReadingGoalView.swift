@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct ReadingGoalView: View {
     let booksReadCount: Int
@@ -195,6 +196,7 @@ struct SetReadingGoalSheet: View {
             modelContext.insert(goal)
         }
         try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
 }

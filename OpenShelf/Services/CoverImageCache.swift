@@ -8,8 +8,12 @@ actor CoverImageCache {
     private var inFlightTasks: [String: Task<UIImage?, Never>] = [:]
 
     init(session: URLSession? = nil) {
-        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let coverDir = cachesDir.appendingPathComponent("Covers", isDirectory: true)
+        // Use the App Group container so the widget extension can read cached covers.
+        let groupURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.com.openshelf.shared"
+        )
+        let baseDir = groupURL ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let coverDir = baseDir.appendingPathComponent("Covers", isDirectory: true)
         self.cacheDirectory = coverDir
 
         if let session {

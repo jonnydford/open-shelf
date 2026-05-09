@@ -69,23 +69,38 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
 
             VStack(spacing: 12) {
-                onboardingCard(
-                    icon: "square.and.arrow.down",
-                    title: "Import from Goodreads",
-                    subtitle: "Bring your existing library over"
-                )
+                Button {
+                    completeOnboarding()
+                } label: {
+                    onboardingCard(
+                        icon: "square.and.arrow.down",
+                        title: "Import from Goodreads",
+                        subtitle: "Bring your existing library over"
+                    )
+                }
+                .buttonStyle(.plain)
 
-                onboardingCard(
-                    icon: "barcode.viewfinder",
-                    title: "Scan a book",
-                    subtitle: "Point your camera at a barcode"
-                )
+                Button {
+                    completeOnboarding()
+                } label: {
+                    onboardingCard(
+                        icon: "barcode.viewfinder",
+                        title: "Scan a book",
+                        subtitle: "Point your camera at a barcode"
+                    )
+                }
+                .buttonStyle(.plain)
 
-                onboardingCard(
-                    icon: "magnifyingglass",
-                    title: "Search for a book",
-                    subtitle: "Find books on Open Library"
-                )
+                Button {
+                    completeOnboarding()
+                } label: {
+                    onboardingCard(
+                        icon: "magnifyingglass",
+                        title: "Search for a book",
+                        subtitle: "Find books on Open Library"
+                    )
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal)
 
