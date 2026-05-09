@@ -29,7 +29,20 @@ struct BookDetailView: View {
     @State private var showAddToListSheet = false
     @State private var coverImageForShare: UIImage?
 
+    // Up Next prompt state
+    @State private var showUpNextPrompt = false
+    @State private var upNextBook: Book?
+
+    // Author search state
+    @State private var authorBooks: [SearchResult] = []
+    @State private var isLoadingAuthorBooks = false
+
+    // Library availability
+    @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
+    @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
+
     @Query(sort: \ReadingList.dateCreated, order: .reverse) private var readingLists: [ReadingList]
+    @Query private var allLibraryBooks: [Book]
 
     var body: some View {
         ScrollView {
@@ -43,6 +56,9 @@ struct BookDetailView: View {
                     .padding(.horizontal)
                 ReadHistorySection(entries: book.reads)
                     .padding(.horizontal)
+                similarBooksSection
+                moreByAuthorSection
+                libraryAvailabilitySection
                 socialSection
                 actionsSection
             }
@@ -83,6 +99,17 @@ struct BookDetailView: View {
             }
         } message: {
             Text("Are you sure you want to remove \"\(book.title)\" from your library? This cannot be undone.")
+        }
+        .alert("Start reading \(upNextBook?.title ?? "")?", isPresented: $showUpNextPrompt) {
+            Button("Start Reading") {
+                if let nextBook = upNextBook {
+                    repository.updateShelf(nextBook, to: .reading)
+                }
+            }
+            Button("Not Now", role: .cancel) {}
+        }
+        .task {
+            await loadAuthorBooks()
         }
     }
 
@@ -299,6 +326,140 @@ struct BookDetailView: View {
                     .background(.quaternary)
                     .clipShape(Capsule())
             }
+        }
+    }
+
+    // MARK: - Similar Books Section
+
+    @ViewBuilder
+    private var similarBooksSection: some View {
+        if allLibraryBooks.count >= 5 {
+            let similar = RecommendationEngine.similarBooks(to: book, from: allLibraryBooks, limit: 5)
+            if !similar.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Divider()
+                        .padding(.horizontal)
+
+                    Text("You might also like")
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(similar) { rec in
+                                NavigationLink {
+                                    BookDetailView(book: rec)
+                                } label: {
+                                    VStack(spacing: 6) {
+                                        CoverImage(coverID: rec.coverImageID, size: .small)
+                                            .frame(width: 80, height: 120)
+                                            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                                        Text(rec.title)
+                                            .font(.caption)
+                                            .lineLimit(2)
+                                            .multilineTextAlignment(.center)
+                                            .frame(width: 80)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - More by Author Section
+
+    @ViewBuilder
+    private var moreByAuthorSection: some View {
+        if !authorBooks.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Divider()
+                    .padding(.horizontal)
+
+                Text("More by \(book.authorName)")
+                    .font(.headline)
+                    .padding(.horizontal)
+
+                if isLoadingAuthorBooks {
+                    ProgressView()
+                        .padding(.horizontal)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(authorBooks) { result in
+                                NavigationLink {
+                                    authorBookDestination(result)
+                                } label: {
+                                    VStack(spacing: 6) {
+                                        CoverImage(coverID: result.coverI, size: .small)
+                                            .frame(width: 80, height: 120)
+                                            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                                        Text(result.title)
+                                            .font(.caption)
+                                            .lineLimit(2)
+                                            .multilineTextAlignment(.center)
+                                            .frame(width: 80)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func authorBookDestination(_ result: SearchResult) -> some View {
+        if let existingBook = allLibraryBooks.first(where: { $0.olWorkKey == result.key }) {
+            BookDetailView(book: existingBook)
+        } else {
+            BookDetailSheet(searchResult: result, onAdded: {})
+        }
+    }
+
+    // MARK: - Library Availability Section
+
+    @ViewBuilder
+    private var libraryAvailabilitySection: some View {
+        let isbn = book.isbn13 ?? book.isbn10
+        if let isbn {
+            VStack(spacing: 12) {
+                Divider()
+                    .padding(.horizontal)
+
+                Button {
+                    openLibraryLink(isbn: isbn)
+                } label: {
+                    Label("Check library availability", systemImage: "building.columns")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private func openLibraryLink(isbn: String) {
+        let service = LibraryService(rawValue: preferredLibraryService) ?? .libby
+        let url: URL?
+
+        if service == .custom {
+            url = LibraryService.customURL(template: customLibraryURLTemplate, isbn: isbn)
+        } else {
+            url = service.url(for: isbn)
+        }
+
+        if let url {
+            UIApplication.shared.open(url)
         }
     }
 
@@ -582,6 +743,32 @@ struct BookDetailView: View {
         repository.updateShelf(book, to: .dnf)
         try? modelContext.save()
         showDNFSheet = false
+        promptUpNextIfAvailable()
+    }
+
+    private func promptUpNextIfAvailable() {
+        if let nextBook = repository.nextInQueue() {
+            upNextBook = nextBook
+            showUpNextPrompt = true
+        }
+    }
+
+    private func loadAuthorBooks() async {
+        guard !book.authorName.isEmpty else { return }
+        isLoadingAuthorBooks = true
+        defer { isLoadingAuthorBooks = false }
+
+        do {
+            let results = try await repository.searchByAuthor(name: book.authorName)
+            // Filter out the current book and limit
+            authorBooks = results
+                .filter { $0.key != book.olWorkKey }
+                .prefix(5)
+                .map { $0 }
+        } catch {
+            // Non-critical — silently fail
+            authorBooks = []
+        }
     }
 
     private func handleShelfMove(to shelf: Shelf) {
@@ -596,6 +783,7 @@ struct BookDetailView: View {
             modelContext.insert(entry)
             repository.updateShelf(book, to: .read)
             try? modelContext.save()
+            promptUpNextIfAvailable()
         case .dnf:
             dnfPage = ""
             dnfReason = ""
