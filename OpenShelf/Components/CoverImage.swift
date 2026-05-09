@@ -1,0 +1,46 @@
+import SwiftUI
+
+struct CoverImage: View {
+    let coverID: Int?
+    var size: CoverSize = .medium
+    @State private var image: UIImage?
+    @State private var isLoading = false
+    @Environment(BookRepository.self) private var repository
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                placeholder
+            }
+        }
+        .task(id: coverID) {
+            await loadImage()
+        }
+    }
+
+    private var placeholder: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(.quaternary)
+            Image(systemName: "book.closed")
+                .font(.title2)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func loadImage() async {
+        guard let coverID else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        image = await repository.imageCache.image(for: coverID, size: size)
+    }
+}
