@@ -3,9 +3,16 @@ import WidgetKit
 import SwiftUI
 
 struct ReadingSessionLiveActivity: Widget {
+    private func deepLink(for context: ActivityViewContext<ReadingSessionAttributes>) -> URL? {
+        let path = context.attributes.olWorkKey.replacingOccurrences(of: "/works/", with: "")
+        guard let encoded = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else { return nil }
+        return URL(string: "openshelf://book/\(encoded)")
+    }
+
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ReadingSessionAttributes.self) { context in
             lockScreenView(context: context)
+                .widgetURL(deepLink(for: context))
                 .activityBackgroundTint(.black.opacity(0.8))
         } dynamicIsland: { context in
             DynamicIsland {

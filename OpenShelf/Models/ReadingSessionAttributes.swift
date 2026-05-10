@@ -2,6 +2,7 @@ import Foundation
 import ActivityKit
 
 struct ReadingSessionAttributes: ActivityAttributes, Sendable {
+    let olWorkKey: String
     let bookTitle: String
     let authorName: String
     let pageCount: Int?

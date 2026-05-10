@@ -63,7 +63,6 @@ struct CurrentlyReadingEntry: TimelineEntry {
 struct LargeWidgetData {
     let books: [CurrentlyReadingEntry]
     let booksReadThisYear: Int
-    let currentStreak: Int
     let goalProgress: (read: Int, target: Int)?
 }
 
@@ -120,7 +119,7 @@ struct CurrentlyReadingProvider: AppIntentTimelineProvider {
 
 // MARK: - Large Widget Provider
 
-struct LargeWidgetProvider: AppIntentTimelineProvider {
+struct LargeWidgetProvider: TimelineProvider {
     struct LargeEntry: TimelineEntry {
         let date: Date
         let data: LargeWidgetData
@@ -130,18 +129,17 @@ struct LargeWidgetProvider: AppIntentTimelineProvider {
         LargeEntry(date: .now, data: LargeWidgetData(
             books: [.placeholder],
             booksReadThisYear: 23,
-            currentStreak: 7,
             goalProgress: (read: 23, target: 40)
         ))
     }
 
-    func snapshot(for configuration: SelectBookIntent, in context: Context) async -> LargeEntry {
-        context.isPreview ? placeholder(in: context) : fetchLargeEntry()
+    func getSnapshot(in context: Context, completion: @escaping (LargeEntry) -> Void) {
+        completion(context.isPreview ? placeholder(in: context) : fetchLargeEntry())
     }
 
-    func timeline(for configuration: SelectBookIntent, in context: Context) async -> Timeline<LargeEntry> {
+    func getTimeline(in context: Context, completion: @escaping (Timeline<LargeEntry>) -> Void) {
         let entry = fetchLargeEntry()
-        return Timeline(entries: [entry], policy: .atEnd)
+        completion(Timeline(entries: [entry], policy: .atEnd))
     }
 
     private func fetchLargeEntry() -> LargeEntry {
@@ -182,14 +180,13 @@ struct LargeWidgetProvider: AppIntentTimelineProvider {
             let data = LargeWidgetData(
                 books: Array(readingBooks),
                 booksReadThisYear: booksReadThisYear,
-                currentStreak: 0,
                 goalProgress: goalProgress
             )
 
             return LargeEntry(date: .now, data: data)
         } catch {
             return LargeEntry(date: .now, data: LargeWidgetData(
-                books: [], booksReadThisYear: 0, currentStreak: 0, goalProgress: nil
+                books: [], booksReadThisYear: 0, goalProgress: nil
             ))
         }
     }
@@ -220,9 +217,10 @@ struct CurrentlyReadingLargeWidget: Widget {
     let kind = "CurrentlyReadingLargeWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: SelectBookIntent.self, provider: LargeWidgetProvider()) { entry in
+        StaticConfiguration(kind: kind, provider: LargeWidgetProvider()) { entry in
             LargeWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
+                .widgetURL(URL(string: "openshelf://stats"))
         }
         .configurationDisplayName("Reading Dashboard")
         .description("See all your currently reading books and year-to-date stats.")
@@ -333,7 +331,7 @@ struct CurrentlyReadingWidgetView: View {
                 .frame(width: 70, height: 100)
             }
 
-            if let title = entry.title, let workKey = entry.olWorkKey {
+            if let title = entry.title {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.headline)
@@ -358,21 +356,22 @@ struct CurrentlyReadingWidgetView: View {
                                     .tint(.green)
                             }
 
-                            // Interactive buttons
-                            HStack(spacing: 4) {
-                                Button(intent: makeUpdateIntent(bookID: workKey)) {
-                                    Image(systemName: "plus.circle.fill")
-                                        .font(.title3)
-                                        .foregroundStyle(.tint)
-                                }
-                                .buttonStyle(.plain)
+                            if let workKey = entry.olWorkKey {
+                                HStack(spacing: 4) {
+                                    Button(intent: makeUpdateIntent(bookID: workKey)) {
+                                        Image(systemName: "plus.circle.fill")
+                                            .font(.title3)
+                                            .foregroundStyle(.tint)
+                                    }
+                                    .buttonStyle(.plain)
 
-                                Button(intent: makeFinishIntent(bookID: workKey)) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.title3)
-                                        .foregroundStyle(.green)
+                                    Button(intent: makeFinishIntent(bookID: workKey)) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.title3)
+                                            .foregroundStyle(.green)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -454,6 +453,13 @@ struct CurrentlyReadingWidgetView: View {
 struct LargeWidgetView: View {
     let entry: LargeWidgetProvider.LargeEntry
 
+    private func bookDeepLink(for book: CurrentlyReadingEntry) -> URL? {
+        guard let key = book.olWorkKey else { return nil }
+        let path = key.replacingOccurrences(of: "/works/", with: "")
+        guard let encoded = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else { return nil }
+        return URL(string: "openshelf://book/\(encoded)")
+    }
+
     private func loadCoverImage(coverID: Int?) -> UIImage? {
         guard let coverID else { return nil }
         guard let groupURL = FileManager.default.containerURL(
@@ -497,9 +503,15 @@ struct LargeWidgetView: View {
             Divider()
 
             // Book list
-            ForEach(entry.data.books, id: \.olWorkKey) { book in
-                bookRow(book)
-                if book.olWorkKey != entry.data.books.last?.olWorkKey {
+            ForEach(Array(entry.data.books.enumerated()), id: \.offset) { index, book in
+                if let url = bookDeepLink(for: book) {
+                    Link(destination: url) {
+                        bookRow(book)
+                    }
+                } else {
+                    bookRow(book)
+                }
+                if index < entry.data.books.count - 1 {
                     Divider()
                 }
             }

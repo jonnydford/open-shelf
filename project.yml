@@ -43,6 +43,7 @@ targets:
     info:
       path: OpenShelf/Info.plist
       properties:
+        NSSupportsLiveActivities: true
         BGTaskSchedulerPermittedIdentifiers:
           - com.openshelf.authorcheck
         CFBundleURLTypes:

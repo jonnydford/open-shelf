@@ -21,7 +21,7 @@ struct BookEntityQuery: EntityQuery {
         let descriptor = FetchDescriptor<Book>()
         let books = (try? context.fetch(descriptor)) ?? []
         return books
-            .filter { identifiers.contains($0.olWorkKey) }
+            .filter { identifiers.contains($0.olWorkKey) && !$0.isPrivate }
             .map { BookEntity(id: $0.olWorkKey, title: $0.title, authorName: $0.authorName, coverImageID: $0.coverImageID) }
     }
 

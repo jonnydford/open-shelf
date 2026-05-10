@@ -19,7 +19,8 @@ struct UpdatePagesIntent: AppIntent {
             predicate: #Predicate { $0.olWorkKey == bookKey }
         )
 
-        guard let book = (try? context.fetch(descriptor))?.first else {
+        guard let book = (try? context.fetch(descriptor))?.first,
+              !book.isPrivate else {
             return .result()
         }
 

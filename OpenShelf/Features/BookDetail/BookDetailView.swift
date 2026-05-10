@@ -163,6 +163,9 @@ struct BookDetailView: View {
             }
             Button("Not Now", role: .cancel) {}
         }
+        .onAppear {
+            restoreReadingSession()
+        }
         .task {
             await loadAuthorBooks()
         }
@@ -376,6 +379,7 @@ struct BookDetailView: View {
 
     private func startReadingSession() {
         let attributes = ReadingSessionAttributes(
+            olWorkKey: book.olWorkKey,
             bookTitle: book.isPrivate ? "Reading" : book.title,
             authorName: book.isPrivate ? "" : book.authorName,
             pageCount: book.pageCount
@@ -409,6 +413,14 @@ struct BookDetailView: View {
             for liveActivity in Activity<ReadingSessionAttributes>.activities where liveActivity.id == activityID {
                 await liveActivity.end(content, dismissalPolicy: .immediate)
             }
+        }
+    }
+
+    private func restoreReadingSession() {
+        guard readingSessionActivity == nil else { return }
+        let workKey = book.olWorkKey
+        readingSessionActivity = Activity<ReadingSessionAttributes>.activities.first {
+            $0.attributes.olWorkKey == workKey
         }
     }
 

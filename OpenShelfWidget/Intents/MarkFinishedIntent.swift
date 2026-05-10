@@ -16,9 +16,17 @@ struct MarkFinishedIntent: AppIntent {
             predicate: #Predicate { $0.olWorkKey == bookKey }
         )
 
-        guard let book = (try? context.fetch(descriptor))?.first else {
+        guard let book = (try? context.fetch(descriptor))?.first,
+              !book.isPrivate else {
             return .result()
         }
+
+        let entry = ReadEntry(
+            book: book,
+            startDate: book.dateStarted,
+            finishDate: .now
+        )
+        context.insert(entry)
 
         book.shelf = .read
         if book.dateFinished == nil {
