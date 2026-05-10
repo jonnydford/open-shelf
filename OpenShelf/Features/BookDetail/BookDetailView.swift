@@ -37,6 +37,9 @@ struct BookDetailView: View {
     @State private var authorBooks: [SearchResult] = []
     @State private var isLoadingAuthorBooks = false
 
+    // Followed author state
+    @Query private var followedAuthors: [FollowedAuthor]
+
     // Library availability
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
@@ -138,7 +141,46 @@ struct BookDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.tertiary)
             }
+
+            followAuthorButton
         }
+    }
+
+    // MARK: - Follow Author
+
+    private var isFollowingAuthor: Bool {
+        followedAuthors.contains { $0.authorName == book.authorName }
+    }
+
+    private var followAuthorButton: some View {
+        Button {
+            toggleFollowAuthor()
+        } label: {
+            Label(
+                isFollowingAuthor ? "Following" : "Follow Author",
+                systemImage: isFollowingAuthor ? "checkmark.circle.fill" : "person.badge.plus"
+            )
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(isFollowingAuthor ? Color.accentColor.opacity(0.15) : Color(.systemGray5))
+            .foregroundStyle(isFollowingAuthor ? Color.accentColor : Color.primary)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: isFollowingAuthor)
+        .accessibilityLabel(isFollowingAuthor ? "Unfollow \(book.authorName)" : "Follow \(book.authorName)")
+    }
+
+    private func toggleFollowAuthor() {
+        if let existing = followedAuthors.first(where: { $0.authorName == book.authorName }) {
+            modelContext.delete(existing)
+        } else {
+            let followed = FollowedAuthor(authorName: book.authorName)
+            modelContext.insert(followed)
+        }
+        try? modelContext.save()
     }
 
     // MARK: - User Section

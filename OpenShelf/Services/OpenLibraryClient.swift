@@ -122,6 +122,25 @@ actor OpenLibraryClient {
         return try await performRequest(url: url)
     }
 
+    // MARK: - Author Works
+
+    func fetchAuthorWorks(authorKey: String, limit: Int = 5) async throws -> AuthorWorksResponse {
+        let path = authorKey.hasPrefix("/") ? authorKey : "/authors/\(authorKey)"
+        guard var components = URLComponents(string: "\(baseURL)\(path)/works.json") else {
+            throw OpenLibraryError.invalidURL
+        }
+
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: "\(limit)")
+        ]
+
+        guard let url = components.url else {
+            throw OpenLibraryError.invalidURL
+        }
+
+        return try await performRequest(url: url)
+    }
+
     // MARK: - Cover URL
 
     func coverURL(id: Int, size: CoverSize) -> URL {

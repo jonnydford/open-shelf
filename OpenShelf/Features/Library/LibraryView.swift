@@ -103,9 +103,12 @@ struct LibraryView: View {
         return books
     }
 
+    @State private var pendingNewBooks: [PendingNewBook] = AuthorCheckService.pendingNewBooks
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                newBookBanner
                 shelfPicker
 
                 Group {
@@ -117,6 +120,9 @@ struct LibraryView: View {
                 }
             }
             .navigationTitle("Library")
+            .onAppear {
+                pendingNewBooks = AuthorCheckService.pendingNewBooks
+            }
             .searchable(text: $localSearchText, prompt: "Filter by title or author")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -156,6 +162,40 @@ struct LibraryView: View {
             .sheet(isPresented: $showManualEntry) {
                 ManualEntryView()
             }
+        }
+    }
+
+    // MARK: - New Book Banner
+
+    @ViewBuilder
+    private var newBookBanner: some View {
+        ForEach(pendingNewBooks) { pending in
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundStyle(Color.accentColor)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("New book by \(pending.authorName)")
+                        .font(.subheadline.bold())
+                    Text(pending.bookTitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button {
+                    AuthorCheckService.dismissPendingBook(workKey: pending.workKey)
+                    pendingNewBooks = AuthorCheckService.pendingNewBooks
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+            .background(Color.accentColor.opacity(0.08))
         }
     }
 
@@ -298,7 +338,7 @@ struct LibraryView: View {
 
     private var upNextSection: some View {
         Section {
-            ForEach(queuedBooks) { book in
+            ForEach(Array(queuedBooks.enumerated()), id: \.element.id) { _, book in
                 NavigationLink {
                     BookDetailView(book: book)
                 } label: {
@@ -312,7 +352,7 @@ struct LibraryView: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
                                 .background(Color.accentColor.opacity(0.15))
-                                .foregroundStyle(.accentColor)
+                                .foregroundStyle(Color.accentColor)
                                 .clipShape(Capsule())
                         }
                     }
@@ -336,11 +376,6 @@ struct LibraryView: View {
                 .contextMenu {
                     contextMenuItems(for: book)
                 }
-            }
-            .onMove { source, destination in
-                var reordered = queuedBooks
-                reordered.move(fromOffsets: source, toOffset: destination)
-                repository.reorderQueue(reordered)
             }
         } header: {
             Label("Up Next", systemImage: "text.line.first.and.arrowtriangle.forward")

@@ -34,7 +34,7 @@ struct OnboardingView: View {
 
             Image(systemName: "books.vertical.fill")
                 .font(.system(size: 72))
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
 
             Text("Open Shelf")
                 .font(.largeTitle.bold())
@@ -128,7 +128,7 @@ struct OnboardingView: View {
 
             Image(systemName: "target")
                 .font(.system(size: 48))
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
 
             Text("Set a reading goal for \(String(currentYear))?")
                 .font(.title2.bold())
@@ -164,7 +164,7 @@ struct OnboardingView: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(.accent)
+                    .background(Color.accentColor)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
@@ -180,7 +180,7 @@ struct OnboardingView: View {
         HStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
                 .frame(width: 40)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -211,7 +211,7 @@ struct OnboardingView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(.accent)
+                .background(Color.accentColor)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
         }

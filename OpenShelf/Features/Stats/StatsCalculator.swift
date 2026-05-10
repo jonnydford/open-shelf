@@ -274,6 +274,90 @@ struct StatsCalculator {
         return booksRead - Int(expectedBooks.rounded())
     }
 
+    // MARK: - Longest streak in a year
+
+    static func longestStreak(books: [Book], year: Int) -> Int {
+        let calendar = Calendar.current
+
+        // Collect all "reading" days: for each currently-reading or read book,
+        // use dateStarted..dateFinished (or today if still reading).
+        let relevantBooks = books.filter { $0.shelf == .reading || $0.shelf == .read }
+
+        var allDates = Set<Date>()
+        for book in relevantBooks {
+            guard let start = book.dateStarted else { continue }
+            let startDay = calendar.startOfDay(for: start)
+            let endDay: Date
+            if let finished = book.dateFinished {
+                endDay = calendar.startOfDay(for: finished)
+            } else {
+                endDay = calendar.startOfDay(for: .now)
+            }
+
+            var day = startDay
+            var iterations = 0
+            while day <= endDay {
+                iterations += 1
+                if iterations > 366 { break }
+                let dayYear = calendar.component(.year, from: day)
+                if dayYear == year {
+                    allDates.insert(day)
+                }
+                day = calendar.date(byAdding: .day, value: 1, to: day)!
+            }
+        }
+
+        guard !allDates.isEmpty else { return 0 }
+
+        let sorted = allDates.sorted()
+        var maxStreak = 1
+        var current = 1
+
+        for i in 1..<sorted.count {
+            let expected = calendar.date(byAdding: .day, value: 1, to: sorted[i - 1])!
+            if sorted[i] == expected {
+                current += 1
+                maxStreak = max(maxStreak, current)
+            } else {
+                current = 1
+            }
+        }
+
+        return maxStreak
+    }
+
+    // MARK: - Estimated reading hours
+
+    static func estimatedReadingHours(books: [Book]) -> Int {
+        // 1.7 minutes per page, converted to hours
+        let totalMinutes = books.compactMap(\.pageCount).reduce(0.0) { $0 + Double($1) * 1.7 }
+        return Int((totalMinutes / 60.0).rounded())
+    }
+
+    // MARK: - Favourite author
+
+    static func favouriteAuthor(books: [Book]) -> String? {
+        var counts = [String: Int]()
+        for book in books {
+            counts[book.authorName, default: 0] += 1
+        }
+        return counts.max(by: { $0.value < $1.value })?.key
+    }
+
+    // MARK: - Slowest read
+
+    static func slowestRead(_ books: [Book]) -> (book: Book, days: Int)? {
+        var worst: (Book, Int)?
+        for book in books {
+            guard let start = book.dateStarted, let finish = book.dateFinished else { continue }
+            let days = max(Calendar.current.dateComponents([.day], from: start, to: finish).day ?? 0, 1)
+            if worst == nil || days > worst!.1 {
+                worst = (book, days)
+            }
+        }
+        return worst.map { ($0.0, $0.1) }
+    }
+
     // MARK: - Helpers
 
     private static func finishedInYear(_ book: Book, year: Int) -> Bool {
