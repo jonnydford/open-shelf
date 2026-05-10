@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var deepLinkBook: Book?
     @State private var deepLinkSearchResult: SearchResult?
     @State private var isLoadingDeepLink = false
+    @State private var deepLinkSearchQuery: String?
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -21,7 +22,7 @@ struct ContentView: View {
             }
 
             Tab("Search", systemImage: "magnifyingglass", value: "Search") {
-                SearchView()
+                SearchView(prefillQuery: $deepLinkSearchQuery)
             }
 
             Tab("Stats", systemImage: "chart.bar", value: "Stats") {
@@ -77,6 +78,25 @@ struct ContentView: View {
             return
         }
 
+        // Handle openshelf://search?q={query}
+        if url.host == "search" {
+            let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            if let query = components?.queryItems?.first(where: { $0.name == "q" })?.value, !query.isEmpty {
+                deepLinkSearchQuery = query
+                selectedTab = "Search"
+            }
+            return
+        }
+
+        // Handle openshelf://book?isbn={isbn}
+        if url.host == "book" {
+            let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            if let isbn = components?.queryItems?.first(where: { $0.name == "isbn" })?.value, !isbn.isEmpty {
+                handleISBNDeepLink(isbn)
+                return
+            }
+        }
+
         // Handle openshelf://book/{olWorkKey}
         guard url.host == "book" else { return }
 
@@ -122,6 +142,27 @@ struct ContentView: View {
                 isLoadingDeepLink = false
             }
         }
+    }
+
+    private func handleISBNDeepLink(_ isbn: String) {
+        // Check if a book with this ISBN already exists
+        let descriptor13 = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.isbn13 == isbn }
+        )
+        let descriptor10 = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.isbn10 == isbn }
+        )
+
+        if let existing = (try? modelContext.fetch(descriptor13))?.first
+            ?? (try? modelContext.fetch(descriptor10))?.first {
+            deepLinkBook = existing
+            showDeepLinkBook = true
+            return
+        }
+
+        // Not in library — open search with the ISBN
+        deepLinkSearchQuery = isbn
+        selectedTab = "Search"
     }
 
     @ViewBuilder

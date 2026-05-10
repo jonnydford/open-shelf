@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SearchView: View {
+    @Binding var prefillQuery: String?
+
     @Environment(BookRepository.self) private var repository
     @State private var searchText = ""
     @State private var results: [SearchResult] = []
@@ -10,6 +12,10 @@ struct SearchView: View {
     @State private var hasSearched = false
     @State private var selectedResult: SearchResult?
     @State private var showManualEntry = false
+
+    init(prefillQuery: Binding<String?> = .constant(nil)) {
+        self._prefillQuery = prefillQuery
+    }
 
     var body: some View {
         NavigationStack {
@@ -52,6 +58,12 @@ struct SearchView: View {
             }
             .sheet(isPresented: $showManualEntry) {
                 ManualEntryView()
+            }
+            .onChange(of: prefillQuery) { _, newValue in
+                if let query = newValue, !query.isEmpty {
+                    searchText = query
+                    prefillQuery = nil
+                }
             }
         }
     }
