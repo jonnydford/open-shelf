@@ -81,7 +81,9 @@ struct CuratedListDetailView: View {
     let list: CuratedList
 
     @Environment(BookRepository.self) private var repository
+    @Environment(\.modelContext) private var modelContext
     @Query private var libraryBooks: [Book]
+    @Query private var dismissedBooks: [DismissedBook]
 
     @State private var fetchedBooks: [FetchedCuratedBook] = []
     @State private var isLoading = true
@@ -91,6 +93,15 @@ struct CuratedListDetailView: View {
         GridItem(.flexible()),
         GridItem(.flexible()),
     ]
+
+    /// Books filtered to exclude dismissed titles and books already in the library.
+    private var visibleBooks: [FetchedCuratedBook] {
+        let dismissedKeys = Set(dismissedBooks.map(\.openLibraryWorkKey))
+        let libraryKeys = Set(libraryBooks.map(\.olWorkKey))
+        return fetchedBooks.filter { book in
+            !dismissedKeys.contains(book.workKey) && !libraryKeys.contains(book.workKey)
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -104,7 +115,13 @@ struct CuratedListDetailView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
-                } else if fetchedBooks.isEmpty {
+                } else if visibleBooks.isEmpty && !fetchedBooks.isEmpty {
+                    ContentUnavailableView(
+                        "All books dismissed",
+                        systemImage: "hand.thumbsdown",
+                        description: Text("You've dismissed all books in this list. Undo in Settings.")
+                    )
+                } else if visibleBooks.isEmpty {
                     ContentUnavailableView(
                         "No books available",
                         systemImage: "book.closed",
@@ -112,13 +129,20 @@ struct CuratedListDetailView: View {
                     )
                 } else {
                     LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(fetchedBooks) { book in
+                        ForEach(visibleBooks) { book in
                             NavigationLink {
                                 bookDestination(book)
                             } label: {
                                 bookCell(book)
                             }
                             .buttonStyle(.plain)
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    dismissBook(book)
+                                } label: {
+                                    Label("Not Interested", systemImage: "hand.thumbsdown")
+                                }
+                            }
                         }
                     }
                     .padding(.horizontal)
@@ -138,7 +162,7 @@ struct CuratedListDetailView: View {
             let searchResult = SearchResult(
                 key: book.workKey,
                 title: book.title,
-                authorName: nil,
+                authorName: book.author.map { [$0] },
                 firstPublishYear: nil,
                 numberOfPagesMedian: nil,
                 coverI: book.coverID,
@@ -174,6 +198,18 @@ struct CuratedListDetailView: View {
         }
     }
 
+    private func dismissBook(_ book: FetchedCuratedBook) {
+        let dismissed = DismissedBook(
+            openLibraryWorkKey: book.workKey,
+            title: book.title,
+            author: book.author ?? "Unknown Author"
+        )
+        withAnimation {
+            modelContext.insert(dismissed)
+            try? modelContext.save()
+        }
+    }
+
     private func loadBooks() async {
         isLoading = true
         defer { isLoading = false }
@@ -188,11 +224,17 @@ struct CuratedListDetailView: View {
                 group.addTask {
                     do {
                         let detail = try await repo.fetchDetail(for: key)
+                        var authorName: String?
+                        if let authorKey = detail.primaryAuthorKey {
+                            let authorDetail = try? await repo.fetchAuthorDetail(key: authorKey)
+                            authorName = authorDetail?.name
+                        }
                         return (index, FetchedCuratedBook(
                             workKey: key,
                             title: detail.title,
                             coverID: detail.primaryCoverID,
-                            subjects: detail.subjects
+                            subjects: detail.subjects,
+                            author: authorName
                         ))
                     } catch {
                         return (index, nil)
@@ -222,6 +264,7 @@ struct FetchedCuratedBook: Identifiable {
     let title: String
     let coverID: Int?
     let subjects: [String]?
+    let author: String?
 
     var id: String { workKey }
 }

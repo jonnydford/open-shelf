@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Query(sort: \ReadingGoal.year, order: .reverse) private var goals: [ReadingGoal]
     @Query private var books: [Book]
     @Query(sort: \FollowedAuthor.dateFollowed, order: .reverse) private var followedAuthors: [FollowedAuthor]
+    @Query(sort: \DismissedBook.dateDismissed, order: .reverse) private var dismissedBooks: [DismissedBook]
 
     @State private var showImportView = false
     @State private var showExportView = false
@@ -31,6 +32,7 @@ struct SettingsView: View {
                 notificationsSection
                 privacySection
                 followedAuthorsSection
+                dismissedBooksSection
                 bookshopsSection
                 librarySection
                 importSection
@@ -209,6 +211,45 @@ struct SettingsView: View {
                     }
                     .accessibilityAction(named: "Unfollow") {
                         modelContext.delete(author)
+                        try? modelContext.save()
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Not Interested Section
+
+    @ViewBuilder
+    private var dismissedBooksSection: some View {
+        if !dismissedBooks.isEmpty {
+            Section("Not Interested") {
+                ForEach(dismissedBooks) { dismissed in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(dismissed.title)
+                                .font(.body)
+                            Text(dismissed.author)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(dismissed.dateDismissed, format: .dateTime.day().month().year())
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button {
+                            modelContext.delete(dismissed)
+                            try? modelContext.save()
+                        } label: {
+                            Label("Undo", systemImage: "arrow.uturn.backward")
+                        }
+                        .tint(.blue)
+                        .accessibilityLabel("Undo dismissal of \(dismissed.title)")
+                    }
+                    .accessibilityAction(named: "Undo dismissal") {
+                        modelContext.delete(dismissed)
                         try? modelContext.save()
                     }
                 }
