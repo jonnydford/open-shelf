@@ -375,6 +375,16 @@ final class BookRepository {
         try await apiClient.fetchAuthorWorks(authorKey: authorKey, limit: limit)
     }
 
+    // MARK: - Author Detail
+
+    nonisolated func fetchAuthorDetail(key: String) async throws -> AuthorDetail {
+        try await apiClient.fetchAuthorDetail(key: key)
+    }
+
+    nonisolated func resolveWikipediaURL(wikidataID: String) async throws -> URL? {
+        try await apiClient.resolveWikipediaURL(wikidataID: wikidataID)
+    }
+
     // MARK: - Cover cache access
 
     nonisolated var imageCache: CoverImageCache {

@@ -57,6 +57,14 @@
 		AA01B10100000013A0000013 /* RecommendationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01F10100000013A0000013 /* RecommendationEngine.swift */; };
 		AA01B10100000014A0000014 /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01F10100000014A0000014 /* SharedModelContainer.swift */; };
 		AA01B10100000015A0000015 /* AuthorWorksResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01F10100000015A0000015 /* AuthorWorksResponse.swift */; };
+		BB01B10100000020B0000020 /* BookshopService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB01F10100000020B0000020 /* BookshopService.swift */; };
+		BB01B10100000021B0000021 /* AuthorDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB01F10100000021B0000021 /* AuthorDetail.swift */; };
+		BB01B10100000022B0000022 /* AuthorPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB01F10100000022B0000022 /* AuthorPageView.swift */; };
+		BB01B10100000023B0000023 /* WorldBookDayBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB01F10100000023B0000023 /* WorldBookDayBanner.swift */; };
+		BB01B10100000024B0000024 /* DiscoverSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB01F10100000024B0000024 /* DiscoverSection.swift */; };
+		BB01B10100000025B0000025 /* TipJarStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB01F10100000025B0000025 /* TipJarStore.swift */; };
+		BB01B10100000026B0000026 /* TipJarSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB01F10100000026B0000026 /* TipJarSection.swift */; };
+		BB01B10100000027B0000027 /* CuratedLists.json in Resources */ = {isa = PBXBuildFile; fileRef = BB01F10100000027B0000027 /* CuratedLists.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -112,6 +120,14 @@
 		AA01F10100000013A0000013 /* RecommendationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationEngine.swift; sourceTree = "<group>"; };
 		AA01F10100000014A0000014 /* SharedModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
 		AA01F10100000015A0000015 /* AuthorWorksResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorWorksResponse.swift; sourceTree = "<group>"; };
+		BB01F10100000020B0000020 /* BookshopService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookshopService.swift; sourceTree = "<group>"; };
+		BB01F10100000021B0000021 /* AuthorDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorDetail.swift; sourceTree = "<group>"; };
+		BB01F10100000022B0000022 /* AuthorPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorPageView.swift; sourceTree = "<group>"; };
+		BB01F10100000023B0000023 /* WorldBookDayBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldBookDayBanner.swift; sourceTree = "<group>"; };
+		BB01F10100000024B0000024 /* DiscoverSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverSection.swift; sourceTree = "<group>"; };
+		BB01F10100000025B0000025 /* TipJarStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipJarStore.swift; sourceTree = "<group>"; };
+		BB01F10100000026B0000026 /* TipJarSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipJarSection.swift; sourceTree = "<group>"; };
+		BB01F10100000027B0000027 /* CuratedLists.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = CuratedLists.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -127,6 +143,7 @@
 				81F88F47997C3D12B5451855 /* OpenLibraryClient.swift */,
 				AA01F10100000013A0000013 /* RecommendationEngine.swift */,
 				AA01F10100000014A0000014 /* SharedModelContainer.swift */,
+				BB01F10100000025B0000025 /* TipJarStore.swift */,
 				2500AF53BDCC10D69B821840 /* DTOs */,
 			);
 			path = Services;
@@ -143,15 +160,25 @@
 				F1C65B09F1BCA1010B36B3F8 /* Components */,
 				7A2EA3EE0C306F0ADF38B5E7 /* Features */,
 				2B2EC73B69641C98D4D5BB10 /* Models */,
+				BB01G10100000028B0000028 /* Resources */,
 				103CC7960C5952AB6EAEC3A6 /* Services */,
 				E1B6668CA1B26327F50398F5 /* Widgets */,
 			);
 			path = OpenShelf;
 			sourceTree = "<group>";
 		};
+		BB01G10100000028B0000028 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BB01F10100000027B0000027 /* CuratedLists.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		1F0FC88A52F1919D64648537 /* BookDetail */ = {
 			isa = PBXGroup;
 			children = (
+				BB01F10100000022B0000022 /* AuthorPageView.swift */,
 				BB4D3362D14FBDCE9D184008 /* BookDetailView.swift */,
 				9D859695F9FA5A549BD5E3DA /* NotesEditor.swift */,
 				F2ECA3F7017D39DD1FD73D2E /* ProgressEditor.swift */,
@@ -164,6 +191,7 @@
 		2500AF53BDCC10D69B821840 /* DTOs */ = {
 			isa = PBXGroup;
 			children = (
+				BB01F10100000021B0000021 /* AuthorDetail.swift */,
 				AA01F10100000015A0000015 /* AuthorWorksResponse.swift */,
 				71858783351BE710421D4D22 /* EditionDetail.swift */,
 				F0E3088FDE041E6C3EDAD50B /* SearchResponse.swift */,
@@ -176,6 +204,7 @@
 			isa = PBXGroup;
 			children = (
 				60D283094A253783DCFF7D8E /* Book.swift */,
+				BB01F10100000020B0000020 /* BookshopService.swift */,
 				AA01F1010000000CA000000C /* FollowedAuthor.swift */,
 				AA01F1010000000DA000000D /* LibraryService.swift */,
 				0EA13AA9BCE4556FF49B507D /* ReadEntry.swift */,
@@ -191,6 +220,7 @@
 			isa = PBXGroup;
 			children = (
 				1F20E41E7A07AAA1CB749556 /* LibraryView.swift */,
+				BB01F10100000023B0000023 /* WorldBookDayBanner.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -246,6 +276,7 @@
 				AA01F10100000005A0000005 /* ExportView.swift */,
 				69A105D9B62331858AA224F7 /* ImportView.swift */,
 				E9B5246DEF1DA8C98F110052 /* SettingsView.swift */,
+				BB01F10100000026B0000026 /* TipJarSection.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -255,6 +286,7 @@
 			children = (
 				A870FA64B05D7C35921F6DE7 /* BarcodeScannerView.swift */,
 				EB87078E942A0B3A90280EAD /* BookDetailSheet.swift */,
+				BB01F10100000024B0000024 /* DiscoverSection.swift */,
 				CB8CADEF055C9A6DBBB8B046 /* ManualEntryView.swift */,
 				3C4B3BCE625C262C82CFE270 /* SearchView.swift */,
 			);
@@ -352,6 +384,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FF0F13753C408E69E9CB7D80 /* Assets.xcassets in Resources */,
+				BB01B10100000027B0000027 /* CuratedLists.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,6 +444,13 @@
 				AA01B10100000013A0000013 /* RecommendationEngine.swift in Sources */,
 				AA01B10100000014A0000014 /* SharedModelContainer.swift in Sources */,
 				AA01B10100000015A0000015 /* AuthorWorksResponse.swift in Sources */,
+				BB01B10100000020B0000020 /* BookshopService.swift in Sources */,
+				BB01B10100000021B0000021 /* AuthorDetail.swift in Sources */,
+				BB01B10100000022B0000022 /* AuthorPageView.swift in Sources */,
+				BB01B10100000023B0000023 /* WorldBookDayBanner.swift in Sources */,
+				BB01B10100000024B0000024 /* DiscoverSection.swift in Sources */,
+				BB01B10100000025B0000025 /* TipJarStore.swift in Sources */,
+				BB01B10100000026B0000026 /* TipJarSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

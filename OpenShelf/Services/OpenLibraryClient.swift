@@ -141,6 +141,63 @@ actor OpenLibraryClient {
         return try await performRequest(url: url)
     }
 
+    // MARK: - Author Detail
+
+    func fetchAuthorDetail(key: String) async throws -> AuthorDetail {
+        let path = key.hasPrefix("/") ? key : "/authors/\(key)"
+        guard let url = URL(string: "\(baseURL)\(path).json") else {
+            throw OpenLibraryError.invalidURL
+        }
+        return try await performRequest(url: url)
+    }
+
+    // MARK: - Wikipedia Link Resolution
+
+    func resolveWikipediaURL(wikidataID: String) async throws -> URL? {
+        guard wikidataID.range(of: #"^Q[0-9]+$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+
+        guard var components = URLComponents(string: "https://www.wikidata.org/w/api.php") else {
+            return nil
+        }
+
+        components.queryItems = [
+            URLQueryItem(name: "action", value: "wbgetentities"),
+            URLQueryItem(name: "ids", value: wikidataID),
+            URLQueryItem(name: "props", value: "sitelinks"),
+            URLQueryItem(name: "format", value: "json"),
+            URLQueryItem(name: "sitefilter", value: "enwiki"),
+        ]
+
+        guard let url = components.url else { return nil }
+
+        let data: Data
+        let response: URLResponse
+
+        do {
+            (data, response) = try await session.data(from: url)
+        } catch {
+            return nil
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            return nil
+        }
+
+        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let entities = json?["entities"] as? [String: Any]
+        let entity = entities?[wikidataID] as? [String: Any]
+        let sitelinks = entity?["sitelinks"] as? [String: Any]
+        let enwiki = sitelinks?["enwiki"] as? [String: Any]
+        let title = enwiki?["title"] as? String
+
+        guard let title else { return nil }
+        let encoded = title.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? title
+        return URL(string: "https://en.wikipedia.org/wiki/\(encoded)")
+    }
+
     // MARK: - Cover URL
 
     func coverURL(id: Int, size: CoverSize) -> URL {

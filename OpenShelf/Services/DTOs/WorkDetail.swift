@@ -7,6 +7,7 @@ struct WorkDetail: Codable, Sendable {
     let subjects: [String]?
     let covers: [Int]?
     let firstPublishDate: String?
+    let authors: [AuthorRef]?
 
     var synopsis: String? {
         description?.text
@@ -16,12 +17,24 @@ struct WorkDetail: Codable, Sendable {
         covers?.first
     }
 
+    var primaryAuthorKey: String? {
+        authors?.first?.author?.key
+    }
+
+    struct AuthorRef: Codable, Sendable {
+        let author: AuthorKey?
+        struct AuthorKey: Codable, Sendable {
+            let key: String
+        }
+    }
+
     enum CodingKeys: String, CodingKey {
         case key
         case title
         case description
         case subjects
         case covers
+        case authors
         case firstPublishDate = "first_publish_date"
     }
 }

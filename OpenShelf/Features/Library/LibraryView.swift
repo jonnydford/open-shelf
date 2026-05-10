@@ -108,6 +108,7 @@ struct LibraryView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                WorldBookDayBanner(books: allBooks)
                 newBookBanner
                 shelfPicker
 

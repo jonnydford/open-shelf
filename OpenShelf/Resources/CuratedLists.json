@@ -1,0 +1,49 @@
+[
+  {
+    "id": "classics",
+    "name": "Classics Everyone Should Read",
+    "description": "Timeless works of literature",
+    "bookKeys": [
+      "/works/OL45804W",
+      "/works/OL103123W",
+      "/works/OL66554W",
+      "/works/OL15099W",
+      "/works/OL27516W",
+      "/works/OL53908W",
+      "/works/OL35187W"
+    ]
+  },
+  {
+    "id": "uk-authors",
+    "name": "UK Authors to Discover",
+    "description": "Brilliant British and Irish writers worth exploring",
+    "bookKeys": [
+      "/works/OL82563W",
+      "/works/OL14933414W",
+      "/works/OL17860744W",
+      "/works/OL20648482W",
+      "/works/OL15836W",
+      "/works/OL362684W"
+    ]
+  },
+  {
+    "id": "best-2026",
+    "name": "Best of 2026",
+    "description": "Popular and acclaimed recent releases",
+    "bookKeys": [
+      "/works/OL27448W",
+      "/works/OL76837W",
+      "/works/OL15413843W",
+      "/works/OL17930368W",
+      "/works/OL20817234W"
+    ]
+  },
+  {
+    "id": "book-of-the-month",
+    "name": "Book of the Month",
+    "description": "Our pick for this month",
+    "bookKeys": [
+      "/works/OL45804W"
+    ]
+  }
+]
