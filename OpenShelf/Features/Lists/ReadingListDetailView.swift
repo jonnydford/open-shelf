@@ -19,6 +19,7 @@ struct ReadingListDetailView: View {
     @State private var renameText = ""
     @State private var showCloudSharing = false
     @State private var activeShare: CKShare?
+    @State private var activeContainer: CKContainer?
     @State private var isSharingInProgress = false
     @State private var sharingError: String?
 
@@ -110,12 +111,10 @@ struct ReadingListDetailView: View {
             updateSharedRecordIfNeeded()
         }
         .sheet(isPresented: $showCloudSharing) {
-            if let share = activeShare, CloudSharingService.isAvailable {
+            if let share = activeShare, let ckContainer = activeContainer {
                 CloudSharingSheet(
                     share: share,
-                    container: CKContainer(
-                        identifier: CloudSharingService.containerIdentifier
-                    ),
+                    container: ckContainer,
                     onStoppedSharing: {
                         readingList.ckRecordName = nil
                         try? modelContext.save()
@@ -295,7 +294,7 @@ struct ReadingListDetailView: View {
         isSharingInProgress = true
         defer { isSharingInProgress = false }
         do {
-            let (record, share, _) = try await sharingService.prepareShare(
+            let (record, share, ckContainer) = try await sharingService.prepareShare(
                 list: readingList,
                 books: booksInList,
                 includeRatings: readingList.includeRatings,
@@ -304,6 +303,7 @@ struct ReadingListDetailView: View {
             readingList.ckRecordName = record.recordID.recordName
             try? modelContext.save()
             activeShare = share
+            activeContainer = ckContainer
             showCloudSharing = true
         } catch {
             sharingError = "Could not share this list. Make sure you're signed into iCloud."
