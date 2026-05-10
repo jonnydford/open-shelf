@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-final class LibraryAvailabilityChecker: Sendable {
+final class LibraryAvailabilityChecker {
     static let shared = LibraryAvailabilityChecker()
 
     private let cache = NSCache<NSString, NSNumber>()
@@ -45,11 +45,12 @@ final class LibraryAvailabilityChecker: Sendable {
                 return .unknown
             }
 
+            // Check for Spydus Cloud / Prism catalogue-specific markup
             let hasResults = html.contains("resultCount") ||
-                html.contains("search-results") ||
-                html.contains("item-list") ||
-                html.contains("record-detail") ||
-                (html.contains("results") && !html.contains("0 results") && !html.contains("No results"))
+                html.contains("class=\"search-results\"") ||
+                html.contains("class=\"item-list\"") ||
+                html.contains("class=\"record-detail\"") ||
+                html.contains("data-total")
 
             let status: AvailabilityStatus = hasResults ? .likelyAvailable : .notFound
             cache.setObject(NSNumber(value: hasResults), forKey: isbn as NSString)

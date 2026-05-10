@@ -294,7 +294,7 @@ struct SettingsView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
-                    Text("Your library's catalogue domain, e.g. norfolk.spydus.co.uk")
+                    Text("Your library's Koha catalogue domain, e.g. catalogue.mylibrary.org")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

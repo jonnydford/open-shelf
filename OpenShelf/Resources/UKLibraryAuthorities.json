@@ -40,15 +40,15 @@
     {"name": "Gateshead", "region": "North East", "system": "spydus_cloud", "slug": "gateshead"},
     {"name": "South Tyneside", "region": "North East", "system": "spydus_cloud", "slug": "southtyneside"},
     {"name": "North Tyneside", "region": "North East", "system": "spydus_cloud", "slug": "northtyneside"},
-    {"name": "Norfolk", "region": "East of England", "system": "koha", "domain": "norfolk.spydus.co.uk"},
-    {"name": "Suffolk", "region": "East of England", "system": "koha", "domain": "suffolk.spydus.co.uk"},
-    {"name": "Cambridgeshire", "region": "East of England", "system": "koha", "domain": "cambridgeshire.spydus.co.uk"},
-    {"name": "Hertfordshire", "region": "East of England", "system": "koha", "domain": "herts.spydus.co.uk"},
-    {"name": "Essex", "region": "East of England", "system": "koha", "domain": "essex.spydus.co.uk"},
-    {"name": "Kent", "region": "South East", "system": "koha", "domain": "kent.spydus.co.uk"},
-    {"name": "Hampshire", "region": "South East", "system": "koha", "domain": "hampshire.spydus.co.uk"},
-    {"name": "Devon", "region": "South West", "system": "koha", "domain": "devon.spydus.co.uk"},
-    {"name": "Cornwall", "region": "South West", "system": "koha", "domain": "cornwall.spydus.co.uk"},
-    {"name": "Lincolnshire", "region": "East Midlands", "system": "koha", "domain": "lincolnshire.spydus.co.uk"}
+    {"name": "Norfolk", "region": "East of England", "system": "spydus_cloud", "slug": "norfolk"},
+    {"name": "Suffolk", "region": "East of England", "system": "spydus_cloud", "slug": "suffolk"},
+    {"name": "Cambridgeshire", "region": "East of England", "system": "spydus_cloud", "slug": "cambridgeshire"},
+    {"name": "Hertfordshire", "region": "East of England", "system": "spydus_cloud", "slug": "herts"},
+    {"name": "Essex", "region": "East of England", "system": "spydus_cloud", "slug": "essex"},
+    {"name": "Kent", "region": "South East", "system": "spydus_cloud", "slug": "kent"},
+    {"name": "Hampshire", "region": "South East", "system": "spydus_cloud", "slug": "hampshire"},
+    {"name": "Devon", "region": "South West", "system": "spydus_cloud", "slug": "devon"},
+    {"name": "Cornwall", "region": "South West", "system": "spydus_cloud", "slug": "cornwall"},
+    {"name": "Lincolnshire", "region": "East Midlands", "system": "spydus_cloud", "slug": "lincolnshire"}
   ]
 }

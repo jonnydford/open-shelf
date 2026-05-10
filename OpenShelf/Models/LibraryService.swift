@@ -37,13 +37,36 @@ enum LibraryService: String, CaseIterable, Identifiable {
 
     static func spydusCloudURL(slug: String, isbn: String) -> URL? {
         guard !slug.isEmpty else { return nil }
-        let cleaned = slug.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return URL(string: "https://prism.librarymanagementcloud.co.uk/\(cleaned)/items?query=\(isbn)")
+        let cleaned = slug
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber || $0 == "-" }
+        guard !cleaned.isEmpty else { return nil }
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "prism.librarymanagementcloud.co.uk"
+        components.path = "/\(cleaned)/items"
+        components.queryItems = [URLQueryItem(name: "query", value: isbn)]
+        return components.url
     }
 
     static func kohaURL(domain: String, isbn: String) -> URL? {
         guard !domain.isEmpty else { return nil }
-        let cleaned = domain.trimmingCharacters(in: .whitespacesAndNewlines)
-        return URL(string: "https://\(cleaned)/cgi-bin/koha/opac-search.pl?q=nb:\(isbn)")
+        var cleaned = domain.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Strip accidental scheme prefix
+        for prefix in ["https://", "http://"] {
+            if cleaned.lowercased().hasPrefix(prefix) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+            }
+        }
+        // Strip trailing slashes
+        cleaned = cleaned.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !cleaned.isEmpty else { return nil }
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = cleaned
+        components.path = "/cgi-bin/koha/opac-search.pl"
+        components.queryItems = [URLQueryItem(name: "q", value: "nb:\(isbn)")]
+        return components.url
     }
 }

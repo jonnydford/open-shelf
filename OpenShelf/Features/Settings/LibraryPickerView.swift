@@ -49,6 +49,7 @@ struct LibraryPickerView: View {
                                     Image(systemName: "chevron.right")
                                         .font(.caption)
                                         .foregroundStyle(.tertiary)
+                                        .accessibilityHidden(true)
                                 }
                             }
                             .accessibilityLabel("\(authority.name), \(authority.region), \(authority.libraryService.rawValue)")

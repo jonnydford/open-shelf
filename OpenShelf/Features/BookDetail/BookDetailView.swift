@@ -787,7 +787,7 @@ struct BookDetailView: View {
                 .buttonStyle(.bordered)
                 .padding(.horizontal)
             }
-            .task {
+            .task(id: isbn) {
                 await checkLibraryAvailability(isbn: isbn)
             }
         }
