@@ -295,6 +295,19 @@ struct CurrentlyReadingWidgetView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(smallViewAccessibilityLabel)
+    }
+
+    private var smallViewAccessibilityLabel: String {
+        guard let title = entry.title else {
+            return "No books currently being read"
+        }
+        var label = "Currently reading \(title)"
+        if entry.pageCount != nil {
+            label += ", \(entry.percentage) percent complete"
+        }
+        return label
     }
 
     private var emptySmallView: some View {
@@ -308,6 +321,7 @@ struct CurrentlyReadingWidgetView: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityLabel("No books currently being read. Open Open Shelf to start reading.")
     }
 
     // MARK: - Medium Widget
@@ -364,6 +378,7 @@ struct CurrentlyReadingWidgetView: View {
                                             .foregroundStyle(.tint)
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityLabel("Add 10 pages")
 
                                     Button(intent: makeFinishIntent(bookID: workKey)) {
                                         Image(systemName: "checkmark.circle.fill")
@@ -371,6 +386,7 @@ struct CurrentlyReadingWidgetView: View {
                                             .foregroundStyle(.green)
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityLabel("Mark as finished")
                                 }
                             }
                         }
@@ -399,6 +415,7 @@ struct CurrentlyReadingWidgetView: View {
                 Image(systemName: "book.fill")
             }
             .gaugeStyle(.accessoryCircularCapacity)
+            .accessibilityLabel("Reading progress, \(entry.percentage) percent")
         } else {
             ZStack {
                 AccessoryWidgetBackground()
@@ -430,6 +447,7 @@ struct CurrentlyReadingWidgetView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Intent Helpers
@@ -568,12 +586,14 @@ struct LargeWidgetView: View {
                             .foregroundStyle(.tint)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Add 10 pages to \(book.title ?? "book")")
 
                     Button(intent: makeFinishIntent(bookID: workKey)) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Mark \(book.title ?? "book") as finished")
                 }
             }
         }

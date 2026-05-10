@@ -165,10 +165,21 @@ struct ReadingGoalWidgetView: View {
                 }
             }
             .frame(width: 90, height: 90)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(entry.booksRead) of \(entry.target) books read")
+            .accessibilityValue(paceDescription)
 
             Text("books")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private var paceDescription: String {
+        if entry.pace >= 0 {
+            return "On track"
+        } else {
+            return "\(abs(entry.pace)) books behind schedule"
         }
     }
 
@@ -182,5 +193,7 @@ struct ReadingGoalWidgetView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No reading goal set. Open Open Shelf to set a goal.")
     }
 }

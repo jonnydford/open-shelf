@@ -20,6 +20,7 @@ struct ReadHistorySection: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Read History")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
 
                 ForEach(sortedEntries) { entry in
                     readEntryRow(entry)
@@ -61,6 +62,7 @@ struct ReadHistorySection: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityHint("Double tap to expand details")
 
             if isExpanded {
                 expandedContent(entry)
@@ -89,7 +91,7 @@ struct ReadHistorySection: View {
                 Text(finish, style: .date)
                     .font(.subheadline)
             } else if entry.dnfPage != nil {
-                Text("DNF")
+                Label("DNF", systemImage: "xmark.circle")
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(.orange)
@@ -104,9 +106,19 @@ struct ReadHistorySection: View {
         HStack(spacing: 1) {
             ForEach(1...5, id: \.self) { star in
                 Image(systemName: starName(for: star, rating: rating))
-                    .font(.system(size: 10))
+                    .font(.caption2)
                     .foregroundStyle(.yellow)
             }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(ratingAccessibilityLabel(rating))
+    }
+
+    private func ratingAccessibilityLabel(_ rating: Double) -> String {
+        if rating == floor(rating) {
+            return "\(Int(rating)) out of 5 stars"
+        } else {
+            return "\(String(format: "%.1f", rating)) out of 5 stars"
         }
     }
 

@@ -84,7 +84,7 @@ struct ImportView: View {
         ScrollView {
             VStack(spacing: 24) {
                 Image(systemName: "square.and.arrow.down")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(.tint)
                     .padding(.top, 32)
 
@@ -137,6 +137,7 @@ struct ImportView: View {
                 .font(.subheadline)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Parsing
@@ -163,6 +164,7 @@ struct ImportView: View {
 
             ProgressView(value: Double(current), total: Double(total))
                 .padding(.horizontal, 40)
+                .accessibilityLabel("Import progress: \(current) of \(total) books matched")
 
             Text("Matching books...")
                 .font(.headline)
@@ -206,7 +208,7 @@ struct ImportView: View {
         ScrollView {
             VStack(spacing: 24) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 56))
+                    .font(.largeTitle)
                     .foregroundStyle(.green)
                     .padding(.top, 32)
 
@@ -304,7 +306,7 @@ struct ImportView: View {
             Spacer()
 
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundStyle(.red)
 
             Text("Import Failed")

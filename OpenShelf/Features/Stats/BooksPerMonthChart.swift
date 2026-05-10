@@ -12,6 +12,7 @@ struct BooksPerMonthChart: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Books Per Month")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             chartContent
                 .frame(height: 200)
@@ -74,6 +75,7 @@ struct BooksPerMonthChart: View {
         .chartXSelection(value: $selectedMonthName)
         .chartYAxisLabel("Books")
         .animation(.easeInOut, value: data.map(\.count))
+        .accessibilityHint("Tap a bar to see count for that month")
     }
 
     private var yearlyChart: some View {

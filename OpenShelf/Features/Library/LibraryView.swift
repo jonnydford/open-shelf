@@ -418,6 +418,13 @@ struct LibraryView: View {
                 .contextMenu {
                     contextMenuItems(for: book)
                 }
+                .accessibilityAction(named: "Remove from Up Next") {
+                    repository.removeFromQueue(book)
+                }
+                .accessibilityAction(named: "Delete") {
+                    bookToDelete = book
+                    showDeleteConfirmation = true
+                }
             }
         } header: {
             Label("Up Next", systemImage: "text.line.first.and.arrowtriangle.forward")
@@ -502,6 +509,22 @@ struct LibraryView: View {
         }
         .contextMenu {
             contextMenuItems(for: book)
+        }
+        .accessibilityAction(named: "Delete") {
+            bookToDelete = book
+            showDeleteConfirmation = true
+        }
+        .accessibilityAction(named: "Move to Want to Read") {
+            moveBook(book, to: .wantToRead)
+        }
+        .accessibilityAction(named: "Move to Reading") {
+            moveBook(book, to: .reading)
+        }
+        .accessibilityAction(named: "Move to Read") {
+            moveBook(book, to: .read)
+        }
+        .accessibilityAction(named: "Move to Did Not Finish") {
+            moveBook(book, to: .dnf)
         }
     }
 

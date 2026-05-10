@@ -112,10 +112,12 @@ struct ReadingGoalView: View {
             Text("\(pace) book\(pace == 1 ? "" : "s") ahead of schedule")
                 .font(.caption)
                 .foregroundStyle(.green)
+                .accessibilityLabel("\(pace) book\(pace == 1 ? "" : "s") ahead of reading goal schedule")
         } else if pace < 0 {
             Text("\(abs(pace)) book\(abs(pace) == 1 ? "" : "s") behind schedule")
                 .font(.caption)
                 .foregroundStyle(.orange)
+                .accessibilityLabel("\(abs(pace)) book\(abs(pace) == 1 ? "" : "s") behind reading goal schedule")
         } else {
             Text("Right on schedule")
                 .font(.caption)

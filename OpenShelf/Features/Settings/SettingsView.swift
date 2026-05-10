@@ -201,6 +201,10 @@ struct SettingsView: View {
                             Label("Unfollow", systemImage: "trash")
                         }
                     }
+                    .accessibilityAction(named: "Unfollow") {
+                        modelContext.delete(author)
+                        try? modelContext.save()
+                    }
                 }
             }
         }
@@ -341,6 +345,7 @@ struct SettingsView: View {
                         if booksRead >= goal.target {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(.green)
+                                .accessibilityLabel("Goal achieved")
                         }
                     }
                 }
