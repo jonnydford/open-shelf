@@ -8,9 +8,11 @@ enum BookFormat: String, Codable, CaseIterable, Sendable {
     case graphicNovel = "Graphic Novel"
     case manga = "Manga"
     case comic = "Comic"
+    case audiobook = "Audiobook"
 
     static func detectFormat(subjects: [String]) -> BookFormat {
         let lower = subjects.map { $0.lowercased() }
+        if lower.contains(where: { $0.contains("audiobook") || $0.contains("audiobooks") || $0.contains("audio book") }) { return .audiobook }
         if lower.contains(where: { $0.contains("manga") }) { return .manga }
         if lower.contains(where: { $0.contains("graphic novel") || $0.contains("graphic novels") }) { return .graphicNovel }
         if lower.contains(where: { $0.contains("comic") || $0.contains("comics") }) { return .comic }
@@ -67,6 +69,13 @@ final class Book {
 
     var format: BookFormat
 
+    // MARK: - Audiobook metadata
+
+    var narrator: String?
+    var durationMinutes: Int?
+    var chapterCount: Int?
+    var currentChapter: Int?
+
     @Relationship(deleteRule: .cascade, inverse: \ReadEntry.book)
     var reads: [ReadEntry]
 
@@ -100,6 +109,10 @@ final class Book {
         seriesName: String? = nil,
         seriesPosition: Int? = nil,
         format: BookFormat = .book,
+        narrator: String? = nil,
+        durationMinutes: Int? = nil,
+        chapterCount: Int? = nil,
+        currentChapter: Int? = nil,
         reads: [ReadEntry] = []
     ) {
         self.olWorkKey = olWorkKey
@@ -131,6 +144,10 @@ final class Book {
         self.seriesName = seriesName
         self.seriesPosition = seriesPosition
         self.format = format
+        self.narrator = narrator
+        self.durationMinutes = durationMinutes
+        self.chapterCount = chapterCount
+        self.currentChapter = currentChapter
         self.reads = reads
     }
 }

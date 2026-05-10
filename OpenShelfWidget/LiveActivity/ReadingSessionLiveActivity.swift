@@ -17,7 +17,7 @@ struct ReadingSessionLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Image(systemName: "book.fill")
+                    Image(systemName: context.attributes.isAudiobook ? "headphones" : "book.fill")
                         .font(.title2)
                         .foregroundStyle(.tint)
                 }
@@ -33,7 +33,18 @@ struct ReadingSessionLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     Group {
-                        if let pageCount = context.attributes.pageCount, pageCount > 0 {
+                        if context.attributes.isAudiobook {
+                            if let chapterCount = context.attributes.chapterCount, chapterCount > 0,
+                               let currentChapter = context.state.currentChapter {
+                                let progress = Double(currentChapter) / Double(chapterCount)
+                                Gauge(value: progress) {
+                                    Text("")
+                                }
+                                .gaugeStyle(.accessoryCircularCapacity)
+                                .tint(.purple)
+                                .frame(width: 44, height: 44)
+                            }
+                        } else if let pageCount = context.attributes.pageCount, pageCount > 0 {
                             let progress = Double(context.state.currentPage) / Double(pageCount)
                             Gauge(value: progress) {
                                 Text("")
@@ -46,8 +57,18 @@ struct ReadingSessionLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
-                        Label("Page \(context.state.currentPage)", systemImage: "bookmark.fill")
-                            .font(.caption)
+                        if context.attributes.isAudiobook {
+                            if let currentChapter = context.state.currentChapter {
+                                Label("Chapter \(currentChapter)", systemImage: "headphones")
+                                    .font(.caption)
+                            } else {
+                                Label("Listening", systemImage: "headphones")
+                                    .font(.caption)
+                            }
+                        } else {
+                            Label("Page \(context.state.currentPage)", systemImage: "bookmark.fill")
+                                .font(.caption)
+                        }
                         Spacer()
                         Text(context.state.startedAt, style: .timer)
                             .font(.caption.monospacedDigit())
@@ -55,11 +76,21 @@ struct ReadingSessionLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                Image(systemName: "book.fill")
+                Image(systemName: context.attributes.isAudiobook ? "headphones" : "book.fill")
                     .foregroundStyle(.tint)
             } compactTrailing: {
                 Group {
-                    if let pageCount = context.attributes.pageCount, pageCount > 0 {
+                    if context.attributes.isAudiobook {
+                        if let chapterCount = context.attributes.chapterCount, chapterCount > 0,
+                           let currentChapter = context.state.currentChapter {
+                            let pct = Int(Double(currentChapter) / Double(chapterCount) * 100)
+                            Text("\(pct)%")
+                        } else if let currentChapter = context.state.currentChapter {
+                            Text("Ch.\(currentChapter)")
+                        } else {
+                            Image(systemName: "headphones")
+                        }
+                    } else if let pageCount = context.attributes.pageCount, pageCount > 0 {
                         let pct = Int(Double(context.state.currentPage) / Double(pageCount) * 100)
                         Text("\(pct)%")
                     } else {
@@ -68,7 +99,7 @@ struct ReadingSessionLiveActivity: Widget {
                 }
                 .font(.caption.monospacedDigit())
             } minimal: {
-                Image(systemName: "book.fill")
+                Image(systemName: context.attributes.isAudiobook ? "headphones" : "book.fill")
                     .foregroundStyle(.tint)
             }
         }
@@ -77,7 +108,7 @@ struct ReadingSessionLiveActivity: Widget {
     @ViewBuilder
     private func lockScreenView(context: ActivityViewContext<ReadingSessionAttributes>) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "book.fill")
+            Image(systemName: context.attributes.isAudiobook ? "headphones" : "book.fill")
                 .font(.title2)
                 .foregroundStyle(.tint)
 
@@ -87,13 +118,30 @@ struct ReadingSessionLiveActivity: Widget {
                     .lineLimit(1)
 
                 HStack(spacing: 16) {
-                    Label("Page \(context.state.currentPage)", systemImage: "bookmark.fill")
-                        .font(.caption)
-                    if let pageCount = context.attributes.pageCount, pageCount > 0 {
-                        let pct = Int(Double(context.state.currentPage) / Double(pageCount) * 100)
-                        Text("\(pct)%")
+                    if context.attributes.isAudiobook {
+                        if let currentChapter = context.state.currentChapter {
+                            Label("Chapter \(currentChapter)", systemImage: "headphones")
+                                .font(.caption)
+                        } else {
+                            Label("Listening", systemImage: "headphones")
+                                .font(.caption)
+                        }
+                        if let chapterCount = context.attributes.chapterCount, chapterCount > 0,
+                           let currentChapter = context.state.currentChapter {
+                            let pct = Int(Double(currentChapter) / Double(chapterCount) * 100)
+                            Text("\(pct)%")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Label("Page \(context.state.currentPage)", systemImage: "bookmark.fill")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                        if let pageCount = context.attributes.pageCount, pageCount > 0 {
+                            let pct = Int(Double(context.state.currentPage) / Double(pageCount) * 100)
+                            Text("\(pct)%")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     Spacer()
                     Text(context.state.startedAt, style: .timer)
@@ -108,12 +156,25 @@ struct ReadingSessionLiveActivity: Widget {
     }
 
     private func lockScreenAccessibilityLabel(context: ActivityViewContext<ReadingSessionAttributes>) -> String {
-        var label = "Reading \(context.attributes.bookTitle)"
-        label += ", page \(context.state.currentPage)"
-        if let pageCount = context.attributes.pageCount, pageCount > 0 {
-            let pct = Int(Double(context.state.currentPage) / Double(pageCount) * 100)
-            label += ", \(pct) percent complete"
+        if context.attributes.isAudiobook {
+            var label = "Listening to \(context.attributes.bookTitle)"
+            if let currentChapter = context.state.currentChapter {
+                label += ", chapter \(currentChapter)"
+            }
+            if let chapterCount = context.attributes.chapterCount, chapterCount > 0,
+               let currentChapter = context.state.currentChapter {
+                let pct = Int(Double(currentChapter) / Double(chapterCount) * 100)
+                label += ", \(pct) percent complete"
+            }
+            return label
+        } else {
+            var label = "Reading \(context.attributes.bookTitle)"
+            label += ", page \(context.state.currentPage)"
+            if let pageCount = context.attributes.pageCount, pageCount > 0 {
+                let pct = Int(Double(context.state.currentPage) / Double(pageCount) * 100)
+                label += ", \(pct) percent complete"
+            }
+            return label
         }
-        return label
     }
 }

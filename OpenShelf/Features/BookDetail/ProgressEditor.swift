@@ -7,6 +7,7 @@ struct ProgressEditor: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var pageInput: String = ""
+    @State private var chapterInput: String = ""
     @State private var percentageValue: Double = 0
     @State private var showFinishedAlert = false
     @State private var showRatingSheet = false
@@ -14,15 +15,17 @@ struct ProgressEditor: View {
     @State private var validationError: String?
     @State private var useSlider = false
 
+    private var isAudiobook: Bool {
+        book.format == .audiobook
+    }
+
     var body: some View {
         NavigationStack {
             Form {
-                currentProgressSection
-
-                inputSection
-
-                if book.pageCount != nil {
-                    percentageSection
+                if isAudiobook {
+                    audiobookContent
+                } else {
+                    pageContent
                 }
 
                 if let error = validationError {
@@ -33,42 +36,149 @@ struct ProgressEditor: View {
                     }
                 }
             }
-            .navigationTitle("Update Progress")
+            .navigationTitle(isAudiobook ? "Update Listening Progress" : "Update Progress")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveProgress()
+                    if isAudiobook {
+                        if book.chapterCount != nil {
+                            Button("Save") {
+                                saveChapterProgress()
+                            }
+                            .disabled(chapterInput.isEmpty)
+                        }
+                    } else {
+                        Button("Save") {
+                            saveProgress()
+                        }
+                        .disabled(pageInput.isEmpty)
                     }
-                    .disabled(pageInput.isEmpty)
                 }
             }
-            .alert("Finished Reading?", isPresented: $showFinishedAlert) {
+            .alert(isAudiobook ? "Finished Listening?" : "Finished Reading?", isPresented: $showFinishedAlert) {
                 Button("Not Yet") {
-                    // Save progress without finishing
-                    applyProgress(Int(pageInput) ?? 0)
+                    if isAudiobook {
+                        if let chapter = Int(chapterInput) {
+                            repository.updateChapterProgress(book, chapter: chapter)
+                        }
+                    } else {
+                        applyProgress(Int(pageInput) ?? 0)
+                    }
                     dismiss()
                 }
                 Button("Yes, Finished!") {
                     showRatingSheet = true
                 }
             } message: {
-                Text("You've reached the last page. Mark this book as finished?")
+                Text(isAudiobook
+                     ? "You've reached the last chapter. Mark this audiobook as finished?"
+                     : "You've reached the last page. Mark this book as finished?")
             }
             .sheet(isPresented: $showRatingSheet) {
                 ratingSheet
             }
             .onAppear {
-                if let page = book.currentPage {
-                    pageInput = String(page)
+                if isAudiobook {
+                    if let chapter = book.currentChapter {
+                        chapterInput = String(chapter)
+                    }
+                } else {
+                    if let page = book.currentPage {
+                        pageInput = String(page)
+                    }
+                    syncSliderFromPage()
                 }
-                syncSliderFromPage()
             }
         }
         .presentationDetents([.medium])
+    }
+
+    // MARK: - Audiobook Content
+
+    @ViewBuilder
+    private var audiobookContent: some View {
+        if let chapterCount = book.chapterCount {
+            // Chapter mode
+            audiobookChapterProgressSection
+            audiobookChapterInputSection
+        } else {
+            // Simple mode: just a finish button
+            audiobookSimpleSection
+        }
+    }
+
+    @ViewBuilder
+    private var audiobookChapterProgressSection: some View {
+        if let currentChapter = book.currentChapter, let chapterCount = book.chapterCount, chapterCount > 0 {
+            Section("Current Progress") {
+                let progress = min(Double(currentChapter) / Double(chapterCount), 1.0)
+                let percentage = Int(progress * 100)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    ProgressView(value: progress)
+                        .tint(.green)
+                        .accessibilityLabel("Listening progress: \(percentage) percent")
+
+                    Text("Chapter \(currentChapter) of \(chapterCount) (\(percentage)%)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private var audiobookChapterInputSection: some View {
+        Section("Chapter Number") {
+            TextField("Enter current chapter", text: $chapterInput)
+                .keyboardType(.numberPad)
+                .accessibilityLabel("Current chapter number")
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            UIApplication.shared.sendAction(
+                                #selector(UIResponder.resignFirstResponder),
+                                to: nil, from: nil, for: nil
+                            )
+                        }
+                    }
+                }
+
+            if let chapterCount = book.chapterCount {
+                Text("Total chapters: \(chapterCount)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var audiobookSimpleSection: some View {
+        Section {
+            Button {
+                showRatingSheet = true
+            } label: {
+                Label("Finished Listening", systemImage: "checkmark.circle.fill")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+        }
+    }
+
+    // MARK: - Page Content
+
+    @ViewBuilder
+    private var pageContent: some View {
+        currentProgressSection
+        inputSection
+
+        if book.pageCount != nil {
+            percentageSection
+        }
     }
 
     // MARK: - Current Progress
@@ -181,11 +291,11 @@ struct ProgressEditor: View {
             VStack(spacing: 24) {
                 Spacer()
 
-                Text("Rate This Book")
+                Text(isAudiobook ? "Rate This Audiobook" : "Rate This Book")
                     .font(.title2)
                     .fontWeight(.bold)
 
-                Text("How would you rate this book?")
+                Text(isAudiobook ? "How would you rate this audiobook?" : "How would you rate this book?")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -234,13 +344,41 @@ struct ProgressEditor: View {
         }
     }
 
+    private func saveChapterProgress() {
+        guard let chapter = Int(chapterInput), chapter > 0 else {
+            validationError = "Please enter a valid chapter number."
+            return
+        }
+
+        if let chapterCount = book.chapterCount, chapter > chapterCount {
+            validationError = "Chapter number can't exceed \(chapterCount)."
+            return
+        }
+
+        validationError = nil
+
+        // Auto-finish check
+        if let chapterCount = book.chapterCount, chapter >= chapterCount {
+            showFinishedAlert = true
+        } else {
+            repository.updateChapterProgress(book, chapter: chapter)
+            dismiss()
+        }
+    }
+
     private func applyProgress(_ page: Int) {
         repository.updateProgress(book, page: page)
     }
 
     private func finishBook(rating: Double?) {
-        if let page = Int(pageInput) {
-            repository.updateProgress(book, page: page)
+        if isAudiobook {
+            if let chapter = Int(chapterInput) {
+                repository.updateChapterProgress(book, chapter: chapter)
+            }
+        } else {
+            if let page = Int(pageInput) {
+                repository.updateProgress(book, page: page)
+            }
         }
 
         // Create ReadEntry

@@ -84,6 +84,7 @@ final class BookRepository {
             book.dateStarted = nil
             book.dateFinished = nil
             book.currentPage = nil
+            book.currentChapter = nil
         case .dnf:
             break
         }
@@ -100,6 +101,19 @@ final class BookRepository {
 
     func updateProgress(_ book: Book, page: Int) {
         book.currentPage = page
+
+        // Automatically move to "reading" if on "want to read"
+        if book.shelf == .wantToRead {
+            book.shelf = .reading
+            book.dateStarted = .now
+        }
+
+        try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    func updateChapterProgress(_ book: Book, chapter: Int) {
+        book.currentChapter = chapter
 
         // Automatically move to "reading" if on "want to read"
         if book.shelf == .wantToRead {
