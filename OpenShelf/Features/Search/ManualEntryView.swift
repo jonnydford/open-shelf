@@ -17,6 +17,11 @@ struct ManualEntryView: View {
     @State private var coverImage: UIImage?
     @State private var isSaving = false
     @State private var validationError: String?
+    @State private var selectedFormat: BookFormat = .book
+    @State private var narrator = ""
+    @State private var durationHoursText = ""
+    @State private var durationMinutesText = ""
+    @State private var chapterCountText = ""
 
     @ScaledMetric(relativeTo: .body) private var coverPreviewWidth: CGFloat = 60
     @ScaledMetric(relativeTo: .body) private var coverPreviewHeight: CGFloat = 90
@@ -25,7 +30,11 @@ struct ManualEntryView: View {
         NavigationStack {
             Form {
                 requiredSection
+                formatPickerSection
                 optionalSection
+                if selectedFormat == .audiobook {
+                    audiobookSection
+                }
                 coverSection
                 shelfSection
             }
@@ -66,6 +75,46 @@ struct ManualEntryView: View {
                 Text(validationError)
                     .foregroundStyle(.red)
             }
+        }
+    }
+
+    // MARK: - Format Picker
+
+    private var formatPickerSection: some View {
+        Section("Format") {
+            Picker("Format", selection: $selectedFormat) {
+                ForEach(BookFormat.allCases, id: \.self) { format in
+                    Text(format.rawValue).tag(format)
+                }
+            }
+            .pickerStyle(.menu)
+        }
+    }
+
+    // MARK: - Audiobook Fields
+
+    private var audiobookSection: some View {
+        Section("Audiobook Details") {
+            TextField("Narrator", text: $narrator)
+                .textContentType(.name)
+                .accessibilityLabel("Narrator name")
+
+            HStack {
+                TextField("Hours", text: $durationHoursText)
+                    .keyboardType(.numberPad)
+                    .accessibilityLabel("Duration hours")
+                Text("h")
+                    .foregroundStyle(.secondary)
+                TextField("Minutes", text: $durationMinutesText)
+                    .keyboardType(.numberPad)
+                    .accessibilityLabel("Duration minutes")
+                Text("m")
+                    .foregroundStyle(.secondary)
+            }
+
+            TextField("Number of chapters", text: $chapterCountText)
+                .keyboardType(.numberPad)
+                .accessibilityLabel("Chapter count")
         }
     }
 
@@ -188,6 +237,21 @@ struct ManualEntryView: View {
 
         let manualKey = "manual-\(UUID().uuidString)"
 
+        // Audiobook metadata
+        let trimmedNarrator = narrator.trimmingCharacters(in: .whitespaces)
+        let narratorValue: String? = (selectedFormat == .audiobook && !trimmedNarrator.isEmpty) ? trimmedNarrator : nil
+        let durationMinutes: Int? = {
+            guard selectedFormat == .audiobook else { return nil }
+            let hours = Int(durationHoursText.trimmingCharacters(in: .whitespaces)) ?? 0
+            let mins = Int(durationMinutesText.trimmingCharacters(in: .whitespaces)) ?? 0
+            let total = hours * 60 + mins
+            return total > 0 ? total : nil
+        }()
+        let chapterCount: Int? = {
+            guard selectedFormat == .audiobook else { return nil }
+            return Int(chapterCountText.trimmingCharacters(in: .whitespaces))
+        }()
+
         let book = Book(
             olWorkKey: manualKey,
             isbn13: trimmedISBN.count == 13 ? trimmedISBN : nil,
@@ -197,7 +261,11 @@ struct ManualEntryView: View {
             pageCount: pageCount,
             subjects: subjects,
             shelf: selectedShelf,
-            dateAdded: .now
+            dateAdded: .now,
+            format: selectedFormat,
+            narrator: narratorValue,
+            durationMinutes: durationMinutes,
+            chapterCount: chapterCount
         )
 
         // Set shelf-specific dates

@@ -190,6 +190,10 @@ struct StatsView: View {
 
     private var summaryHeader: some View {
         let pages = StatsCalculator.totalPages(readBooks)
+        let readingHrs = StatsCalculator.estimatedReadingHours(books: readBooks)
+        let listeningHrs = StatsCalculator.listeningHours(readBooks)
+        let hasReadingHours = readingHrs > 0
+        let hasListeningHours = listeningHrs >= 0.5
 
         return VStack(spacing: 4) {
             Text("\(filter.displayName): \(readBooks.count) book\(readBooks.count == 1 ? "" : "s") read")
@@ -198,6 +202,20 @@ struct StatsView: View {
             Text("\(pages.formatted()) pages")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+
+            if hasReadingHours && hasListeningHours {
+                Text("\(readingHrs) hours read \u{00B7} \(Int(listeningHrs.rounded())) hours listened")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if hasReadingHours {
+                Text("\(readingHrs) hours read")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if hasListeningHours {
+                Text("\(Int(listeningHrs.rounded())) hours listened")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding()

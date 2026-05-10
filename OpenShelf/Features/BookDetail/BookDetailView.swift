@@ -208,6 +208,20 @@ struct BookDetailView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("View author page for \(book.authorName)")
 
+            if let narrator = book.narrator, !narrator.isEmpty {
+                Text("Narrated by \(narrator)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            if book.format == .audiobook, let durationMinutes = book.durationMinutes, durationMinutes > 0 {
+                let hours = durationMinutes / 60
+                let minutes = durationMinutes % 60
+                Text(minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h")
+                    .font(.subheadline)
+                    .foregroundStyle(.tertiary)
+            }
+
             if let year = book.firstPublishYear {
                 Text(String(year))
                     .font(.subheadline)
@@ -320,11 +334,17 @@ struct BookDetailView: View {
 
     // MARK: - Progress Section
 
+    private var isAudiobook: Bool {
+        book.format == .audiobook
+    }
+
     @ViewBuilder
     private var progressSection: some View {
         if book.shelf == .reading {
             VStack(spacing: 8) {
-                if let currentPage = book.currentPage {
+                if isAudiobook {
+                    audiobookProgressDisplay
+                } else if let currentPage = book.currentPage {
                     if let pageCount = book.pageCount, pageCount > 0 {
                         let progress = min(Double(currentPage) / Double(pageCount), 1.0)
                         let percentage = Int(progress * 100)
@@ -348,9 +368,12 @@ struct BookDetailView: View {
                     Button {
                         showProgressEditor = true
                     } label: {
-                        Label("Update Progress", systemImage: "book.pages")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                        Label(
+                            isAudiobook ? "Update Listening Progress" : "Update Progress",
+                            systemImage: isAudiobook ? "headphones" : "book.pages"
+                        )
+                        .font(.subheadline)
+                        .fontWeight(.medium)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
@@ -369,9 +392,12 @@ struct BookDetailView: View {
                         Button {
                             startReadingSession()
                         } label: {
-                            Label("Start Reading", systemImage: "play.fill")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                            Label(
+                                isAudiobook ? "Start Listening" : "Start Reading",
+                                systemImage: "play.fill"
+                            )
+                            .font(.subheadline)
+                            .fontWeight(.medium)
                         }
                         .buttonStyle(.bordered)
                     }
@@ -381,18 +407,61 @@ struct BookDetailView: View {
         }
     }
 
+    @ViewBuilder
+    private var audiobookProgressDisplay: some View {
+        if let currentChapter = book.currentChapter, let chapterCount = book.chapterCount, chapterCount > 0 {
+            let progress = min(Double(currentChapter) / Double(chapterCount), 1.0)
+            let percentage = Int(progress * 100)
+
+            ProgressView(value: progress)
+                .tint(.green)
+                .padding(.horizontal)
+                .accessibilityLabel("Listening progress: \(percentage) percent")
+
+            HStack(spacing: 4) {
+                Image(systemName: "headphones")
+                    .font(.subheadline)
+                    .foregroundStyle(.purple)
+                Text("Chapter \(currentChapter) of \(chapterCount) (\(percentage)%)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        } else if let currentChapter = book.currentChapter {
+            HStack(spacing: 4) {
+                Image(systemName: "headphones")
+                    .font(.subheadline)
+                    .foregroundStyle(.purple)
+                Text("Chapter \(currentChapter)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            HStack(spacing: 4) {
+                Image(systemName: "headphones")
+                    .font(.subheadline)
+                    .foregroundStyle(.purple)
+                Text("Listening")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
     // MARK: - Reading Session
 
     private func startReadingSession() {
         let attributes = ReadingSessionAttributes(
             olWorkKey: book.olWorkKey,
-            bookTitle: book.isPrivate ? "Reading" : book.title,
+            bookTitle: book.isPrivate ? (isAudiobook ? "Listening" : "Reading") : book.title,
             authorName: book.isPrivate ? "" : book.authorName,
-            pageCount: book.pageCount
+            pageCount: book.pageCount,
+            isAudiobook: isAudiobook,
+            chapterCount: book.chapterCount
         )
         let state = ReadingSessionAttributes.ContentState(
             currentPage: book.currentPage ?? 0,
-            startedAt: .now
+            startedAt: .now,
+            currentChapter: book.currentChapter
         )
         do {
             readingSessionActivity = try Activity.request(
@@ -413,7 +482,8 @@ struct BookDetailView: View {
         Task {
             let state = ReadingSessionAttributes.ContentState(
                 currentPage: currentPage,
-                startedAt: startedAt
+                startedAt: startedAt,
+                currentChapter: book.currentChapter
             )
             let content = ActivityContent(state: state, staleDate: nil)
             for liveActivity in Activity<ReadingSessionAttributes>.activities where liveActivity.id == activityID {

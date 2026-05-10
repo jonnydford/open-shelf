@@ -346,9 +346,24 @@ struct StatsCalculator {
     // MARK: - Estimated reading hours
 
     static func estimatedReadingHours(books: [Book]) -> Int {
-        // 1.7 minutes per page, converted to hours
-        let totalMinutes = books.compactMap(\.pageCount).reduce(0.0) { $0 + Double($1) * 1.7 }
+        // 1.7 minutes per page, converted to hours — excludes audiobooks
+        let nonAudiobooks = books.filter { $0.format != .audiobook }
+        let totalMinutes = nonAudiobooks.compactMap(\.pageCount).reduce(0.0) { $0 + Double($1) * 1.7 }
         return Int((totalMinutes / 60.0).rounded())
+    }
+
+    // MARK: - Listening hours
+
+    static func listeningHours(_ books: [Book]) -> Double {
+        let finishedAudiobooks = books.filter { $0.format == .audiobook && $0.shelf == .read }
+        let totalMinutes = finishedAudiobooks.compactMap(\.durationMinutes).reduce(0, +)
+        return Double(totalMinutes) / 60.0
+    }
+
+    // MARK: - Total hours (reading + listening)
+
+    static func totalHours(_ books: [Book]) -> Double {
+        Double(estimatedReadingHours(books: books)) + listeningHours(books)
     }
 
     // MARK: - Favourite author

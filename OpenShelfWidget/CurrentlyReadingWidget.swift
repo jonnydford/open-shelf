@@ -15,8 +15,15 @@ struct CurrentlyReadingEntry: TimelineEntry {
     let dateStarted: Date?
     let coverImageID: Int?
     let olWorkKey: String?
+    let isAudiobook: Bool
+    let currentChapter: Int?
+    let chapterCount: Int?
 
     var progress: Double {
+        if isAudiobook {
+            guard let currentChapter, let chapterCount, chapterCount > 0 else { return 0 }
+            return min(Double(currentChapter) / Double(chapterCount), 1.0)
+        }
         guard let currentPage, let pageCount, pageCount > 0 else { return 0 }
         return min(Double(currentPage) / Double(pageCount), 1.0)
     }
@@ -40,7 +47,10 @@ struct CurrentlyReadingEntry: TimelineEntry {
             pageCount: 218,
             dateStarted: Calendar.current.date(byAdding: .day, value: -5, to: .now),
             coverImageID: nil,
-            olWorkKey: nil
+            olWorkKey: nil,
+            isAudiobook: false,
+            currentChapter: nil,
+            chapterCount: nil
         )
     }
 
@@ -53,7 +63,10 @@ struct CurrentlyReadingEntry: TimelineEntry {
             pageCount: nil,
             dateStarted: nil,
             coverImageID: nil,
-            olWorkKey: nil
+            olWorkKey: nil,
+            isAudiobook: false,
+            currentChapter: nil,
+            chapterCount: nil
         )
     }
 }
@@ -109,7 +122,10 @@ struct CurrentlyReadingProvider: AppIntentTimelineProvider {
                 pageCount: book.pageCount,
                 dateStarted: book.dateStarted,
                 coverImageID: book.coverImageID,
-                olWorkKey: book.olWorkKey
+                olWorkKey: book.olWorkKey,
+                isAudiobook: book.format == .audiobook,
+                currentChapter: book.currentChapter,
+                chapterCount: book.chapterCount
             )
         } catch {
             return .empty
@@ -162,7 +178,10 @@ struct LargeWidgetProvider: TimelineProvider {
                         pageCount: book.pageCount,
                         dateStarted: book.dateStarted,
                         coverImageID: book.coverImageID,
-                        olWorkKey: book.olWorkKey
+                        olWorkKey: book.olWorkKey,
+                        isAudiobook: book.format == .audiobook,
+                        currentChapter: book.currentChapter,
+                        chapterCount: book.chapterCount
                     )
                 }
 
@@ -273,9 +292,9 @@ struct CurrentlyReadingWidgetView: View {
     private var smallView: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let title = entry.title {
-                Image(systemName: "book.fill")
+                Image(systemName: entry.isAudiobook ? "headphones" : "book.fill")
                     .font(.title3)
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(entry.isAudiobook ? .purple : .tint)
 
                 Text(title)
                     .font(.headline)
@@ -283,7 +302,15 @@ struct CurrentlyReadingWidgetView: View {
 
                 Spacer(minLength: 0)
 
-                if entry.pageCount != nil {
+                if entry.isAudiobook {
+                    if entry.chapterCount != nil {
+                        ProgressView(value: entry.progress)
+                            .tint(.purple)
+                        Text("\(entry.percentage)%")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                } else if entry.pageCount != nil {
                     ProgressView(value: entry.progress)
                         .tint(.green)
                     Text("\(entry.percentage)%")
@@ -363,7 +390,43 @@ struct CurrentlyReadingWidgetView: View {
 
                     Spacer(minLength: 0)
 
-                    if let currentPage = entry.currentPage, let pageCount = entry.pageCount, pageCount > 0 {
+                    if entry.isAudiobook {
+                        if let currentChapter = entry.currentChapter, let chapterCount = entry.chapterCount, chapterCount > 0 {
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "headphones")
+                                            .font(.caption)
+                                            .foregroundStyle(.purple)
+                                        Text("Chapter \(currentChapter) of \(chapterCount)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    ProgressView(value: entry.progress)
+                                        .tint(.purple)
+                                }
+
+                                if let workKey = entry.olWorkKey {
+                                    Button(intent: makeFinishIntent(bookID: workKey)) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.title3)
+                                            .foregroundStyle(.green)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("Mark as finished")
+                                }
+                            }
+                        } else {
+                            HStack(spacing: 4) {
+                                Image(systemName: "headphones")
+                                    .font(.caption)
+                                    .foregroundStyle(.purple)
+                                Text("Listening")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    } else if let currentPage = entry.currentPage, let pageCount = entry.pageCount, pageCount > 0 {
                         HStack(spacing: 8) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Page \(currentPage) of \(pageCount)")
@@ -431,10 +494,12 @@ struct CurrentlyReadingWidgetView: View {
     private var circularLockScreenView: some View {
         if entry.title != nil {
             Gauge(value: entry.progress) {
-                Image(systemName: "book.fill")
+                Image(systemName: entry.isAudiobook ? "headphones" : "book.fill")
             }
             .gaugeStyle(.accessoryCircularCapacity)
-            .accessibilityLabel("Reading progress, \(entry.percentage) percent")
+            .accessibilityLabel(entry.isAudiobook
+                ? "Listening progress, \(entry.percentage) percent"
+                : "Reading progress, \(entry.percentage) percent")
         } else {
             ZStack {
                 AccessoryWidgetBackground()
@@ -588,7 +653,29 @@ struct LargeWidgetView: View {
                         .lineLimit(1)
                 }
 
-                if book.pageCount != nil {
+                if book.isAudiobook {
+                    if book.chapterCount != nil {
+                        HStack(spacing: 4) {
+                            Image(systemName: "headphones")
+                                .font(.caption2)
+                                .foregroundStyle(.purple)
+                            ProgressView(value: book.progress)
+                                .tint(.purple)
+                        }
+                        Text("\(book.percentage)%")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        HStack(spacing: 4) {
+                            Image(systemName: "headphones")
+                                .font(.caption2)
+                                .foregroundStyle(.purple)
+                            Text("Listening")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else if book.pageCount != nil {
                     ProgressView(value: book.progress)
                         .tint(.green)
                     Text("\(book.percentage)%")

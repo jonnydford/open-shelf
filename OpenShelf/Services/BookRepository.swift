@@ -111,6 +111,19 @@ final class BookRepository {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    func updateChapterProgress(_ book: Book, chapter: Int) {
+        book.currentChapter = chapter
+
+        // Automatically move to "reading" if on "want to read"
+        if book.shelf == .wantToRead {
+            book.shelf = .reading
+            book.dateStarted = .now
+        }
+
+        try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     func booksOnShelf(_ shelf: Shelf) -> [Book] {
         let descriptor = FetchDescriptor<Book>(
             predicate: #Predicate { $0.shelf == shelf }

@@ -17,7 +17,15 @@ struct BookRow: View {
                     .frame(width: coverWidth, height: coverHeight)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
-                if let formatBadge = formatAbbreviation {
+                if book.format == .audiobook {
+                    Image(systemName: "headphones")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(4)
+                        .background(Color.purple.opacity(0.85))
+                        .clipShape(Circle())
+                        .offset(x: 2, y: 2)
+                } else if let formatBadge = formatAbbreviation {
                     Text(formatBadge)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.white)
@@ -58,8 +66,12 @@ struct BookRow: View {
                     }
                 }
 
-                if book.shelf == .reading, let currentPage = book.currentPage, let pageCount = book.pageCount, pageCount > 0 {
-                    progressBar(current: currentPage, total: pageCount)
+                if book.shelf == .reading {
+                    if book.format == .audiobook {
+                        audiobookProgressLabel
+                    } else if let currentPage = book.currentPage, let pageCount = book.pageCount, pageCount > 0 {
+                        progressBar(current: currentPage, total: pageCount)
+                    }
                 }
             }
         }
@@ -76,11 +88,38 @@ struct BookRow: View {
                 parts.append("rated \(String(format: "%.1f", rating)) out of 5 stars")
             }
         }
-        if book.shelf == .reading, let currentPage = book.currentPage, let pageCount = book.pageCount, pageCount > 0 {
-            let percentage = Int(min(Double(currentPage) / Double(pageCount), 1.0) * 100)
-            parts.append("reading progress: \(percentage) percent")
+        if book.shelf == .reading {
+            if book.format == .audiobook {
+                if let currentChapter = book.currentChapter, let chapterCount = book.chapterCount, chapterCount > 0 {
+                    parts.append("listening progress: chapter \(currentChapter) of \(chapterCount)")
+                } else {
+                    parts.append("listening")
+                }
+            } else if let currentPage = book.currentPage, let pageCount = book.pageCount, pageCount > 0 {
+                let percentage = Int(min(Double(currentPage) / Double(pageCount), 1.0) * 100)
+                parts.append("reading progress: \(percentage) percent")
+            }
         }
         return parts.joined(separator: ", ")
+    }
+
+    // MARK: - Audiobook Progress Label
+
+    private var audiobookProgressLabel: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "headphones")
+                .font(.caption2)
+                .foregroundStyle(.purple)
+            if let currentChapter = book.currentChapter, let chapterCount = book.chapterCount, chapterCount > 0 {
+                Text("Chapter \(currentChapter) of \(chapterCount)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Listening")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     // MARK: - Format Badge
@@ -90,6 +129,7 @@ struct BookRow: View {
         case .graphicNovel: "GN"
         case .manga: "Manga"
         case .comic: "Comic"
+        case .audiobook: nil // Uses headphone icon overlay instead
         case .book: nil
         }
     }
