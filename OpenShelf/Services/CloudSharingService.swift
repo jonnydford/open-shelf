@@ -141,6 +141,7 @@ final class CloudSharingService {
     // MARK: - Shared With Me
 
     func fetchSharedWithMe() async {
+        guard Self.isAvailable else { return }
         isLoading = true
         defer { isLoading = false }
 
