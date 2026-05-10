@@ -40,7 +40,7 @@ struct OpenShelfShortcuts: AppShortcutsProvider {
             phrases: [
                 "I finished my book in \(.applicationName)",
                 "Mark my book as finished in \(.applicationName)",
-                "I'm done reading in \(.applicationName)"
+                "I finished reading in \(.applicationName)"
             ],
             shortTitle: "Finish Book",
             systemImageName: "checkmark.circle"

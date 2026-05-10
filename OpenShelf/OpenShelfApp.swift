@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 import CloudKit
-import CoreSpotlight
 
 @main
 struct OpenShelfApp: App {
@@ -33,17 +32,14 @@ struct OpenShelfApp: App {
             ContentView()
                 .environment(repository)
                 .environment(sharingService)
+                .task {
+                    SpotlightIndexer.indexAllBooks(from: modelContainer.mainContext)
+                }
         }
         .modelContainer(modelContainer)
         .onChange(of: scenePhase) { _, newPhase in
-            switch newPhase {
-            case .active:
-                SpotlightIndexer.indexAllBooks(from: modelContainer.mainContext)
-                SpotlightIndexer.indexAllLists(from: modelContainer.mainContext)
-            case .background:
+            if newPhase == .background {
                 AuthorCheckService.scheduleBackgroundCheck()
-            default:
-                break
             }
         }
     }

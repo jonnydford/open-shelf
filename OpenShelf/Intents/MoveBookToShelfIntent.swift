@@ -21,7 +21,8 @@ struct MoveBookToShelfIntent: AppIntent {
             predicate: #Predicate { $0.olWorkKey == bookKey }
         )
 
-        guard let foundBook = (try? context.fetch(descriptor))?.first else {
+        guard let foundBook = (try? context.fetch(descriptor))?.first,
+              !foundBook.isPrivate else {
             return .result(dialog: "Could not find that book in your library.")
         }
 
@@ -53,6 +54,7 @@ struct MoveBookToShelfIntent: AppIntent {
 
         try? context.save()
         WidgetCenter.shared.reloadAllTimelines()
+        SpotlightIndexer.indexBook(foundBook)
         return .result(dialog: "Moved \"\(foundBook.title)\" to \(targetShelf.displayName).")
     }
 }

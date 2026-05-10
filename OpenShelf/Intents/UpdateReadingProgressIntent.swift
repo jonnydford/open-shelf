@@ -21,7 +21,8 @@ struct UpdateReadingProgressIntent: AppIntent {
             predicate: #Predicate { $0.olWorkKey == bookKey }
         )
 
-        guard let foundBook = (try? context.fetch(descriptor))?.first else {
+        guard let foundBook = (try? context.fetch(descriptor))?.first,
+              !foundBook.isPrivate else {
             return .result(dialog: "Could not find that book in your library.")
         }
 

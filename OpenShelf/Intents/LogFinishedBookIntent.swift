@@ -21,12 +21,13 @@ struct LogFinishedBookIntent: AppIntent {
             let descriptor = FetchDescriptor<Book>(
                 predicate: #Predicate { $0.olWorkKey == bookKey }
             )
-            foundBook = (try? context.fetch(descriptor))?.first
+            let result = (try? context.fetch(descriptor))?.first
+            foundBook = result?.isPrivate == true ? nil : result
         } else {
             let descriptor = FetchDescriptor<Book>()
             let allBooks = (try? context.fetch(descriptor)) ?? []
             foundBook = allBooks
-                .filter { $0.shelf == .reading }
+                .filter { $0.shelf == .reading && !$0.isPrivate }
                 .sorted { ($0.dateStarted ?? .distantPast) > ($1.dateStarted ?? .distantPast) }
                 .first
         }
@@ -52,6 +53,7 @@ struct LogFinishedBookIntent: AppIntent {
 
         try? context.save()
         WidgetCenter.shared.reloadAllTimelines()
+        SpotlightIndexer.indexBook(foundBook)
         return .result(dialog: "Finished \"\(foundBook.title)\"! Great work.")
     }
 }
