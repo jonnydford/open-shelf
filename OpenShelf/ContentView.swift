@@ -6,6 +6,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(BookRepository.self) private var repository
 
+    @State private var selectedTab = "Library"
     @State private var deepLinkBookKey: String?
     @State private var showDeepLinkBook = false
     @State private var deepLinkBook: Book?
@@ -13,20 +14,20 @@ struct ContentView: View {
     @State private var isLoadingDeepLink = false
 
     var body: some View {
-        TabView {
-            Tab("Library", systemImage: "books.vertical") {
+        TabView(selection: $selectedTab) {
+            Tab("Library", systemImage: "books.vertical", value: "Library") {
                 LibraryView()
             }
 
-            Tab("Search", systemImage: "magnifyingglass") {
+            Tab("Search", systemImage: "magnifyingglass", value: "Search") {
                 SearchView()
             }
 
-            Tab("Stats", systemImage: "chart.bar") {
+            Tab("Stats", systemImage: "chart.bar", value: "Stats") {
                 StatsView()
             }
 
-            Tab("Settings", systemImage: "gearshape") {
+            Tab("Settings", systemImage: "gearshape", value: "Settings") {
                 SettingsView()
             }
         }
@@ -47,9 +48,16 @@ struct ContentView: View {
     // MARK: - Deep Link Handling
 
     private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "openshelf" else { return }
+
+        // Handle openshelf://stats
+        if url.host == "stats" {
+            selectedTab = "Stats"
+            return
+        }
+
         // Handle openshelf://book/{olWorkKey}
-        guard url.scheme == "openshelf",
-              url.host == "book" else { return }
+        guard url.host == "book" else { return }
 
         // The work key path: e.g. openshelf://book/works/OL12345W -> /works/OL12345W
         let pathComponents = url.pathComponents.filter { $0 != "/" }

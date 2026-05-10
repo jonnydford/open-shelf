@@ -1,7 +1,6 @@
 import Foundation
+import SwiftData
 
-/// Shared store URL helper for the widget extension.
-/// Mirrors the logic in `SharedModelContainer` but avoids importing the main app target.
 enum WidgetSharedStore {
     static var storeURL: URL {
         let containerURL = FileManager.default.containerURL(
@@ -12,5 +11,19 @@ enum WidgetSharedStore {
             in: .userDomainMask
         ).first!
         return baseURL.appendingPathComponent("OpenShelf.store")
+    }
+
+    private static let schema = Schema([Book.self, ReadEntry.self, UserTag.self, ReadingGoal.self, ReadingList.self, FollowedAuthor.self])
+
+    private static let container: ModelContainer? = {
+        let configuration = ModelConfiguration(schema: schema, url: storeURL)
+        return try? ModelContainer(for: schema, configurations: [configuration])
+    }()
+
+    static func makeContext() throws -> ModelContext {
+        guard let container else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        return ModelContext(container)
     }
 }

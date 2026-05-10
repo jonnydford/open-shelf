@@ -82,14 +82,7 @@ struct ReadingGoalProvider: TimelineProvider {
         let currentYear = Calendar.current.component(.year, from: .now)
 
         do {
-            let schema = Schema([Book.self, ReadEntry.self, UserTag.self, ReadingGoal.self])
-            let storeURL = WidgetSharedStore.storeURL
-            let configuration = ModelConfiguration(
-                schema: schema,
-                url: storeURL
-            )
-            let container = try ModelContainer(for: schema, configurations: [configuration])
-            let context = ModelContext(container)
+            let context = try WidgetSharedStore.makeContext()
 
             // Fetch reading goal
             let goalDescriptor = FetchDescriptor<ReadingGoal>(
@@ -129,6 +122,7 @@ struct ReadingGoalWidget: Widget {
         StaticConfiguration(kind: kind, provider: ReadingGoalProvider()) { entry in
             ReadingGoalWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
+                .widgetURL(URL(string: "openshelf://stats"))
         }
         .configurationDisplayName("Reading Goal")
         .description("Track your yearly reading goal progress.")
