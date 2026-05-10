@@ -44,6 +44,7 @@ final class BookRepository {
         modelContext.insert(book)
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
+        SpotlightIndexer.indexBook(book)
 
         // Prefetch cover in background
         if let coverID = book.coverImageID {
@@ -56,6 +57,7 @@ final class BookRepository {
     }
 
     func deleteBook(_ book: Book) {
+        SpotlightIndexer.removeBook(book)
         modelContext.delete(book)
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
@@ -88,6 +90,7 @@ final class BookRepository {
 
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
+        SpotlightIndexer.indexBook(book)
     }
 
     func updateRating(_ book: Book, rating: Double?) {

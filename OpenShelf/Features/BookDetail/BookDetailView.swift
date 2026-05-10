@@ -141,6 +141,7 @@ struct BookDetailView: View {
             Button(book.isPrivate ? "Make Visible" : "Make Private") {
                 book.isPrivate.toggle()
                 try? modelContext.save()
+                SpotlightIndexer.indexBook(book)
             }
             Button("Cancel", role: .cancel) {}
         } message: {
