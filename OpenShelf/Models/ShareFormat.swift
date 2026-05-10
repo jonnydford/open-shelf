@@ -1,4 +1,4 @@
-import Foundation
+import CoreGraphics
 
 enum ShareFormat: String, CaseIterable, Identifiable, Sendable {
     case story = "Story"

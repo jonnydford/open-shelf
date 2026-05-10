@@ -75,6 +75,7 @@ struct ShareCardSheet: View {
     // MARK: - Share
 
     private func renderAndShare() {
+        guard !book.isPrivate else { return }
         guard let image = ShareCardRenderer.renderImage(
             for: book,
             coverImage: coverImage,
@@ -83,11 +84,10 @@ struct ShareCardSheet: View {
 
         var items: [Any] = [image]
 
-        if !book.isPrivate {
-            let workKeyPath = book.olWorkKey.replacingOccurrences(of: "/works/", with: "")
-            if let deepLink = URL(string: "openshelf://book/\(workKeyPath)") {
-                items.append(deepLink)
-            }
+        let workKeyPath = book.olWorkKey.replacingOccurrences(of: "/works/", with: "")
+        if let encoded = workKeyPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+           let deepLink = URL(string: "openshelf://book/\(encoded)") {
+            items.append(deepLink)
         }
 
         shareItems = items

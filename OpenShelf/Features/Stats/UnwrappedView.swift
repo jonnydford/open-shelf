@@ -124,7 +124,9 @@ struct UnwrappedView: View {
             closeButton
         }
         .overlay(alignment: .bottomTrailing) {
-            shareYearButton
+            if currentPage < totalCards - 1 {
+                shareYearButton
+            }
         }
         .sheet(isPresented: $showUnwrappedShareSheet) {
             UnwrappedShareSheet(
@@ -137,7 +139,11 @@ struct UnwrappedView: View {
                 favouriteAuthor: favouriteAuthor,
                 longestStreak: longestStreak,
                 goalTarget: goalForYear?.target,
-                goalMet: goalForYear.map { readBooks.count >= $0.target } ?? false
+                goalMet: goalForYear.map { readBooks.count >= $0.target } ?? false,
+                averageDays: averageDays,
+                fastestRead: fastestRead.map { (title: $0.book.title, days: $0.days) },
+                longestRead: longestRead.map { (title: $0.book.title, days: $0.days) },
+                monthlyData: StatsCalculator.booksPerMonth(readBooks)
             )
         }
         .onReceive(
