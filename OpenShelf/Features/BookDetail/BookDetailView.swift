@@ -61,6 +61,11 @@ struct BookDetailView: View {
     // Reading session (Live Activity)
     @State private var readingSessionActivity: Activity<ReadingSessionAttributes>?
 
+    @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 200
+    @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 300
+    @ScaledMetric(relativeTo: .caption) private var thumbWidth: CGFloat = 80
+    @ScaledMetric(relativeTo: .caption) private var thumbHeight: CGFloat = 120
+
     @Query(sort: \ReadingList.dateCreated, order: .reverse) private var readingLists: [ReadingList]
     @Query private var allLibraryBooks: [Book]
 
@@ -177,8 +182,8 @@ struct BookDetailView: View {
     private var headerSection: some View {
         VStack(spacing: 12) {
             CoverImage(coverID: book.coverImageID, size: .large, accessibilityTitle: book.title)
-                .frame(width: 200, height: 300)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .frame(width: coverWidth, height: coverHeight)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
                 .shadow(radius: 4)
                 .padding(.top, 16)
 
@@ -584,10 +589,12 @@ struct BookDetailView: View {
             Form {
                 Section("Series Name") {
                     TextField("e.g. The Lord of the Rings", text: $editingSeriesName)
+                        .accessibilityLabel("Series name")
                 }
                 Section("Volume Number") {
                     TextField("e.g. 1", text: $editingSeriesPosition)
                         .keyboardType(.numberPad)
+                        .accessibilityLabel("Volume number")
                 }
             }
             .navigationTitle("Series")
@@ -667,14 +674,14 @@ struct BookDetailView: View {
                                 } label: {
                                     VStack(spacing: 6) {
                                         CoverImage(coverID: rec.coverImageID, size: .small)
-                                            .frame(width: 80, height: 120)
-                                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                                            .frame(width: thumbWidth, height: thumbHeight)
+                                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
                                         Text(rec.title)
                                             .font(.caption)
                                             .lineLimit(2)
                                             .multilineTextAlignment(.center)
-                                            .frame(width: 80)
+                                            .frame(width: thumbWidth)
                                     }
                                 }
                                 .buttonStyle(.plain)
@@ -712,14 +719,14 @@ struct BookDetailView: View {
                                 } label: {
                                     VStack(spacing: 6) {
                                         CoverImage(coverID: result.coverI, size: .small)
-                                            .frame(width: 80, height: 120)
-                                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                                            .frame(width: thumbWidth, height: thumbHeight)
+                                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
                                         Text(result.title)
                                             .font(.caption)
                                             .lineLimit(2)
                                             .multilineTextAlignment(.center)
-                                            .frame(width: 80)
+                                            .frame(width: thumbWidth)
                                     }
                                 }
                                 .buttonStyle(.plain)
@@ -1008,10 +1015,12 @@ struct BookDetailView: View {
                 Section("Page stopped at (optional)") {
                     TextField("Page number", text: $dnfPage)
                         .keyboardType(.numberPad)
+                        .accessibilityLabel("Page stopped at")
                 }
                 Section("Reason (optional)") {
                     TextField("Why did you stop?", text: $dnfReason, axis: .vertical)
                         .lineLimit(3...6)
+                        .accessibilityLabel("Reason for not finishing")
 
                     // Suggestion chips
                     FlowLayout(spacing: 6) {
@@ -1280,6 +1289,7 @@ struct AddBookToListSheet: View {
         }
         .alert("New Reading List", isPresented: $showNewListAlert) {
             TextField("List name", text: $newListName)
+                .accessibilityLabel("New list name")
             Button("Cancel", role: .cancel) {}
             Button("Create") {
                 createListAndAdd()

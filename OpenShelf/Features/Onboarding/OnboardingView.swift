@@ -138,6 +138,8 @@ struct OnboardingView: View {
             VStack(spacing: 8) {
                 Stepper("Books: \(goalTarget)", value: $goalTarget, in: 1...365)
                     .padding(.horizontal, 40)
+                    .accessibilityLabel("Reading goal target")
+                    .accessibilityValue("\(goalTarget) books")
 
                 let booksPerMonth = max(1, Int((Double(goalTarget) / 12.0).rounded(.up)))
                 Text("About \(booksPerMonth) book\(booksPerMonth == 1 ? "" : "s") per month")
@@ -145,7 +147,7 @@ struct OnboardingView: View {
                     .foregroundStyle(.secondary)
             }
             .padding()
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
             .padding(.horizontal)
 
             Spacer()
@@ -167,7 +169,7 @@ struct OnboardingView: View {
                     .padding()
                     .background(Color.accentColor)
                     .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.large))
             }
             .padding(.horizontal)
             .padding(.bottom, 32)
@@ -199,7 +201,7 @@ struct OnboardingView: View {
                 .foregroundStyle(.tertiary)
         }
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
     }
 
     private func nextButton(label: String) -> some View {
@@ -214,7 +216,7 @@ struct OnboardingView: View {
                 .padding()
                 .background(Color.accentColor)
                 .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.large))
         }
         .padding(.horizontal)
     }

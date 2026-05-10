@@ -17,6 +17,9 @@ struct BookDetailSheet: View {
     @State private var rating: Double?
     @State private var alreadyInLibrary = false
 
+    @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 180
+    @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 270
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -60,8 +63,8 @@ struct BookDetailSheet: View {
 
     private var coverSection: some View {
         CoverImage(coverID: searchResult.coverI, size: .large)
-            .frame(width: 180, height: 270)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .frame(width: coverWidth, height: coverHeight)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
             .shadow(radius: 4)
             .padding(.top, 16)
     }
@@ -174,7 +177,7 @@ struct BookDetailSheet: View {
                     .padding()
                     .background(.tint)
                     .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
                 }
                 .disabled(isAdding)
                 .padding(.horizontal)

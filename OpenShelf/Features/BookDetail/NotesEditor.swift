@@ -14,9 +14,10 @@ struct NotesEditor: View {
                 TextEditor(text: notesBinding)
                     .focused($isFocused)
                     .frame(minHeight: 100)
+                    .accessibilityLabel("Book notes")
                     .scrollContentBackground(.hidden)
                     .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
                     .toolbar {
                         ToolbarItemGroup(placement: .keyboard) {
                             Spacer()

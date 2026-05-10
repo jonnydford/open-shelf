@@ -71,7 +71,7 @@ struct ReadHistorySection: View {
         }
         .padding(12)
         .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
     }
 
     // MARK: - Date Range
@@ -196,7 +196,7 @@ private struct ReadEntryNotesEditor: View {
                     .frame(minHeight: 60)
                     .scrollContentBackground(.hidden)
                     .background(Color(.systemGray5))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
                 if entry.notes == nil || entry.notes?.isEmpty == true {
                     Text("Notes for this read...")

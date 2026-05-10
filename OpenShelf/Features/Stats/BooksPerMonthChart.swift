@@ -18,7 +18,7 @@ struct BooksPerMonthChart: View {
                 .frame(height: 200)
         }
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Books Per Month chart")
         .accessibilityValue(chartAccessibilityValue)
@@ -59,7 +59,7 @@ struct BooksPerMonthChart: View {
                 y: .value("Books", item.count)
             )
             .foregroundStyle(item.month == currentMonth ? Color.accentColor : Color.accentColor.opacity(0.6))
-            .cornerRadius(4)
+            .cornerRadius(CornerRadius.xSmall)
 
             if let selected = selectedMonthName, selected == item.monthName {
                 RuleMark(x: .value("Month", item.monthName))
@@ -87,7 +87,7 @@ struct BooksPerMonthChart: View {
                 y: .value("Books", item.count)
             )
             .foregroundStyle(Color.accentColor)
-            .cornerRadius(4)
+            .cornerRadius(CornerRadius.xSmall)
         }
         .chartYAxisLabel("Books")
         .animation(.easeInOut, value: data.map(\.count))

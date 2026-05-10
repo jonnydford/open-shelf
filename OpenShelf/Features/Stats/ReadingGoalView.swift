@@ -37,7 +37,7 @@ struct ReadingGoalView: View {
             }
         }
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .sheet(isPresented: $showSetGoal) {
             SetReadingGoalSheet(year: year, existingGoal: goal)
         }
@@ -159,6 +159,8 @@ struct SetReadingGoalSheet: View {
             Form {
                 Section {
                     Stepper("Books: \(target)", value: $target, in: 1...365)
+                        .accessibilityLabel("Reading goal target")
+                        .accessibilityValue("\(target) books")
                 } header: {
                     Text("\(String(year)) Reading Goal")
                 }
@@ -170,6 +172,7 @@ struct SetReadingGoalSheet: View {
             }
             .navigationTitle("Reading Goal")
             .navigationBarTitleDisplayMode(.inline)
+            .interactiveDismissDisabled(target != (existingGoal?.target ?? 12))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

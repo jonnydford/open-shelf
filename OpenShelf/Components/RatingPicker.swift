@@ -9,12 +9,15 @@ struct RatingPicker: View {
     @Binding var rating: Double?
     var mode: RatingPickerMode = .interactive
 
+    @ScaledMetric(relativeTo: .body) private var interactiveSize: CGFloat = 28
+    @ScaledMetric(relativeTo: .caption2) private var compactSize: CGFloat = 12
+
     @State private var dragRating: Double?
 
     private var starSize: CGFloat {
         switch mode {
-        case .interactive: 28
-        case .compact: 12
+        case .interactive: interactiveSize
+        case .compact: compactSize
         }
     }
 

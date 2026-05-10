@@ -58,7 +58,7 @@ struct DiscoverSection: View {
         }
         .frame(width: 160, alignment: .leading)
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
     }
 
     init() {
@@ -156,7 +156,7 @@ struct CuratedListDetailView: View {
             ZStack(alignment: .topTrailing) {
                 CoverImage(coverID: book.coverID, size: .medium)
                     .frame(width: 100, height: 150)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
                 if libraryBooks.contains(where: { $0.olWorkKey == book.workKey && !$0.isPrivate }) {
                     Image(systemName: "checkmark.circle.fill")

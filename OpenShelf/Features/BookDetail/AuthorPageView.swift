@@ -14,6 +14,9 @@ struct AuthorPageView: View {
     @State private var wikipediaURL: URL?
     @State private var resolvedAuthorKey: String?
 
+    @ScaledMetric(relativeTo: .caption) private var thumbWidth: CGFloat = 80
+    @ScaledMetric(relativeTo: .caption) private var thumbHeight: CGFloat = 120
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -219,14 +222,14 @@ struct AuthorPageView: View {
                     ForEach(authorBooks) { result in
                         VStack(spacing: 6) {
                             CoverImage(coverID: result.coverI, size: .small)
-                                .frame(width: 80, height: 120)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .frame(width: thumbWidth, height: thumbHeight)
+                                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
                             Text(result.title)
                                 .font(.caption)
                                 .lineLimit(2)
                                 .multilineTextAlignment(.center)
-                                .frame(width: 80)
+                                .frame(width: thumbWidth)
                         }
                     }
                 }

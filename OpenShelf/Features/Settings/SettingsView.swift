@@ -266,6 +266,7 @@ struct SettingsView: View {
             if selectedLibraryService.wrappedValue == .custom {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("URL template", text: $customLibraryURLTemplate)
+                        .accessibilityLabel("Custom library URL template")
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.URL)

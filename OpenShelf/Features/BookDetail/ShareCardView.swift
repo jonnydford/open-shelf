@@ -84,11 +84,11 @@ struct ShareCardView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: coverSize.width, height: coverSize.height)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.large))
                     .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
             } else {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: CornerRadius.large)
                         .fill(Color.white.opacity(0.1))
                         .frame(width: coverSize.width, height: coverSize.height)
                     Image(systemName: "book.closed.fill")

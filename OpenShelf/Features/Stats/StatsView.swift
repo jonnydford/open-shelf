@@ -88,16 +88,21 @@ struct StatsView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
             .opacity(0.5)
             .padding(.horizontal)
         }
     }
 
     private func statsPreviewRow(icon: String, label: String) -> some View {
-        Label(label, systemImage: icon)
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+        Label {
+            Text(label)
+        } icon: {
+            Image(systemName: icon)
+                .frame(width: 20, alignment: .center)
+        }
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
     }
 
     // MARK: - Year Menu
@@ -196,7 +201,7 @@ struct StatsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
     }
 
     // MARK: - Unwrapped Banner
@@ -231,7 +236,7 @@ struct StatsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding()
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
             }
             .buttonStyle(.plain)
             .fullScreenCover(isPresented: $showUnwrapped) {
@@ -255,7 +260,7 @@ struct StatsView: View {
                 Spacer()
             }
             .padding()
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
             .opacity(0.5)
         } else if unwrappedYears.count > 1 {
             NavigationLink {
@@ -281,7 +286,7 @@ struct StatsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding()
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
             }
             .buttonStyle(.plain)
         }
@@ -311,7 +316,7 @@ struct StatsView: View {
             Spacer()
         }
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Reading streak: \(streak) days")
     }
@@ -342,7 +347,7 @@ struct StatsView: View {
                     .foregroundStyle(.secondary)
             }
             .padding()
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         }
         .buttonStyle(.plain)
     }
@@ -393,7 +398,7 @@ struct StatsView: View {
                 }
             }
             .padding()
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         }
     }
 
@@ -560,7 +565,7 @@ struct StatCard<Content: View>: View {
         }
         .frame(maxWidth: .infinity, minHeight: 100)
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
         .if(accessibilityValueText != nil) { view in
             view.accessibilityLabel(title)
@@ -596,7 +601,7 @@ struct PagesPerMonthChart: View {
                 .frame(height: 200)
         }
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Pages Per Month chart")
         .accessibilityValue(pagesChartAccessibilityValue)
@@ -627,7 +632,7 @@ struct PagesPerMonthChart: View {
                     y: .value("Pages", item.pages)
                 )
                 .foregroundStyle(Color.indigo.gradient)
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xSmall)
             }
             .chartYAxisLabel("Pages")
             .animation(.easeInOut, value: data.map(\.pages))
@@ -640,7 +645,7 @@ struct PagesPerMonthChart: View {
                     y: .value("Pages", item.pages)
                 )
                 .foregroundStyle(Color.indigo.gradient)
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xSmall)
             }
             .chartYAxisLabel("Pages")
         }

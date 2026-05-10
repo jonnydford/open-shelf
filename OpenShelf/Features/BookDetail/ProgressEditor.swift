@@ -105,6 +105,7 @@ struct ProgressEditor: View {
         Section("Page Number") {
             TextField("Enter current page", text: $pageInput)
                 .keyboardType(.numberPad)
+                .accessibilityLabel("Current page number")
                 .onChange(of: pageInput) { _, newValue in
                     syncSliderFromPage()
                 }
