@@ -217,7 +217,7 @@ struct BookDetailView: View {
             if book.format == .audiobook, let durationMinutes = book.durationMinutes, durationMinutes > 0 {
                 let hours = durationMinutes / 60
                 let minutes = durationMinutes % 60
-                Text(minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h")
+                Text(hours > 0 && minutes > 0 ? "\(hours)h \(minutes)m" : hours > 0 ? "\(hours)h" : "\(minutes)m")
                     .font(.subheadline)
                     .foregroundStyle(.tertiary)
             }

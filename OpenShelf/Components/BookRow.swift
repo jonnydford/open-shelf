@@ -25,6 +25,7 @@ struct BookRow: View {
                         .background(Color.purple.opacity(0.85))
                         .clipShape(Circle())
                         .offset(x: 2, y: 2)
+                        .accessibilityHidden(true)
                 } else if let formatBadge = formatAbbreviation {
                     Text(formatBadge)
                         .font(.caption2.weight(.semibold))

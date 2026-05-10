@@ -84,6 +84,7 @@ final class BookRepository {
             book.dateStarted = nil
             book.dateFinished = nil
             book.currentPage = nil
+            book.currentChapter = nil
         case .dnf:
             break
         }
