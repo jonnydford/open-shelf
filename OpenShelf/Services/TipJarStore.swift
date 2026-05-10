@@ -60,6 +60,8 @@ final class TipJarStore {
                     await transaction.finish()
                     purchaseState = .thanked
                     UserDefaults.standard.set(true, forKey: "hasTipped")
+                } else {
+                    purchaseState = .error("Purchase could not be verified. Please try again.")
                 }
             case .pending:
                 purchaseState = .ready

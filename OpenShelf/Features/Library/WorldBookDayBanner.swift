@@ -71,6 +71,16 @@ struct WorldBookDayBanner: View {
         WorldBookDay.isWorldBookDayWeek() && dismissedYear != currentYear
     }
 
+    /// Number of books finished since last year's World Book Day.
+    private var booksSinceLastWBD: Int {
+        let lastYear = currentYear - 1
+        guard let lastWBD = WorldBookDay.worldBookDay(year: lastYear) else { return 0 }
+        return books.filter { book in
+            guard let finished = book.dateFinished else { return false }
+            return finished >= lastWBD
+        }.count
+    }
+
     var body: some View {
         if shouldShow {
             VStack(spacing: 12) {
@@ -78,9 +88,15 @@ struct WorldBookDayBanner: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Happy World Book Day!")
                             .font(.headline)
-                        Text("Read a book this week")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        if booksSinceLastWBD > 0 {
+                            Text("You've read \(booksSinceLastWBD) \(booksSinceLastWBD == 1 ? "book" : "books") since last World Book Day")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("Read a book this week")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                     }
 
                     Spacer()

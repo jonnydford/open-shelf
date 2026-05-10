@@ -178,20 +178,39 @@ struct CuratedListDetailView: View {
         isLoading = true
         defer { isLoading = false }
 
-        var results: [FetchedCuratedBook] = []
-        for key in list.bookKeys {
-            do {
-                let detail = try await repository.fetchDetail(for: key)
-                results.append(FetchedCuratedBook(
-                    workKey: key,
-                    title: detail.title,
-                    coverID: detail.primaryCoverID,
-                    subjects: detail.subjects
-                ))
-            } catch {
-                // Skip books that fail to fetch
+        let keys = list.bookKeys
+        let repo = repository
+
+        let results: [FetchedCuratedBook] = await withTaskGroup(
+            of: (Int, FetchedCuratedBook?).self
+        ) { group in
+            for (index, key) in keys.enumerated() {
+                group.addTask {
+                    do {
+                        let detail = try await repo.fetchDetail(for: key)
+                        return (index, FetchedCuratedBook(
+                            workKey: key,
+                            title: detail.title,
+                            coverID: detail.primaryCoverID,
+                            subjects: detail.subjects
+                        ))
+                    } catch {
+                        return (index, nil)
+                    }
+                }
             }
+
+            var indexed: [(Int, FetchedCuratedBook)] = []
+            for await (index, book) in group {
+                if let book {
+                    indexed.append((index, book))
+                }
+            }
+            return indexed
+                .sorted { $0.0 < $1.0 }
+                .map(\.1)
         }
+
         fetchedBooks = results
     }
 }

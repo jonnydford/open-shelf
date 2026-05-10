@@ -154,6 +154,10 @@ actor OpenLibraryClient {
     // MARK: - Wikipedia Link Resolution
 
     func resolveWikipediaURL(wikidataID: String) async throws -> URL? {
+        guard wikidataID.range(of: #"^Q[0-9]+$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+
         guard var components = URLComponents(string: "https://www.wikidata.org/w/api.php") else {
             return nil
         }

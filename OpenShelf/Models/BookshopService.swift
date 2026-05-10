@@ -2,6 +2,10 @@ import Foundation
 
 // MARK: - Bookshop Services (#48)
 
+private func isValidISBN(_ isbn: String) -> Bool {
+    isbn.range(of: #"^[0-9Xx]{10,13}$"#, options: .regularExpression) != nil
+}
+
 enum BookshopService: String, CaseIterable, Identifiable {
     case bookshopOrg = "Bookshop.org"
     case hive = "Hive"
@@ -10,6 +14,7 @@ enum BookshopService: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     func url(for isbn: String) -> URL? {
+        guard isValidISBN(isbn) else { return nil }
         switch self {
         case .bookshopOrg:
             // Affiliate ID placeholder — will be set in App Store Connect
@@ -46,6 +51,7 @@ enum AudiobookService: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     func url(for isbn: String) -> URL? {
+        guard isValidISBN(isbn) else { return nil }
         switch self {
         case .libroFm:
             URL(string: "https://libro.fm/audiobooks/\(isbn)")
