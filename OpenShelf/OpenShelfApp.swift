@@ -32,6 +32,9 @@ struct OpenShelfApp: App {
             ContentView()
                 .environment(repository)
                 .environment(sharingService)
+                .task {
+                    SpotlightIndexer.indexAllBooks(from: modelContainer.mainContext)
+                }
         }
         .modelContainer(modelContainer)
         .onChange(of: scenePhase) { _, newPhase in

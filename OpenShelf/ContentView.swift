@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CoreSpotlight
 
 struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -40,8 +41,28 @@ struct ContentView: View {
         .onOpenURL { url in
             handleDeepLink(url)
         }
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            handleSpotlightActivity(activity)
+        }
         .sheet(isPresented: $showDeepLinkBook) {
             deepLinkSheet
+        }
+    }
+
+    // MARK: - Spotlight Handling
+
+    private func handleSpotlightActivity(_ activity: NSUserActivity) {
+        guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return }
+
+        if identifier.hasPrefix("/works/") {
+            let key = identifier
+            let descriptor = FetchDescriptor<Book>(
+                predicate: #Predicate { $0.olWorkKey == key }
+            )
+            if let book = (try? modelContext.fetch(descriptor))?.first {
+                deepLinkBook = book
+                showDeepLinkBook = true
+            }
         }
     }
 
