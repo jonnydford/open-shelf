@@ -115,6 +115,12 @@ struct CuratedListDetailView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
+                } else if visibleBooks.isEmpty && !fetchedBooks.isEmpty {
+                    ContentUnavailableView(
+                        "All books dismissed",
+                        systemImage: "hand.thumbsdown",
+                        description: Text("You've dismissed all books in this list. Undo in Settings.")
+                    )
                 } else if visibleBooks.isEmpty {
                     ContentUnavailableView(
                         "No books available",
@@ -156,7 +162,7 @@ struct CuratedListDetailView: View {
             let searchResult = SearchResult(
                 key: book.workKey,
                 title: book.title,
-                authorName: nil,
+                authorName: book.author.map { [$0] },
                 firstPublishYear: nil,
                 numberOfPagesMedian: nil,
                 coverI: book.coverID,

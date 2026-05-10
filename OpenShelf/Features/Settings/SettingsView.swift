@@ -228,7 +228,7 @@ struct SettingsView: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text(dismissed.dateDismissed, format: .dateTime.month().day())
+                        Text(dismissed.dateDismissed, format: .dateTime.day().month().year())
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }

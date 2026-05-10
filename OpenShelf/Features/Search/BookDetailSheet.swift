@@ -256,6 +256,15 @@ struct BookDetailSheet: View {
 
         repository.addBook(from: searchResult, detail: workDetail, shelf: selectedShelf)
 
+        // Clean up any existing DismissedBook record for this work
+        let dismissedKey = searchResult.key
+        let dismissedDescriptor = FetchDescriptor<DismissedBook>(
+            predicate: #Predicate { $0.openLibraryWorkKey == dismissedKey }
+        )
+        if let existingDismissed = try? modelContext.fetch(dismissedDescriptor).first {
+            modelContext.delete(existingDismissed)
+        }
+
         // Apply shelf-specific dates and rating via repository helpers
         let key = searchResult.key
         let descriptor = FetchDescriptor<Book>(
