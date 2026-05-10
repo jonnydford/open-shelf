@@ -78,7 +78,9 @@ struct BookDetailView: View {
                 libraryAvailabilitySection
                 buySection
                 listenSection
-                socialSection
+                if !book.isPrivate {
+                    socialSection
+                }
                 actionsSection
             }
             .padding(.bottom, 32)
@@ -89,13 +91,15 @@ struct BookDetailView: View {
             ProgressEditor(book: book)
         }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    generateShareCard()
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
+            if !book.isPrivate {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        generateShareCard()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel("Share book card")
                 }
-                .accessibilityLabel("Share book card")
             }
         }
         .sheet(isPresented: $showDNFSheet) {
@@ -528,7 +532,7 @@ struct BookDetailView: View {
             book.seriesPosition = nil
         } else {
             book.seriesName = trimmedName
-            book.seriesPosition = Int(editingSeriesPosition)
+            book.seriesPosition = Int(editingSeriesPosition).map { max(1, $0) }
         }
         try? modelContext.save()
     }

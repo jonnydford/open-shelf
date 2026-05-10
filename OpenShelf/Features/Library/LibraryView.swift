@@ -55,6 +55,7 @@ struct LibraryView: View {
     @State private var formatFilter: BookFormat? = nil
 
     // Shelf management states
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var bookToDelete: Book?
     @State private var showDeleteConfirmation = false
@@ -155,6 +156,11 @@ struct LibraryView: View {
             .navigationTitle("Library")
             .onAppear {
                 pendingNewBooks = AuthorCheckService.pendingNewBooks
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .background {
+                    showPrivateBooks = false
+                }
             }
             .searchable(text: $localSearchText, prompt: "Filter by title or author")
             .toolbar {
@@ -456,7 +462,9 @@ struct LibraryView: View {
                     bookNavigationRow(book)
                 }
             } header: {
-                Label(group.name, systemImage: "books.vertical")
+                let readCount = group.books.filter { $0.shelf == .read }.count
+                let totalCount = group.books.count
+                Label("\(group.name) — \(readCount) of \(totalCount) read", systemImage: "books.vertical")
                     .font(.subheadline)
                     .fontWeight(.semibold)
             }
@@ -468,7 +476,7 @@ struct LibraryView: View {
                     bookNavigationRow(book)
                 }
             } header: {
-                Text("Other Books")
+                Text("Standalone")
                     .font(.subheadline)
                     .fontWeight(.semibold)
             }

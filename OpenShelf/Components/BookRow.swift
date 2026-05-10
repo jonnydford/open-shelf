@@ -15,6 +15,17 @@ struct BookRow: View {
                     .frame(width: coverWidth, height: coverHeight)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 
+                if let formatBadge = formatAbbreviation {
+                    Text(formatBadge)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Color.purple.opacity(0.85))
+                        .clipShape(Capsule())
+                        .offset(x: 2, y: 2)
+                }
+
                 if showLockIcon {
                     Image(systemName: "lock.fill")
                         .font(.caption2)
@@ -68,6 +79,17 @@ struct BookRow: View {
             parts.append("reading progress: \(percentage) percent")
         }
         return parts.joined(separator: ", ")
+    }
+
+    // MARK: - Format Badge
+
+    private var formatAbbreviation: String? {
+        switch book.format {
+        case .graphicNovel: "GN"
+        case .manga: "Manga"
+        case .comic: "Comic"
+        case .book: nil
+        }
     }
 
     // MARK: - Shelf Badge
