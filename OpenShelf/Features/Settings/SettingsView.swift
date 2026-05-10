@@ -26,6 +26,7 @@ struct SettingsView: View {
             List {
                 readingGoalSection
                 notificationsSection
+                privacySection
                 followedAuthorsSection
                 bookshopsSection
                 librarySection
@@ -150,6 +151,20 @@ struct SettingsView: View {
         UNUserNotificationCenter.current().removePendingNotificationRequests(
             withIdentifiers: ["streakReminder"]
         )
+    }
+
+    // MARK: - Privacy Section
+
+    @AppStorage("includePrivateBooksInStats") private var includePrivateBooksInStats: Bool = false
+
+    private var privacySection: some View {
+        Section("Privacy") {
+            Toggle("Include private books in stats", isOn: $includePrivateBooksInStats)
+
+            Text("When enabled, private books are included in your reading stats and Books Unwrapped. They are never included in shared content.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 
     // MARK: - Followed Authors Section

@@ -8,13 +8,23 @@ struct UnwrappedView: View {
     @Query private var allBooks: [Book]
     @Query private var goals: [ReadingGoal]
 
+    @AppStorage("includePrivateBooksInStats") private var includePrivateBooksInStats: Bool = false
+
     @State private var currentPage = 0
     @State private var autoAdvanceActive = true
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Books filtered to exclude private unless the stats toggle is on.
+    private var statsBooks: [Book] {
+        if includePrivateBooksInStats {
+            return allBooks
+        }
+        return allBooks.filter { !$0.isPrivate }
+    }
+
     private var readBooks: [Book] {
-        StatsCalculator.booksRead(from: allBooks, filter: .year(year))
+        StatsCalculator.booksRead(from: statsBooks, filter: .year(year))
     }
 
     private var totalPages: Int {
@@ -55,7 +65,7 @@ struct UnwrappedView: View {
     }
 
     private var longestStreak: Int {
-        StatsCalculator.longestStreak(books: allBooks, year: year)
+        StatsCalculator.longestStreak(books: statsBooks, year: year)
     }
 
     private var goalForYear: ReadingGoal? {

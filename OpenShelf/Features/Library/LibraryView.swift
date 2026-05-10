@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import LocalAuthentication
 
 // MARK: - Sort Option
 
@@ -9,6 +10,7 @@ enum LibrarySortOption: String, CaseIterable {
     case authorAZ = "Author A\u{2013}Z"
     case rating = "Rating"
     case dateFinished = "Date Finished"
+    case series = "Series"
 }
 
 // MARK: - Shelf Filter (includes "All")
@@ -49,8 +51,11 @@ struct LibraryView: View {
     @State private var selectedFilter: ShelfFilter = .all
     @State private var sortOption: LibrarySortOption = .dateAdded
     @State private var localSearchText = ""
+    @State private var showPrivateBooks: Bool = false
+    @State private var formatFilter: BookFormat? = nil
 
     // Shelf management states
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var bookToDelete: Book?
     @State private var showDeleteConfirmation = false
@@ -69,12 +74,22 @@ struct LibraryView: View {
     private var filteredBooks: [Book] {
         var books = allBooks
 
+        // Filter out private books unless authenticated
+        if !showPrivateBooks {
+            books = books.filter { !$0.isPrivate }
+        }
+
         // Filter by shelf
         switch selectedFilter {
         case .all:
             break
         case .shelf(let shelf):
             books = books.filter { $0.shelf == shelf }
+        }
+
+        // Filter by format
+        if let formatFilter {
+            books = books.filter { $0.format == formatFilter }
         }
 
         // Filter by local search
@@ -98,6 +113,24 @@ struct LibraryView: View {
             books.sort { ($0.userRating ?? 0) > ($1.userRating ?? 0) }
         case .dateFinished:
             books.sort { ($0.dateFinished ?? .distantPast) > ($1.dateFinished ?? .distantPast) }
+        case .series:
+            books.sort { lhs, rhs in
+                // Books with seriesName come first, sorted by series then position
+                switch (lhs.seriesName, rhs.seriesName) {
+                case (nil, nil):
+                    return lhs.dateAdded > rhs.dateAdded
+                case (nil, _):
+                    return false
+                case (_, nil):
+                    return true
+                case let (lhsSeries?, rhsSeries?):
+                    let cmp = lhsSeries.localizedCaseInsensitiveCompare(rhsSeries)
+                    if cmp == .orderedSame {
+                        return (lhs.seriesPosition ?? Int.max) < (rhs.seriesPosition ?? Int.max)
+                    }
+                    return cmp == .orderedAscending
+                }
+            }
         }
 
         return books
@@ -124,6 +157,11 @@ struct LibraryView: View {
             .onAppear {
                 pendingNewBooks = AuthorCheckService.pendingNewBooks
             }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .background {
+                    showPrivateBooks = false
+                }
+            }
             .searchable(text: $localSearchText, prompt: "Filter by title or author")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -134,6 +172,9 @@ struct LibraryView: View {
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     sortMenu
+                }
+                ToolbarItem(placement: .secondaryAction) {
+                    privateToggleButton
                 }
             }
             .alert("Delete Book", isPresented: $showDeleteConfirmation) {
@@ -344,7 +385,7 @@ struct LibraryView: View {
                     BookDetailView(book: book)
                 } label: {
                     HStack {
-                        BookRow(book: book)
+                        BookRow(book: book, showLockIcon: showPrivateBooks && book.isPrivate)
                         if book.queuePosition == 0 {
                             Spacer()
                             Text("Reading Next")
@@ -385,30 +426,82 @@ struct LibraryView: View {
         }
     }
 
+    @ViewBuilder
     private var regularBooksSection: some View {
-        Section {
-            let books = isWantToReadShelf ? nonQueuedBooks : filteredBooks
-            ForEach(books) { book in
-                NavigationLink {
-                    BookDetailView(book: book)
-                } label: {
-                    BookRow(book: book)
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        bookToDelete = book
-                        showDeleteConfirmation = true
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                }
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    shelfSwipeActions(for: book)
-                }
-                .contextMenu {
-                    contextMenuItems(for: book)
+        let books = isWantToReadShelf ? nonQueuedBooks : filteredBooks
+
+        if sortOption == .series {
+            seriesGroupedSections(books: books)
+        } else {
+            Section {
+                ForEach(books) { book in
+                    bookNavigationRow(book)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func seriesGroupedSections(books: [Book]) -> some View {
+        let withSeries = books.filter { $0.seriesName != nil }
+        let withoutSeries = books.filter { $0.seriesName == nil }
+
+        let seriesGroups: [(name: String, books: [Book])] = {
+            var groups: [String: [Book]] = [:]
+            for book in withSeries {
+                let name = book.seriesName ?? ""
+                groups[name, default: []].append(book)
+            }
+            return groups.keys.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+                .map { (name: $0, books: groups[$0]!) }
+        }()
+
+        ForEach(seriesGroups, id: \.name) { group in
+            Section {
+                ForEach(group.books) { book in
+                    bookNavigationRow(book)
+                }
+            } header: {
+                let readCount = group.books.filter { $0.shelf == .read }.count
+                let totalCount = group.books.count
+                Label("\(group.name) — \(readCount) of \(totalCount) read", systemImage: "books.vertical")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+            }
+        }
+
+        if !withoutSeries.isEmpty {
+            Section {
+                ForEach(withoutSeries) { book in
+                    bookNavigationRow(book)
+                }
+            } header: {
+                Text("Standalone")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+            }
+        }
+    }
+
+    private func bookNavigationRow(_ book: Book) -> some View {
+        NavigationLink {
+            BookDetailView(book: book)
+        } label: {
+            BookRow(book: book, showLockIcon: showPrivateBooks && book.isPrivate)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                bookToDelete = book
+                showDeleteConfirmation = true
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            shelfSwipeActions(for: book)
+        }
+        .contextMenu {
+            contextMenuItems(for: book)
         }
     }
 
@@ -530,19 +623,81 @@ struct LibraryView: View {
 
     private var sortMenu: some View {
         Menu {
-            ForEach(LibrarySortOption.allCases, id: \.self) { option in
+            Section("Sort By") {
+                ForEach(LibrarySortOption.allCases, id: \.self) { option in
+                    Button {
+                        sortOption = option
+                    } label: {
+                        if sortOption == option {
+                            Label(option.rawValue, systemImage: "checkmark")
+                        } else {
+                            Text(option.rawValue)
+                        }
+                    }
+                }
+            }
+
+            Section("Format") {
                 Button {
-                    sortOption = option
+                    formatFilter = nil
                 } label: {
-                    if sortOption == option {
-                        Label(option.rawValue, systemImage: "checkmark")
+                    if formatFilter == nil {
+                        Label("All Formats", systemImage: "checkmark")
                     } else {
-                        Text(option.rawValue)
+                        Text("All Formats")
+                    }
+                }
+
+                ForEach(BookFormat.allCases, id: \.self) { format in
+                    Button {
+                        formatFilter = format
+                    } label: {
+                        if formatFilter == format {
+                            Label(format.rawValue, systemImage: "checkmark")
+                        } else {
+                            Text(format.rawValue)
+                        }
                     }
                 }
             }
         } label: {
             Image(systemName: "arrow.up.arrow.down")
+        }
+    }
+
+    private var privateToggleButton: some View {
+        Button {
+            if showPrivateBooks {
+                showPrivateBooks = false
+            } else {
+                authenticateForPrivateBooks()
+            }
+        } label: {
+            Label(
+                showPrivateBooks ? "Hide Private Books" : "Show Private Books",
+                systemImage: showPrivateBooks ? "lock.open" : "lock"
+            )
+        }
+    }
+
+    private func authenticateForPrivateBooks() {
+        let context = LAContext()
+        var error: NSError?
+
+        if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
+            context.evaluatePolicy(
+                .deviceOwnerAuthentication,
+                localizedReason: "Show private books"
+            ) { success, _ in
+                Task { @MainActor in
+                    if success {
+                        showPrivateBooks = true
+                    }
+                }
+            }
+        } else {
+            // No biometrics or passcode — show directly
+            showPrivateBooks = true
         }
     }
 

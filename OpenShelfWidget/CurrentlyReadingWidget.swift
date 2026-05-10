@@ -85,9 +85,9 @@ struct CurrentlyReadingProvider: TimelineProvider {
             let descriptor = FetchDescriptor<Book>()
             let allBooks = try context.fetch(descriptor)
 
-            // Filter to currently reading books, sorted by most recently started
+            // Filter to currently reading books (excluding private), sorted by most recently started
             let readingBooks = allBooks
-                .filter { $0.shelf == .reading }
+                .filter { $0.shelf == .reading && !$0.isPrivate }
                 .sorted { ($0.dateStarted ?? .distantPast) > ($1.dateStarted ?? .distantPast) }
 
             guard let book = readingBooks.first else {

@@ -6,15 +6,25 @@ struct StatsView: View {
     @Query private var books: [Book]
     @Query private var goals: [ReadingGoal]
 
+    @AppStorage("includePrivateBooksInStats") private var includePrivateBooksInStats: Bool = false
+
     @State private var filter: YearFilter = .year(Calendar.current.component(.year, from: .now))
 
     private var currentYear: Int {
         Calendar.current.component(.year, from: .now)
     }
 
+    /// Books filtered to exclude private unless the stats toggle is on.
+    private var statsBooks: [Book] {
+        if includePrivateBooksInStats {
+            return books
+        }
+        return books.filter { !$0.isPrivate }
+    }
+
     private var availableYears: [Int] {
         let years = Set(
-            books.compactMap { $0.dateFinished.map { Calendar.current.component(.year, from: $0) } }
+            statsBooks.compactMap { $0.dateFinished.map { Calendar.current.component(.year, from: $0) } }
         )
         var all = years
         all.insert(currentYear)
@@ -22,11 +32,11 @@ struct StatsView: View {
     }
 
     private var readBooks: [Book] {
-        StatsCalculator.booksRead(from: books, filter: filter)
+        StatsCalculator.booksRead(from: statsBooks, filter: filter)
     }
 
     private var dnfBooks: [Book] {
-        StatsCalculator.dnfBooks(from: books, filter: filter)
+        StatsCalculator.dnfBooks(from: statsBooks, filter: filter)
     }
 
     private var goalForSelectedYear: ReadingGoal? {
@@ -122,6 +132,7 @@ struct StatsView: View {
                 booksPerMonthSection
                 pagesPerMonthSection
                 genreSection
+                formatSection
                 statsGrid
             }
             .padding()
@@ -131,12 +142,12 @@ struct StatsView: View {
     // MARK: - Badges
 
     private var badges: [Badge] {
-        let streak = StatsCalculator.currentStreak(from: books)
+        let streak = StatsCalculator.currentStreak(from: statsBooks)
         let goalMet: Bool = {
             guard let goal = goalForSelectedYear else { return false }
             return readBooks.count >= goal.target
         }()
-        return BadgeEngine.evaluateBadges(books: books, streak: streak, goalMet: goalMet)
+        return BadgeEngine.evaluateBadges(books: statsBooks, streak: streak, goalMet: goalMet)
     }
 
     private var unlockedBadgeCount: Int {
@@ -147,7 +158,7 @@ struct StatsView: View {
 
     private var unwrappedYears: [Int] {
         let yearCounts = Dictionary(
-            grouping: books.filter { $0.shelf == .read && $0.dateFinished != nil },
+            grouping: statsBooks.filter { $0.shelf == .read && $0.dateFinished != nil },
             by: { Calendar.current.component(.year, from: $0.dateFinished!) }
         )
         return yearCounts.filter { $0.value.count >= 5 }.keys.sorted(by: >)
@@ -189,7 +200,7 @@ struct StatsView: View {
     // MARK: - Unwrapped Banner
 
     private func booksReadInYear(_ year: Int) -> Int {
-        StatsCalculator.booksRead(from: books, filter: .year(year)).count
+        StatsCalculator.booksRead(from: statsBooks, filter: .year(year)).count
     }
 
     @ViewBuilder
@@ -277,7 +288,7 @@ struct StatsView: View {
     // MARK: - Streak Header
 
     private var streakHeader: some View {
-        let streak = StatsCalculator.currentStreak(from: books)
+        let streak = StatsCalculator.currentStreak(from: statsBooks)
         let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
         let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
 
@@ -356,6 +367,31 @@ struct StatsView: View {
             GenreBreakdownChart(books: readBooks)
         }
         .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var formatSection: some View {
+        let breakdown = StatsCalculator.formatBreakdown(readBooks)
+        let hasMixedFormats = breakdown.count > 1
+        if hasMixedFormats {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Format Breakdown")
+                    .font(.headline)
+
+                ForEach(breakdown, id: \.format) { item in
+                    HStack {
+                        Text(item.format)
+                            .font(.subheadline)
+                        Spacer()
+                        Text("\(item.count)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        }
     }
 
     // MARK: - Stats Grid
@@ -486,7 +522,7 @@ struct StatsView: View {
     }
 
     private var streakCard: some View {
-        let streak = StatsCalculator.currentStreak(from: books)
+        let streak = StatsCalculator.currentStreak(from: statsBooks)
         let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
         let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
 

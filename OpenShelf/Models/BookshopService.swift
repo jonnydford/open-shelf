@@ -18,12 +18,12 @@ enum BookshopService: String, CaseIterable, Identifiable {
         switch self {
         case .bookshopOrg:
             // Affiliate ID placeholder — will be set in App Store Connect
-            URL(string: "https://uk.bookshop.org/a/AFFILIATE_ID/\(isbn)")
+            return URL(string: "https://uk.bookshop.org/a/AFFILIATE_ID/\(isbn)")
         case .hive:
             // Hive via Webgains affiliate
-            URL(string: "https://www.hive.co.uk/Search?keyword=\(isbn)")
+            return URL(string: "https://www.hive.co.uk/Search?keyword=\(isbn)")
         case .blackwells:
-            URL(string: "https://blackwells.co.uk/bookshop/product/\(isbn)")
+            return URL(string: "https://blackwells.co.uk/bookshop/product/\(isbn)")
         }
     }
 
@@ -54,9 +54,9 @@ enum AudiobookService: String, CaseIterable, Identifiable {
         guard isValidISBN(isbn) else { return nil }
         switch self {
         case .libroFm:
-            URL(string: "https://libro.fm/audiobooks/\(isbn)")
+            return URL(string: "https://libro.fm/audiobooks/\(isbn)")
         case .audibleUK:
-            URL(string: "https://www.audible.co.uk/search?keywords=\(isbn)")
+            return URL(string: "https://www.audible.co.uk/search?keywords=\(isbn)")
         }
     }
 }

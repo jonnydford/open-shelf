@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BookRow: View {
     let book: Book
+    var showLockIcon: Bool = false
 
     @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 60
     @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 90
@@ -9,10 +10,33 @@ struct BookRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            CoverImage(coverID: book.coverImageID, size: .small)
-                .frame(width: coverWidth, height: coverHeight)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .accessibilityLabel("Book cover for \(book.title)")
+            ZStack(alignment: .bottomTrailing) {
+                CoverImage(coverID: book.coverImageID, size: .small)
+                    .frame(width: coverWidth, height: coverHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                if let formatBadge = formatAbbreviation {
+                    Text(formatBadge)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Color.purple.opacity(0.85))
+                        .clipShape(Capsule())
+                        .offset(x: 2, y: 2)
+                }
+
+                if showLockIcon {
+                    Image(systemName: "lock.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.white)
+                        .padding(3)
+                        .background(Color.black.opacity(0.6))
+                        .clipShape(Circle())
+                        .offset(x: 2, y: 2)
+                }
+            }
+            .accessibilityLabel("Book cover for \(book.title)\(showLockIcon ? ", private" : "")")
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
@@ -55,6 +79,17 @@ struct BookRow: View {
             parts.append("reading progress: \(percentage) percent")
         }
         return parts.joined(separator: ", ")
+    }
+
+    // MARK: - Format Badge
+
+    private var formatAbbreviation: String? {
+        switch book.format {
+        case .graphicNovel: "GN"
+        case .manga: "Manga"
+        case .comic: "Comic"
+        case .book: nil
+        }
     }
 
     // MARK: - Shelf Badge

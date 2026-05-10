@@ -40,6 +40,7 @@ targets:
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
         INFOPLIST_KEY_NSCameraUsageDescription: "Open Shelf uses your camera to scan book barcodes for quick adding."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Open Shelf lets you pick a cover image from your photos for manually added books."
+        INFOPLIST_KEY_NSFaceIDUsageDescription: "Open Shelf uses Face ID to protect your private books."
     info:
       properties:
         BGTaskSchedulerPermittedIdentifiers:

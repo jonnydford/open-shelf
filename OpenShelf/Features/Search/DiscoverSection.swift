@@ -158,7 +158,7 @@ struct CuratedListDetailView: View {
                     .frame(width: 100, height: 150)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                if libraryBooks.contains(where: { $0.olWorkKey == book.workKey }) {
+                if libraryBooks.contains(where: { $0.olWorkKey == book.workKey && !$0.isPrivate }) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.caption)
                         .foregroundStyle(.white, .green)

@@ -1,6 +1,23 @@
 import Foundation
 import SwiftData
 
+// MARK: - Book Format
+
+enum BookFormat: String, Codable, CaseIterable, Sendable {
+    case book = "Book"
+    case graphicNovel = "Graphic Novel"
+    case manga = "Manga"
+    case comic = "Comic"
+
+    static func detectFormat(subjects: [String]) -> BookFormat {
+        let lower = subjects.map { $0.lowercased() }
+        if lower.contains(where: { $0.contains("manga") }) { return .manga }
+        if lower.contains(where: { $0.contains("graphic novel") || $0.contains("graphic novels") }) { return .graphicNovel }
+        if lower.contains(where: { $0.contains("comic") || $0.contains("comics") }) { return .comic }
+        return .book
+    }
+}
+
 @Model
 final class Book {
     // MARK: - Identity
@@ -37,6 +54,19 @@ final class Book {
     var tags: [String]
     var queuePosition: Int?
 
+    // MARK: - Privacy
+
+    var isPrivate: Bool
+
+    // MARK: - Series
+
+    var seriesName: String?
+    var seriesPosition: Int?
+
+    // MARK: - Format
+
+    var format: BookFormat
+
     @Relationship(deleteRule: .cascade, inverse: \ReadEntry.book)
     var reads: [ReadEntry]
 
@@ -66,6 +96,10 @@ final class Book {
         notes: String? = nil,
         tags: [String] = [],
         queuePosition: Int? = nil,
+        isPrivate: Bool = false,
+        seriesName: String? = nil,
+        seriesPosition: Int? = nil,
+        format: BookFormat = .book,
         reads: [ReadEntry] = []
     ) {
         self.olWorkKey = olWorkKey
@@ -93,6 +127,10 @@ final class Book {
         self.notes = notes
         self.tags = tags
         self.queuePosition = queuePosition
+        self.isPrivate = isPrivate
+        self.seriesName = seriesName
+        self.seriesPosition = seriesPosition
+        self.format = format
         self.reads = reads
     }
 }
