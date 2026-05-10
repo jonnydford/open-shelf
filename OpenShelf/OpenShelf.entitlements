@@ -4,7 +4,7 @@
 <dict>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.com.openshelf.shared</string>
+        <string>group.com.forddevinc.OpenShelf.shared</string>
     </array>
     <!-- CloudKit requires real code signing with a provisioning profile.
          These entitlements are set up correctly but will only function
@@ -15,7 +15,7 @@
     </array>
     <key>com.apple.developer.icloud-container-identifiers</key>
     <array>
-        <string>iCloud.com.openshelf.app</string>
+        <string>iCloud.com.forddevinc.OpenShelf</string>
     </array>
 </dict>
 </plist>

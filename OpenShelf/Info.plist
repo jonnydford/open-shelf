@@ -4,7 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.openshelf.authorcheck</string>
+		<string>com.forddevinc.OpenShelf.authorcheck</string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
@@ -24,7 +24,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.openshelf.app</string>
+			<string>com.forddevinc.OpenShelf</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>openshelf</string>

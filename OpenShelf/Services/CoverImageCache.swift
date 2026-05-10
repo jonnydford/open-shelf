@@ -10,7 +10,7 @@ actor CoverImageCache {
     init(session: URLSession? = nil) {
         // Use the App Group container so the widget extension can read cached covers.
         let groupURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.com.openshelf.shared"
+            forSecurityApplicationGroupIdentifier: "group.com.forddevinc.OpenShelf.shared"
         )
         let baseDir = groupURL ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         let coverDir = baseDir.appendingPathComponent("Covers", isDirectory: true)

@@ -11,7 +11,7 @@ struct PendingNewBook: Codable, Sendable, Identifiable {
 
 enum AuthorCheckService: Sendable {
 
-    static let taskIdentifier = "com.openshelf.authorcheck"
+    static let taskIdentifier = "com.forddevinc.OpenShelf.authorcheck"
 
     // MARK: - Pending New Books Storage
 

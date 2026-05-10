@@ -256,7 +256,7 @@ struct CurrentlyReadingWidgetView: View {
     private func loadCoverImage() -> UIImage? {
         guard let coverID = entry.coverImageID else { return nil }
         guard let groupURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.com.openshelf.shared"
+            forSecurityApplicationGroupIdentifier: "group.com.forddevinc.OpenShelf.shared"
         ) else { return nil }
         let path = groupURL.appendingPathComponent("Covers/\(coverID)_M.jpg")
         return UIImage(contentsOfFile: path.path)
@@ -566,7 +566,7 @@ struct LargeWidgetView: View {
     private func loadCoverImage(coverID: Int?) -> UIImage? {
         guard let coverID else { return nil }
         guard let groupURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.com.openshelf.shared"
+            forSecurityApplicationGroupIdentifier: "group.com.forddevinc.OpenShelf.shared"
         ) else { return nil }
         let path = groupURL.appendingPathComponent("Covers/\(coverID)_M.jpg")
         return UIImage(contentsOfFile: path.path)

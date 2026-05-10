@@ -3,7 +3,7 @@ import CloudKit
 @MainActor
 @Observable
 final class CloudSharingService {
-    static let containerIdentifier = "iCloud.com.openshelf.app"
+    static let containerIdentifier = "iCloud.com.forddevinc.OpenShelf"
     static let zoneName = "SharedLists"
 
     private let recordType = "SharedReadingList"

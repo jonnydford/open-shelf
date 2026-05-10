@@ -6,7 +6,7 @@ enum SharedModelContainer {
     /// Both the main app and the widget extension use this URL so they share the same database.
     static var storeURL: URL {
         let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.com.openshelf.shared"
+            forSecurityApplicationGroupIdentifier: "group.com.forddevinc.OpenShelf.shared"
         )
         // Fall back to the default application support directory when the App Group
         // container is unavailable (e.g. simulator without entitlements).

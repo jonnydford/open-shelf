@@ -4,7 +4,7 @@ import UIKit
 
 @MainActor
 final class SpotlightIndexer {
-    private static let bookDomain = "com.openshelf.book"
+    private static let bookDomain = "com.forddevinc.OpenShelf.book"
 
     static func indexAllBooks(from context: ModelContext) {
         let descriptor = FetchDescriptor<Book>()
@@ -54,7 +54,7 @@ final class SpotlightIndexer {
 
         if let coverID = book.coverImageID {
             let groupURL = FileManager.default.containerURL(
-                forSecurityApplicationGroupIdentifier: "group.com.openshelf.shared"
+                forSecurityApplicationGroupIdentifier: "group.com.forddevinc.OpenShelf.shared"
             )
             if let url = groupURL?.appendingPathComponent("Covers/\(coverID)_M.jpg"),
                FileManager.default.fileExists(atPath: url.path) {

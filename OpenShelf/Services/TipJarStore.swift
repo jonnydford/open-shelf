@@ -2,9 +2,9 @@ import Foundation
 import StoreKit
 
 enum TipProduct: String, CaseIterable {
-    case small = "com.openshelf.tip.small"
-    case medium = "com.openshelf.tip.medium"
-    case large = "com.openshelf.tip.large"
+    case small = "com.forddevinc.OpenShelf.tip.small"
+    case medium = "com.forddevinc.OpenShelf.tip.medium"
+    case large = "com.forddevinc.OpenShelf.tip.large"
 
     var displayName: String {
         switch self {

@@ -1,6 +1,6 @@
 name: OpenShelf
 options:
-  bundleIdPrefix: com.openshelf
+  bundleIdPrefix: com.forddevinc
   deploymentTarget:
     iOS: "26.0"
   xcodeVersion: "16.0"
@@ -23,7 +23,7 @@ targets:
       - path: OpenShelf
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.openshelf.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.forddevinc.OpenShelf
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: "NO"
         CODE_SIGNING_ALLOWED: "NO"
@@ -45,9 +45,9 @@ targets:
       properties:
         NSSupportsLiveActivities: true
         BGTaskSchedulerPermittedIdentifiers:
-          - com.openshelf.authorcheck
+          - com.forddevinc.OpenShelf.authorcheck
         CFBundleURLTypes:
-          - CFBundleURLName: "com.openshelf.app"
+          - CFBundleURLName: "com.forddevinc.OpenShelf"
             CFBundleURLSchemes:
               - openshelf
 
@@ -59,7 +59,7 @@ targets:
       - path: OpenShelf/Models
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.openshelf.app.widget
+        PRODUCT_BUNDLE_IDENTIFIER: com.forddevinc.OpenShelf.widget
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: "NO"
         CODE_SIGNING_ALLOWED: "NO"
@@ -81,7 +81,7 @@ targets:
       - path: OpenShelf/Services/DTOs
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.openshelf.app.share-extension
+        PRODUCT_BUNDLE_IDENTIFIER: com.forddevinc.OpenShelf.share-extension
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: "NO"
         CODE_SIGNING_ALLOWED: "NO"

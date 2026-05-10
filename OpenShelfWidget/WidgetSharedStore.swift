@@ -4,7 +4,7 @@ import SwiftData
 enum WidgetSharedStore {
     static var storeURL: URL {
         let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.com.openshelf.shared"
+            forSecurityApplicationGroupIdentifier: "group.com.forddevinc.OpenShelf.shared"
         )
         let baseURL = containerURL ?? FileManager.default.urls(
             for: .applicationSupportDirectory,
