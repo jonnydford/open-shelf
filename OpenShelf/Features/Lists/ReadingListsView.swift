@@ -3,6 +3,7 @@ import SwiftData
 
 struct ReadingListsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(CloudSharingService.self) private var sharingService
     @Query(sort: \ReadingList.dateCreated, order: .reverse) private var lists: [ReadingList]
 
     @State private var showNewListAlert = false
@@ -67,8 +68,33 @@ struct ReadingListsView: View {
                 }
             }
             .onDelete(perform: deleteLists)
+
+            Section {
+                NavigationLink {
+                    SharedWithMeView()
+                } label: {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Shared with Me")
+                            if !sharingService.sharedWithMe.isEmpty {
+                                Text(
+                                    "\(sharingService.sharedWithMe.count) "
+                                    + "\(sharingService.sharedWithMe.count == 1 ? "list" : "lists")"
+                                )
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            }
+                        }
+                    } icon: {
+                        Image(systemName: "person.2.fill")
+                    }
+                }
+            }
         }
         .listStyle(.plain)
+        .task {
+            await sharingService.fetchSharedWithMe()
+        }
     }
 
     private func listRow(_ list: ReadingList) -> some View {

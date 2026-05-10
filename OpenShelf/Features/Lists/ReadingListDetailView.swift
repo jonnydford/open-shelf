@@ -1,11 +1,13 @@
 import SwiftUI
 import SwiftData
+import CloudKit
 
 struct ReadingListDetailView: View {
     @Bindable var readingList: ReadingList
 
     @Environment(\.modelContext) private var modelContext
     @Environment(BookRepository.self) private var repository
+    @Environment(CloudSharingService.self) private var sharingService
     @Query(sort: \Book.title) private var allBooks: [Book]
 
     @State private var showAddBooks = false
@@ -15,6 +17,9 @@ struct ReadingListDetailView: View {
     @State private var shareImage: UIImage?
     @State private var showRenameAlert = false
     @State private var renameText = ""
+    @State private var showCloudSharing = false
+    @State private var activeShare: CKShare?
+    @State private var isSharingInProgress = false
 
     private var booksInList: [Book] {
         allBooks.filter { readingList.bookKeys.contains($0.olWorkKey) }
@@ -82,9 +87,46 @@ struct ReadingListDetailView: View {
         }
         .onChange(of: readingList.includeRatings) {
             try? modelContext.save()
+            if readingList.ckRecordName != nil {
+                Task {
+                    try? await sharingService.updateSharedRecord(
+                        list: readingList,
+                        books: booksInList,
+                        includeRatings: readingList.includeRatings,
+                        includeNotes: readingList.includeNotes
+                    )
+                }
+            }
         }
         .onChange(of: readingList.includeNotes) {
             try? modelContext.save()
+            if readingList.ckRecordName != nil {
+                Task {
+                    try? await sharingService.updateSharedRecord(
+                        list: readingList,
+                        books: booksInList,
+                        includeRatings: readingList.includeRatings,
+                        includeNotes: readingList.includeNotes
+                    )
+                }
+            }
+        }
+        .sheet(isPresented: $showCloudSharing) {
+            if let share = activeShare {
+                CloudSharingSheet(
+                    share: share,
+                    container: CKContainer(
+                        identifier: "iCloud.com.openshelf.app"
+                    ),
+                    onStoppedSharing: {
+                        readingList.ckRecordName = nil
+                        try? modelContext.save()
+                    },
+                    onSaved: {
+                        showCloudSharing = false
+                    }
+                )
+            }
         }
     }
 
@@ -133,6 +175,29 @@ struct ReadingListDetailView: View {
         } label: {
             Label("Share as Image", systemImage: "photo")
         }
+
+        Divider()
+
+        if readingList.ckRecordName != nil {
+            Button {
+                Task { await manageExistingShare() }
+            } label: {
+                Label("Manage iCloud Sharing", systemImage: "person.2.circle")
+            }
+
+            Button {
+                Task { await stopSharing() }
+            } label: {
+                Label("Stop Sharing", systemImage: "xmark.circle")
+            }
+        } else {
+            Button {
+                Task { await startSharing() }
+            } label: {
+                Label("Share via iCloud", systemImage: "icloud.and.arrow.up")
+            }
+            .disabled(isSharingInProgress)
+        }
     }
 
     // MARK: - Add Books Sheet
@@ -160,6 +225,16 @@ struct ReadingListDetailView: View {
             readingList.bookKeys.removeAll { $0 == book.olWorkKey }
         }
         try? modelContext.save()
+        if readingList.ckRecordName != nil {
+            Task {
+                try? await sharingService.updateSharedRecord(
+                    list: readingList,
+                    books: booksInList,
+                    includeRatings: readingList.includeRatings,
+                    includeNotes: readingList.includeNotes
+                )
+            }
+        }
     }
 
     private func shareAsText() {
@@ -208,6 +283,57 @@ struct ReadingListDetailView: View {
             showShareSheet = true
         }
     }
+
+    // MARK: - iCloud Sharing
+
+    private func startSharing() async {
+        isSharingInProgress = true
+        defer { isSharingInProgress = false }
+        do {
+            let (record, share, _) = try await sharingService.prepareShare(
+                list: readingList,
+                books: booksInList,
+                includeRatings: readingList.includeRatings,
+                includeNotes: readingList.includeNotes
+            )
+            readingList.ckRecordName = record.recordID.recordName
+            activeShare = share
+            showCloudSharing = true
+            try? modelContext.save()
+        } catch {
+            // iCloud may not be available — fail silently
+        }
+    }
+
+    private func manageExistingShare() async {
+        guard let recordName = readingList.ckRecordName else { return }
+        do {
+            let zoneID = CKRecordZone.ID(zoneName: "SharedLists")
+            let recordID = CKRecord.ID(recordName: recordName, zoneID: zoneID)
+            let container = CKContainer(identifier: "iCloud.com.openshelf.app")
+            let record = try await container.privateCloudDatabase.record(
+                for: recordID
+            )
+            if let shareRef = record.share {
+                let shareRecord = try await container.privateCloudDatabase.record(
+                    for: shareRef.recordID
+                )
+                if let share = shareRecord as? CKShare {
+                    activeShare = share
+                    showCloudSharing = true
+                }
+            }
+        } catch {
+            // Could not fetch share — fail silently
+        }
+    }
+
+    private func stopSharing() async {
+        guard let recordName = readingList.ckRecordName else { return }
+        try? await sharingService.stopSharing(recordName: recordName)
+        readingList.ckRecordName = nil
+        try? modelContext.save()
+    }
 }
 
 // MARK: - Add Books to List View
@@ -217,6 +343,7 @@ struct AddBooksToListView: View {
     let allBooks: [Book]
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(CloudSharingService.self) private var sharingService
     @State private var searchText = ""
 
     private var filteredBooks: [Book] {
@@ -262,6 +389,19 @@ struct AddBooksToListView: View {
             readingList.bookKeys.append(book.olWorkKey)
         }
         try? modelContext.save()
+        if readingList.ckRecordName != nil {
+            let updatedBooks = allBooks.filter {
+                readingList.bookKeys.contains($0.olWorkKey)
+            }
+            Task {
+                try? await sharingService.updateSharedRecord(
+                    list: readingList,
+                    books: updatedBooks,
+                    includeRatings: readingList.includeRatings,
+                    includeNotes: readingList.includeNotes
+                )
+            }
+        }
     }
 }
 
