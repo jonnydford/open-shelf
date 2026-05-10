@@ -27,6 +27,7 @@ struct UnwrappedShareSheet: View {
     @State private var shareMode: ShareMode = .summary
     @State private var showActivitySheet = false
     @State private var shareItems: [Any] = []
+    @State private var isRendering = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -60,13 +61,20 @@ struct UnwrappedShareSheet: View {
                 Button {
                     renderAndShare()
                 } label: {
-                    Label("Share", systemImage: "square.and.arrow.up")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                    if isRendering {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    } else {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .padding(.horizontal, 32)
+                .disabled(isRendering)
             }
             .padding(.vertical)
             .navigationTitle("Share Your Year")
@@ -668,18 +676,24 @@ struct UnwrappedShareSheet: View {
             renderer.scale = 2.0
             guard let image = renderer.uiImage else { return }
             shareItems = [image]
+            showActivitySheet = true
         case .allCards:
-            var images: [Any] = []
-            for index in 0..<10 {
-                let renderer = ImageRenderer(content: cardView(at: index))
-                renderer.scale = 2.0
-                if let image = renderer.uiImage {
-                    images.append(image)
+            isRendering = true
+            Task {
+                var images: [Any] = []
+                for index in 0..<10 {
+                    let renderer = ImageRenderer(content: cardView(at: index))
+                    renderer.scale = 2.0
+                    if let image = renderer.uiImage {
+                        images.append(image)
+                    }
+                    await Task.yield()
                 }
+                isRendering = false
+                guard !images.isEmpty else { return }
+                shareItems = images
+                showActivitySheet = true
             }
-            guard !images.isEmpty else { return }
-            shareItems = images
         }
-        showActivitySheet = true
     }
 }

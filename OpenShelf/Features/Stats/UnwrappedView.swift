@@ -129,21 +129,31 @@ struct UnwrappedView: View {
             }
         }
         .sheet(isPresented: $showUnwrappedShareSheet) {
+            // Always exclude private books from shared content regardless of stats toggle
+            let shareBooks = StatsCalculator.booksRead(from: allBooks.filter { !$0.isPrivate }, filter: .year(year))
+            let shareTopBook = shareBooks.filter { ($0.userRating ?? 0) > 0 }
+                .max { ($0.userRating ?? 0) < ($1.userRating ?? 0) }
+            let shareGenres = StatsCalculator.genreBreakdown(shareBooks)
+            let shareTopGenre: (genre: String, count: Int, percentage: String)? = shareGenres.first.map { top in
+                let total = shareGenres.reduce(0) { $0 + $1.count }
+                let pct = total > 0 ? String(format: "%.0f%%", Double(top.count) / Double(total) * 100) : "0%"
+                return (top.genre, top.count, pct)
+            }
             UnwrappedShareSheet(
                 year: year,
-                booksReadCount: readBooks.count,
-                totalPages: totalPages,
-                estimatedHours: estimatedHours,
-                topBook: topBook,
-                topGenre: topGenre,
-                favouriteAuthor: favouriteAuthor,
-                longestStreak: longestStreak,
+                booksReadCount: shareBooks.count,
+                totalPages: StatsCalculator.totalPages(shareBooks),
+                estimatedHours: StatsCalculator.estimatedReadingHours(books: shareBooks),
+                topBook: shareTopBook,
+                topGenre: shareTopGenre,
+                favouriteAuthor: StatsCalculator.favouriteAuthor(books: shareBooks),
+                longestStreak: StatsCalculator.longestStreak(books: allBooks.filter { !$0.isPrivate }, year: year),
                 goalTarget: goalForYear?.target,
-                goalMet: goalForYear.map { readBooks.count >= $0.target } ?? false,
-                averageDays: averageDays,
-                fastestRead: fastestRead.map { (title: $0.book.title, days: $0.days) },
-                longestRead: longestRead.map { (title: $0.book.title, days: $0.days) },
-                monthlyData: StatsCalculator.booksPerMonth(readBooks)
+                goalMet: goalForYear.map { shareBooks.count >= $0.target } ?? false,
+                averageDays: StatsCalculator.averageDaysPerBook(shareBooks),
+                fastestRead: StatsCalculator.fastestRead(shareBooks).map { (title: $0.book.title, days: $0.days) },
+                longestRead: StatsCalculator.slowestRead(shareBooks).map { (title: $0.book.title, days: $0.days) },
+                monthlyData: StatsCalculator.booksPerMonth(shareBooks)
             )
         }
         .onReceive(
@@ -190,41 +200,6 @@ struct UnwrappedView: View {
                 .background(.white.opacity(0.2), in: Capsule())
         }
         .padding()
-    }
-
-    // MARK: - Snapshot
-
-    @MainActor
-    func cardSnapshot(format: ShareFormat = .story) -> UIImage? {
-        let dims = format.dimensions
-        let cardView = currentCardView()
-            .frame(width: dims.width, height: dims.height)
-            .overlay(alignment: .bottom) {
-                Text("Open Shelf")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .padding(.bottom, 32)
-            }
-
-        let renderer = ImageRenderer(content: cardView)
-        renderer.scale = 2.0
-        return renderer.uiImage
-    }
-
-    @ViewBuilder
-    private func currentCardView() -> some View {
-        switch currentPage {
-        case 0: openerCard
-        case 1: totalStatsCard
-        case 2: topBookCard
-        case 3: topGenreCard
-        case 4: favouriteAuthorCard
-        case 5: readingPaceCard
-        case 6: monthlyBreakdownCard
-        case 7: streakCard
-        case 8: goalProgressCard
-        default: closerCard
-        }
     }
 
     // MARK: - Cards
