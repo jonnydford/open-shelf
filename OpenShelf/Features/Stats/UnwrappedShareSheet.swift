@@ -39,7 +39,7 @@ struct UnwrappedShareSheet: View {
                     summaryCardView
                         .scaleEffect(previewScale)
                         .frame(width: previewWidth, height: previewHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
                         .shadow(radius: 8)
                 } else {
                     allCardsCarousel
@@ -105,7 +105,7 @@ struct UnwrappedShareSheet: View {
                     cardView(at: index)
                         .scaleEffect(carouselScale)
                         .frame(width: carouselWidth, height: carouselHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
                         .shadow(radius: 4)
                 }
             }

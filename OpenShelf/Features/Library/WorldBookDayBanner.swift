@@ -123,8 +123,8 @@ struct WorldBookDayBanner: View {
                 .buttonStyle(.bordered)
             }
             .padding()
-            .background(Color.accentColor.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .background(.quaternary)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
             .padding(.horizontal)
         }
     }

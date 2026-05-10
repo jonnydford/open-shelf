@@ -16,7 +16,7 @@ struct NotesEditor: View {
                     .frame(minHeight: 100)
                     .scrollContentBackground(.hidden)
                     .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
                     .toolbar {
                         ToolbarItemGroup(placement: .keyboard) {
                             Spacer()

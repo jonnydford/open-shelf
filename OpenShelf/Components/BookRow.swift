@@ -15,7 +15,7 @@ struct BookRow: View {
             ZStack(alignment: .bottomTrailing) {
                 CoverImage(coverID: book.coverImageID, size: .small)
                     .frame(width: coverWidth, height: coverHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
                 if let formatBadge = formatAbbreviation {
                     Text(formatBadge)

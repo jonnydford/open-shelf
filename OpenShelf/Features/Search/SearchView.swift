@@ -133,7 +133,7 @@ struct SearchView: View {
                 VStack {
                     ProgressView()
                         .padding(8)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.small))
                     Spacer()
                 }
                 .padding(.top, 8)
@@ -145,7 +145,7 @@ struct SearchView: View {
         HStack(spacing: 12) {
             CoverImage(coverID: result.coverI, size: .small)
                 .frame(width: 50, height: 75)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(result.title)

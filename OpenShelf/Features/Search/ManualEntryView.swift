@@ -28,6 +28,7 @@ struct ManualEntryView: View {
             }
             .navigationTitle("Add Book Manually")
             .navigationBarTitleDisplayMode(.inline)
+            .interactiveDismissDisabled(!title.isEmpty || !author.isEmpty)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -50,9 +51,11 @@ struct ManualEntryView: View {
         Section {
             TextField("Title", text: $title)
                 .textContentType(.none)
+                .accessibilityLabel("Book title")
 
             TextField("Author", text: $author)
                 .textContentType(.name)
+                .accessibilityLabel("Author name")
         } header: {
             Text("Required")
         } footer: {
@@ -69,12 +72,15 @@ struct ManualEntryView: View {
         Section("Optional") {
             TextField("Page count", text: $pageCountText)
                 .keyboardType(.numberPad)
+                .accessibilityLabel("Page count")
 
             TextField("ISBN", text: $isbn)
                 .keyboardType(.numberPad)
+                .accessibilityLabel("ISBN number")
 
             TextField("Genres / subjects (comma-separated)", text: $subjectTags)
                 .textContentType(.none)
+                .accessibilityLabel("Genres or subjects, comma separated")
         }
     }
 
@@ -92,7 +98,7 @@ struct ManualEntryView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 60, height: 90)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
                 }
 
                 let buttonLabel = hasCoverImage ? "Change Photo" : "Choose Photo"

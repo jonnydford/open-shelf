@@ -237,7 +237,7 @@ struct LibraryView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 10)
-            .background(Color.accentColor.opacity(0.08))
+            .background(.quaternary)
         }
     }
 

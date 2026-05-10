@@ -220,7 +220,7 @@ struct AuthorPageView: View {
                         VStack(spacing: 6) {
                             CoverImage(coverID: result.coverI, size: .small)
                                 .frame(width: 80, height: 120)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
                             Text(result.title)
                                 .font(.caption)

@@ -110,7 +110,7 @@ struct ImportView: View {
                         .padding()
                         .background(.tint)
                         .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
                 }
                 .padding(.horizontal)
 
@@ -279,7 +279,7 @@ struct ImportView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
                         .background(Color(.systemGray6))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
                         .padding(.horizontal)
                     }
                 }
@@ -447,7 +447,7 @@ struct UnmatchedBookSearchSheet: View {
                             HStack(spacing: 12) {
                                 CoverImage(coverID: result.coverI, size: .small)
                                     .frame(width: 50, height: 75)
-                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(result.title)

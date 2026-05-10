@@ -36,7 +36,7 @@ struct GenreBreakdownChart: View {
             }
         }
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Genre Breakdown chart")
         .accessibilityValue(genreAccessibilityValue)
@@ -104,6 +104,8 @@ struct GenreBreakdownChart: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                .contentShape(Rectangle())
+                .frame(minHeight: 44)
                 .onTapGesture {
                     withAnimation {
                         selectedGenre = selectedGenre == genre.genre ? nil : genre.genre

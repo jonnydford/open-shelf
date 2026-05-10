@@ -10,7 +10,7 @@ struct ShareFormatPicker: View {
                     selectedFormat = format
                 } label: {
                     VStack(spacing: 8) {
-                        RoundedRectangle(cornerRadius: 6)
+                        RoundedRectangle(cornerRadius: CornerRadius.small)
                             .stroke(
                                 selectedFormat == format ? Color.accentColor : Color.secondary.opacity(0.3),
                                 lineWidth: 2

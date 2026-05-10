@@ -61,7 +61,7 @@ struct BookDetailSheet: View {
     private var coverSection: some View {
         CoverImage(coverID: searchResult.coverI, size: .large)
             .frame(width: 180, height: 270)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
             .shadow(radius: 4)
             .padding(.top, 16)
     }
@@ -174,7 +174,7 @@ struct BookDetailSheet: View {
                     .padding()
                     .background(.tint)
                     .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
                 }
                 .disabled(isAdding)
                 .padding(.horizontal)

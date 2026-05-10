@@ -37,7 +37,7 @@ struct BadgesView: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Badges earned: \(unlocked) of \(badges.count)")
     }

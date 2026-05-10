@@ -106,7 +106,7 @@ struct BarcodeScannerView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 12))
+        .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: CornerRadius.medium))
     }
 
     // MARK: - Error Overlay
@@ -127,11 +127,11 @@ struct BarcodeScannerView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(.blue, in: RoundedRectangle(cornerRadius: 8))
+            .background(.blue, in: RoundedRectangle(cornerRadius: CornerRadius.small))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 12))
+        .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .padding(.bottom, 40)
     }
 

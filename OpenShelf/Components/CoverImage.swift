@@ -29,7 +29,7 @@ struct CoverImage: View {
 
     private var placeholder: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: CornerRadius.small)
                 .fill(.quaternary)
             Image(systemName: "book.closed")
                 .font(.title2)

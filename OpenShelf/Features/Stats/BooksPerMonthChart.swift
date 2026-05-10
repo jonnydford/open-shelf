@@ -18,7 +18,7 @@ struct BooksPerMonthChart: View {
                 .frame(height: 200)
         }
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Books Per Month chart")
         .accessibilityValue(chartAccessibilityValue)

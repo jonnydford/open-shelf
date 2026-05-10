@@ -19,7 +19,7 @@ struct ShareCardSheet: View {
                 ShareCardView(book: book, coverImage: coverImage, format: selectedFormat)
                     .scaleEffect(previewScale)
                     .frame(width: previewWidth, height: previewHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
                     .shadow(radius: 8)
 
                 Spacer()
