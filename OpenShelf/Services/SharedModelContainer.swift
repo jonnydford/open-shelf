@@ -57,7 +57,8 @@ enum SharedModelContainer {
             UserTag.self,
             ReadingGoal.self,
             ReadingList.self,
-            FollowedAuthor.self
+            FollowedAuthor.self,
+            DismissedBook.self
         ])
         let configuration = ModelConfiguration(
             schema: schema,
