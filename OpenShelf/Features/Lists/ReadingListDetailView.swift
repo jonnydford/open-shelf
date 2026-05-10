@@ -20,6 +20,7 @@ struct ReadingListDetailView: View {
     @State private var showCloudSharing = false
     @State private var activeShare: CKShare?
     @State private var isSharingInProgress = false
+    @State private var sharingError: String?
 
     private var booksInList: [Book] {
         allBooks.filter { readingList.bookKeys.contains($0.olWorkKey) }
@@ -82,41 +83,37 @@ struct ReadingListDetailView: View {
                 if !trimmed.isEmpty {
                     readingList.name = trimmed
                     try? modelContext.save()
+                    updateSharedRecordIfNeeded()
                 }
+            }
+        }
+        .alert(
+            "Sharing Failed",
+            isPresented: Binding(
+                get: { sharingError != nil },
+                set: { if !$0 { sharingError = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let error = sharingError {
+                Text(error)
             }
         }
         .onChange(of: readingList.includeRatings) {
             try? modelContext.save()
-            if readingList.ckRecordName != nil {
-                Task {
-                    try? await sharingService.updateSharedRecord(
-                        list: readingList,
-                        books: booksInList,
-                        includeRatings: readingList.includeRatings,
-                        includeNotes: readingList.includeNotes
-                    )
-                }
-            }
+            updateSharedRecordIfNeeded()
         }
         .onChange(of: readingList.includeNotes) {
             try? modelContext.save()
-            if readingList.ckRecordName != nil {
-                Task {
-                    try? await sharingService.updateSharedRecord(
-                        list: readingList,
-                        books: booksInList,
-                        includeRatings: readingList.includeRatings,
-                        includeNotes: readingList.includeNotes
-                    )
-                }
-            }
+            updateSharedRecordIfNeeded()
         }
         .sheet(isPresented: $showCloudSharing) {
             if let share = activeShare {
                 CloudSharingSheet(
                     share: share,
                     container: CKContainer(
-                        identifier: "iCloud.com.openshelf.app"
+                        identifier: CloudSharingService.containerIdentifier
                     ),
                     onStoppedSharing: {
                         readingList.ckRecordName = nil
@@ -225,11 +222,12 @@ struct ReadingListDetailView: View {
             readingList.bookKeys.removeAll { $0 == book.olWorkKey }
         }
         try? modelContext.save()
+        let currentBooks = booksInList
         if readingList.ckRecordName != nil {
             Task {
                 try? await sharingService.updateSharedRecord(
                     list: readingList,
-                    books: booksInList,
+                    books: currentBooks,
                     includeRatings: readingList.includeRatings,
                     includeNotes: readingList.includeNotes
                 )
@@ -297,42 +295,46 @@ struct ReadingListDetailView: View {
                 includeNotes: readingList.includeNotes
             )
             readingList.ckRecordName = record.recordID.recordName
+            try? modelContext.save()
             activeShare = share
             showCloudSharing = true
-            try? modelContext.save()
         } catch {
-            // iCloud may not be available — fail silently
+            sharingError = "Could not share this list. Make sure you're signed into iCloud."
         }
     }
 
     private func manageExistingShare() async {
         guard let recordName = readingList.ckRecordName else { return }
-        do {
-            let zoneID = CKRecordZone.ID(zoneName: "SharedLists")
-            let recordID = CKRecord.ID(recordName: recordName, zoneID: zoneID)
-            let container = CKContainer(identifier: "iCloud.com.openshelf.app")
-            let record = try await container.privateCloudDatabase.record(
-                for: recordID
-            )
-            if let shareRef = record.share {
-                let shareRecord = try await container.privateCloudDatabase.record(
-                    for: shareRef.recordID
-                )
-                if let share = shareRecord as? CKShare {
-                    activeShare = share
-                    showCloudSharing = true
-                }
-            }
-        } catch {
-            // Could not fetch share — fail silently
+        if let cached = sharingService.cachedShare(forRecordName: recordName) {
+            activeShare = cached
+            showCloudSharing = true
+            return
         }
+        sharingError = "Could not load sharing details. Try stopping and re-sharing this list."
     }
 
     private func stopSharing() async {
         guard let recordName = readingList.ckRecordName else { return }
-        try? await sharingService.stopSharing(recordName: recordName)
+        do {
+            try await sharingService.stopSharing(recordName: recordName)
+        } catch {
+            // Best-effort cleanup
+        }
         readingList.ckRecordName = nil
         try? modelContext.save()
+    }
+
+    private func updateSharedRecordIfNeeded() {
+        guard readingList.ckRecordName != nil else { return }
+        let currentBooks = booksInList
+        Task {
+            try? await sharingService.updateSharedRecord(
+                list: readingList,
+                books: currentBooks,
+                includeRatings: readingList.includeRatings,
+                includeNotes: readingList.includeNotes
+            )
+        }
     }
 }
 

@@ -4,13 +4,13 @@ import CloudKit
 struct CloudSharingSheet: UIViewControllerRepresentable {
     let share: CKShare
     let container: CKContainer
-    let onStoppedSharing: () -> Void
-    let onSaved: () -> Void
+    let onStoppedSharing: @MainActor () -> Void
+    let onSaved: @MainActor () -> Void
 
     func makeUIViewController(context: Context) -> UICloudSharingController {
         let controller = UICloudSharingController(share: share, container: container)
         controller.delegate = context.coordinator
-        controller.availablePermissions = [.allowReadOnly, .allowReadWrite]
+        controller.availablePermissions = [.allowReadOnly]
         return controller
     }
 
@@ -23,13 +23,14 @@ struct CloudSharingSheet: UIViewControllerRepresentable {
         Coordinator(onStoppedSharing: onStoppedSharing, onSaved: onSaved)
     }
 
+    @MainActor
     final class Coordinator: NSObject, UICloudSharingControllerDelegate {
-        let onStoppedSharing: @Sendable () -> Void
-        let onSaved: @Sendable () -> Void
+        let onStoppedSharing: @MainActor () -> Void
+        let onSaved: @MainActor () -> Void
 
         init(
-            onStoppedSharing: @escaping @Sendable () -> Void,
-            onSaved: @escaping @Sendable () -> Void
+            onStoppedSharing: @escaping @MainActor () -> Void,
+            onSaved: @escaping @MainActor () -> Void
         ) {
             self.onStoppedSharing = onStoppedSharing
             self.onSaved = onSaved
@@ -38,14 +39,12 @@ struct CloudSharingSheet: UIViewControllerRepresentable {
         func cloudSharingController(
             _ csc: UICloudSharingController,
             failedToSaveShareWithError error: Error
-        ) {
-            // Sharing failed — the controller displays its own alert
-        }
+        ) {}
 
         func itemTitle(
             for csc: UICloudSharingController
         ) -> String? {
-            nil // Uses CKShare.SystemFieldKey.title set during preparation
+            nil
         }
 
         func cloudSharingControllerDidStopSharing(

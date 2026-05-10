@@ -3,24 +3,26 @@ import CloudKit
 @MainActor
 @Observable
 final class CloudSharingService {
-    private let container = CKContainer(identifier: "iCloud.com.openshelf.app")
-    private let zoneName = "SharedLists"
+    static let containerIdentifier = "iCloud.com.openshelf.app"
+    static let zoneName = "SharedLists"
+
+    private let container = CKContainer(identifier: CloudSharingService.containerIdentifier)
     private let recordType = "SharedReadingList"
 
     private(set) var sharedWithMe: [SharedListRecord] = []
     private(set) var isLoading = false
 
+    private var cachedShares: [String: CKShare] = [:]
+
     // MARK: - Zone Setup
 
     private func ensureZoneExists() async throws {
-        let zone = CKRecordZone(zoneName: zoneName)
+        let zone = CKRecordZone(zoneName: Self.zoneName)
         _ = try await container.privateCloudDatabase.save(zone)
     }
 
     // MARK: - Share a List
 
-    /// Creates a CKRecord + CKShare for a reading list.
-    /// Returns the root record, share, and container for use with UICloudSharingController.
     func prepareShare(
         list: ReadingList,
         books: [Book],
@@ -29,7 +31,7 @@ final class CloudSharingService {
     ) async throws -> (CKRecord, CKShare, CKContainer) {
         try await ensureZoneExists()
 
-        let zoneID = CKRecordZone.ID(zoneName: zoneName)
+        let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
         let recordID: CKRecord.ID
 
         if let existingName = list.ckRecordName {
@@ -49,16 +51,21 @@ final class CloudSharingService {
 
         let share = CKShare(rootRecord: record)
         share[CKShare.SystemFieldKey.title] = list.name as CKRecordValue
-        share.publicPermission = .none // Only explicitly invited participants
+        share.publicPermission = .none
 
         _ = try await container.privateCloudDatabase.modifyRecords(
             saving: [record, share], deleting: []
         )
 
+        cachedShares[record.recordID.recordName] = share
+
         return (record, share, container)
     }
 
-    /// Updates an existing shared record when the list changes.
+    func cachedShare(forRecordName recordName: String) -> CKShare? {
+        cachedShares[recordName]
+    }
+
     func updateSharedRecord(
         list: ReadingList,
         books: [Book],
@@ -67,7 +74,9 @@ final class CloudSharingService {
     ) async throws {
         guard let recordName = list.ckRecordName else { return }
 
-        let zoneID = CKRecordZone.ID(zoneName: zoneName)
+        try await ensureZoneExists()
+
+        let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
         let recordID = CKRecord.ID(recordName: recordName, zoneID: zoneID)
 
         let record = try await container.privateCloudDatabase.record(for: recordID)
@@ -79,14 +88,29 @@ final class CloudSharingService {
             includeNotes: includeNotes
         )
 
+        if let share = record.share {
+            let shareRecord = try await container.privateCloudDatabase.record(for: share.recordID)
+            if let ckShare = shareRecord as? CKShare {
+                ckShare[CKShare.SystemFieldKey.title] = list.name as CKRecordValue
+            }
+        }
+
         _ = try await container.privateCloudDatabase.save(record)
     }
 
-    /// Stops sharing a list by deleting its CKRecord and CKShare.
     func stopSharing(recordName: String) async throws {
-        let zoneID = CKRecordZone.ID(zoneName: zoneName)
+        let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
         let recordID = CKRecord.ID(recordName: recordName, zoneID: zoneID)
-        _ = try await container.privateCloudDatabase.deleteRecord(withID: recordID)
+
+        let record = try await container.privateCloudDatabase.record(for: recordID)
+        var recordsToDelete = [recordID]
+        if let shareRef = record.share {
+            recordsToDelete.append(shareRef.recordID)
+        }
+        _ = try await container.privateCloudDatabase.modifyRecords(
+            saving: [], deleting: recordsToDelete
+        )
+        cachedShares.removeValue(forKey: recordName)
     }
 
     // MARK: - Shared With Me
@@ -113,7 +137,6 @@ final class CloudSharingService {
         }
     }
 
-    /// Accepts an incoming CloudKit share.
     func acceptShare(metadata: CKShare.Metadata) async throws {
         _ = try await container.accept(metadata)
         await fetchSharedWithMe()
@@ -137,13 +160,14 @@ final class CloudSharingService {
                 isbn13: book.isbn13,
                 coverImageID: book.coverImageID,
                 rating: includeRatings ? book.userRating : nil,
-                note: includeNotes ? book.notes : nil
+                note: includeNotes ? book.notes.map { String($0.prefix(200)) } : nil
             )
         }
 
         record["listName"] = list.name as CKRecordValue
-        if let data = try? JSONEncoder().encode(entries) {
-            record["booksJSON"] = String(data: data, encoding: .utf8)! as CKRecordValue
+        if let data = try? JSONEncoder().encode(entries),
+           let json = String(data: data, encoding: .utf8) {
+            record["booksJSON"] = json as CKRecordValue
         }
         record["bookCount"] = entries.count as CKRecordValue
         record["lastUpdated"] = Date() as CKRecordValue

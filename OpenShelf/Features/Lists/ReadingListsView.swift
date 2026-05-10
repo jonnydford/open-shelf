@@ -98,14 +98,24 @@ struct ReadingListsView: View {
     }
 
     private func listRow(_ list: ReadingList) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(list.name)
-                .font(.headline)
-            Text("\(list.bookKeys.count) \(list.bookKeys.count == 1 ? "book" : "books")")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(list.name)
+                    .font(.headline)
+                Text("\(list.bookKeys.count) \(list.bookKeys.count == 1 ? "book" : "books")")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+
+            Spacer()
+
+            if list.ckRecordName != nil {
+                Image(systemName: "icloud.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
-        .padding(.vertical, 4)
     }
 
     // MARK: - Actions
@@ -121,7 +131,13 @@ struct ReadingListsView: View {
 
     private func deleteLists(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(lists[index])
+            let list = lists[index]
+            if let recordName = list.ckRecordName {
+                Task {
+                    try? await sharingService.stopSharing(recordName: recordName)
+                }
+            }
+            modelContext.delete(list)
         }
         try? modelContext.save()
     }

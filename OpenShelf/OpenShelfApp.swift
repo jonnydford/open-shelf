@@ -44,14 +44,15 @@ struct OpenShelfApp: App {
 
 // MARK: - AppDelegate for CloudKit Share Acceptance
 
+@MainActor
 final class AppDelegate: NSObject, UIApplicationDelegate {
-    nonisolated(unsafe) static var sharingService: CloudSharingService?
+    static var sharingService: CloudSharingService?
 
     func application(
         _ application: UIApplication,
         userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
     ) {
-        Task { @MainActor in
+        Task {
             try? await Self.sharingService?.acceptShare(
                 metadata: cloudKitShareMetadata
             )

@@ -5,7 +5,7 @@ struct SharedWithMeView: View {
 
     var body: some View {
         Group {
-            if sharingService.isLoading {
+            if sharingService.isLoading && sharingService.sharedWithMe.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if sharingService.sharedWithMe.isEmpty {
@@ -22,10 +22,14 @@ struct SharedWithMeView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(list.name)
                                 .font(.headline)
-                            Text(
-                                "\(list.books.count) "
-                                + "\(list.books.count == 1 ? "book" : "books")"
-                            )
+                            HStack(spacing: 8) {
+                                Text(
+                                    "\(list.books.count) "
+                                    + "\(list.books.count == 1 ? "book" : "books")"
+                                )
+                                Text(list.lastUpdated, style: .relative)
+                                    + Text(" ago")
+                            }
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         }
@@ -33,6 +37,9 @@ struct SharedWithMeView: View {
                     }
                 }
                 .listStyle(.plain)
+                .refreshable {
+                    await sharingService.fetchSharedWithMe()
+                }
             }
         }
         .navigationTitle("Shared with Me")
@@ -48,7 +55,6 @@ struct SharedListDetailView: View {
     var body: some View {
         List(list.books, id: \.olWorkKey) { book in
             HStack(spacing: 12) {
-                // Cover thumbnail
                 if let coverID = book.coverImageID {
                     AsyncImage(
                         url: URL(
@@ -90,6 +96,13 @@ struct SharedListDetailView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         }
+                    }
+
+                    if let note = book.note, !note.isEmpty {
+                        Text(note)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(2)
                     }
                 }
 
