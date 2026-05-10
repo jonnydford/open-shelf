@@ -9,6 +9,7 @@ final class ReadingList {
     var dateCreated: Date
     var includeRatings: Bool
     var includeNotes: Bool
+    var ckRecordName: String?
 
     init(
         id: UUID = UUID(),
@@ -16,7 +17,8 @@ final class ReadingList {
         bookKeys: [String] = [],
         dateCreated: Date = .now,
         includeRatings: Bool = true,
-        includeNotes: Bool = false
+        includeNotes: Bool = false,
+        ckRecordName: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -24,5 +26,6 @@ final class ReadingList {
         self.dateCreated = dateCreated
         self.includeRatings = includeRatings
         self.includeNotes = includeNotes
+        self.ckRecordName = ckRecordName
     }
 }

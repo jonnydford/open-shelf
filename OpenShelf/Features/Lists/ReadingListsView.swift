@@ -3,6 +3,7 @@ import SwiftData
 
 struct ReadingListsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(CloudSharingService.self) private var sharingService
     @Query(sort: \ReadingList.dateCreated, order: .reverse) private var lists: [ReadingList]
 
     @State private var showNewListAlert = false
@@ -67,19 +68,54 @@ struct ReadingListsView: View {
                 }
             }
             .onDelete(perform: deleteLists)
+
+            Section {
+                NavigationLink {
+                    SharedWithMeView()
+                } label: {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Shared with Me")
+                            if !sharingService.sharedWithMe.isEmpty {
+                                Text(
+                                    "\(sharingService.sharedWithMe.count) "
+                                    + "\(sharingService.sharedWithMe.count == 1 ? "list" : "lists")"
+                                )
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            }
+                        }
+                    } icon: {
+                        Image(systemName: "person.2.fill")
+                    }
+                }
+            }
         }
         .listStyle(.plain)
+        .task {
+            await sharingService.fetchSharedWithMe()
+        }
     }
 
     private func listRow(_ list: ReadingList) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(list.name)
-                .font(.headline)
-            Text("\(list.bookKeys.count) \(list.bookKeys.count == 1 ? "book" : "books")")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(list.name)
+                    .font(.headline)
+                Text("\(list.bookKeys.count) \(list.bookKeys.count == 1 ? "book" : "books")")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+
+            Spacer()
+
+            if list.ckRecordName != nil {
+                Image(systemName: "icloud.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
-        .padding(.vertical, 4)
     }
 
     // MARK: - Actions
@@ -95,7 +131,13 @@ struct ReadingListsView: View {
 
     private func deleteLists(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(lists[index])
+            let list = lists[index]
+            if let recordName = list.ckRecordName {
+                Task {
+                    try? await sharingService.stopSharing(recordName: recordName)
+                }
+            }
+            modelContext.delete(list)
         }
         try? modelContext.save()
     }
