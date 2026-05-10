@@ -68,3 +68,35 @@ targets:
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     dependencies:
       - target: OpenShelf
+
+  OpenShelfShareExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: OpenShelfShareExtension
+      - path: OpenShelf/Models
+      - path: OpenShelf/Services/BookURLParser.swift
+      - path: OpenShelf/Services/OpenLibraryClient.swift
+      - path: OpenShelf/Services/SharedModelContainer.swift
+      - path: OpenShelf/Services/DTOs
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.openshelf.app.share-extension
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGN_ENTITLEMENTS: OpenShelfShareExtension/OpenShelfShareExtension.entitlements
+        INFOPLIST_KEY_CFBundleDisplayName: Open Shelf
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    info:
+      path: OpenShelfShareExtension/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).ShareViewController"
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+    dependencies:
+      - target: OpenShelf
