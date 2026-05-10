@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import ActivityKit
 
 struct BookDetailView: View {
     let book: Book
@@ -56,6 +57,9 @@ struct BookDetailView: View {
 
     // Author page state
     @State private var showAuthorPage = false
+
+    // Reading session (Live Activity)
+    @State private var readingSessionActivity: Activity<ReadingSessionAttributes>?
 
     @Query(sort: \ReadingList.dateCreated, order: .reverse) private var readingLists: [ReadingList]
     @Query private var allLibraryBooks: [Book]
@@ -331,17 +335,80 @@ struct BookDetailView: View {
                     }
                 }
 
-                Button {
-                    showProgressEditor = true
-                } label: {
-                    Label("Update Progress", systemImage: "book.pages")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                HStack(spacing: 12) {
+                    Button {
+                        showProgressEditor = true
+                    } label: {
+                        Label("Update Progress", systemImage: "book.pages")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+
+                    if readingSessionActivity != nil {
+                        Button {
+                            stopReadingSession()
+                        } label: {
+                            Label("Stop", systemImage: "stop.fill")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    } else if ActivityAuthorizationInfo().areActivitiesEnabled {
+                        Button {
+                            startReadingSession()
+                        } label: {
+                            Label("Start Reading", systemImage: "play.fill")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        }
+                        .buttonStyle(.bordered)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
             }
             .padding(.horizontal)
+        }
+    }
+
+    // MARK: - Reading Session
+
+    private func startReadingSession() {
+        let attributes = ReadingSessionAttributes(
+            bookTitle: book.isPrivate ? "Reading" : book.title,
+            authorName: book.isPrivate ? "" : book.authorName,
+            pageCount: book.pageCount
+        )
+        let state = ReadingSessionAttributes.ContentState(
+            currentPage: book.currentPage ?? 0,
+            startedAt: .now
+        )
+        do {
+            readingSessionActivity = try Activity.request(
+                attributes: attributes,
+                content: .init(state: state, staleDate: nil)
+            )
+        } catch {
+            // Live Activities not available
+        }
+    }
+
+    private func stopReadingSession() {
+        guard let activity = readingSessionActivity else { return }
+        let activityID = activity.id
+        let currentPage = book.currentPage ?? 0
+        let startedAt = activity.content.state.startedAt
+        readingSessionActivity = nil
+        Task {
+            let state = ReadingSessionAttributes.ContentState(
+                currentPage: currentPage,
+                startedAt: startedAt
+            )
+            let content = ActivityContent(state: state, staleDate: nil)
+            for liveActivity in Activity<ReadingSessionAttributes>.activities where liveActivity.id == activityID {
+                await liveActivity.end(content, dismissalPolicy: .immediate)
+            }
         }
     }
 

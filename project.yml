@@ -55,6 +55,7 @@ targets:
     platform: iOS
     sources:
       - path: OpenShelfWidget
+      - path: OpenShelf/Models
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.openshelf.app.widget

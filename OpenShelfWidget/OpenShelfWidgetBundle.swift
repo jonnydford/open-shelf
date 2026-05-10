@@ -5,6 +5,8 @@ import WidgetKit
 struct OpenShelfWidgetBundle: WidgetBundle {
     var body: some Widget {
         CurrentlyReadingWidget()
+        CurrentlyReadingLargeWidget()
         ReadingGoalWidget()
+        ReadingSessionLiveActivity()
     }
 }
