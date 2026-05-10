@@ -19,6 +19,7 @@ struct ReadingListDetailView: View {
     @State private var renameText = ""
     @State private var showCloudSharing = false
     @State private var activeShare: CKShare?
+    @State private var activeContainer: CKContainer?
     @State private var isSharingInProgress = false
     @State private var sharingError: String?
 
@@ -110,12 +111,10 @@ struct ReadingListDetailView: View {
             updateSharedRecordIfNeeded()
         }
         .sheet(isPresented: $showCloudSharing) {
-            if let share = activeShare {
+            if let share = activeShare, let ckContainer = activeContainer {
                 CloudSharingSheet(
                     share: share,
-                    container: CKContainer(
-                        identifier: CloudSharingService.containerIdentifier
-                    ),
+                    container: ckContainer,
                     onStoppedSharing: {
                         readingList.ckRecordName = nil
                         try? modelContext.save()
@@ -180,25 +179,27 @@ struct ReadingListDetailView: View {
 
         Divider()
 
-        if readingList.ckRecordName != nil {
-            Button {
-                Task { await manageExistingShare() }
-            } label: {
-                Label("Manage iCloud Sharing", systemImage: "person.2.circle")
-            }
+        if CloudSharingService.isAvailable {
+            if readingList.ckRecordName != nil {
+                Button {
+                    Task { await manageExistingShare() }
+                } label: {
+                    Label("Manage iCloud Sharing", systemImage: "person.2.circle")
+                }
 
-            Button {
-                Task { await stopSharing() }
-            } label: {
-                Label("Stop Sharing", systemImage: "xmark.circle")
+                Button {
+                    Task { await stopSharing() }
+                } label: {
+                    Label("Stop Sharing", systemImage: "xmark.circle")
+                }
+            } else {
+                Button {
+                    Task { await startSharing() }
+                } label: {
+                    Label("Share via iCloud", systemImage: "icloud.and.arrow.up")
+                }
+                .disabled(isSharingInProgress)
             }
-        } else {
-            Button {
-                Task { await startSharing() }
-            } label: {
-                Label("Share via iCloud", systemImage: "icloud.and.arrow.up")
-            }
-            .disabled(isSharingInProgress)
         }
     }
 
@@ -293,7 +294,7 @@ struct ReadingListDetailView: View {
         isSharingInProgress = true
         defer { isSharingInProgress = false }
         do {
-            let (record, share, _) = try await sharingService.prepareShare(
+            let (record, share, ckContainer) = try await sharingService.prepareShare(
                 list: readingList,
                 books: booksInList,
                 includeRatings: readingList.includeRatings,
@@ -302,6 +303,7 @@ struct ReadingListDetailView: View {
             readingList.ckRecordName = record.recordID.recordName
             try? modelContext.save()
             activeShare = share
+            activeContainer = ckContainer
             showCloudSharing = true
         } catch {
             sharingError = "Could not share this list. Make sure you're signed into iCloud."
@@ -310,8 +312,10 @@ struct ReadingListDetailView: View {
 
     private func manageExistingShare() async {
         guard let recordName = readingList.ckRecordName else { return }
-        if let cached = sharingService.cachedShare(forRecordName: recordName) {
+        if let cached = sharingService.cachedShare(forRecordName: recordName),
+           let ckContainer = try? sharingService.resolveContainer() {
             activeShare = cached
+            activeContainer = ckContainer
             showCloudSharing = true
             return
         }

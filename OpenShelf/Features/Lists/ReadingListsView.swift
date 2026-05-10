@@ -69,30 +69,33 @@ struct ReadingListsView: View {
             }
             .onDelete(perform: deleteLists)
 
-            Section {
-                NavigationLink {
-                    SharedWithMeView()
-                } label: {
-                    Label {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Shared with Me")
-                            if !sharingService.sharedWithMe.isEmpty {
-                                Text(
-                                    "\(sharingService.sharedWithMe.count) "
-                                    + "\(sharingService.sharedWithMe.count == 1 ? "list" : "lists")"
-                                )
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+            if CloudSharingService.isAvailable {
+                Section {
+                    NavigationLink {
+                        SharedWithMeView()
+                    } label: {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Shared with Me")
+                                if !sharingService.sharedWithMe.isEmpty {
+                                    Text(
+                                        "\(sharingService.sharedWithMe.count) "
+                                        + "\(sharingService.sharedWithMe.count == 1 ? "list" : "lists")"
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                }
                             }
+                        } icon: {
+                            Image(systemName: "person.2.fill")
                         }
-                    } icon: {
-                        Image(systemName: "person.2.fill")
                     }
                 }
             }
         }
         .listStyle(.plain)
         .task {
+            guard CloudSharingService.isAvailable else { return }
             await sharingService.fetchSharedWithMe()
         }
     }
@@ -110,7 +113,7 @@ struct ReadingListsView: View {
 
             Spacer()
 
-            if list.ckRecordName != nil {
+            if list.ckRecordName != nil, CloudSharingService.isAvailable {
                 Image(systemName: "icloud.fill")
                     .font(.caption)
                     .foregroundStyle(.secondary)

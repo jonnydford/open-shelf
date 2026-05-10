@@ -6,7 +6,6 @@ final class CloudSharingService {
     static let containerIdentifier = "iCloud.com.openshelf.app"
     static let zoneName = "SharedLists"
 
-    private let container = CKContainer(identifier: CloudSharingService.containerIdentifier)
     private let recordType = "SharedReadingList"
 
     private(set) var sharedWithMe: [SharedListRecord] = []
@@ -14,7 +13,28 @@ final class CloudSharingService {
 
     private var cachedShares: [String: CKShare] = [:]
 
+    private var _container: CKContainer?
+    private var container: CKContainer {
+        get throws {
+            if let c = _container { return c }
+            guard Self.isAvailable else {
+                throw CloudSharingError.cloudKitUnavailable
+            }
+            let c = CKContainer(identifier: Self.containerIdentifier)
+            _container = c
+            return c
+        }
+    }
+
+    static var isAvailable: Bool {
+        FileManager.default.ubiquityIdentityToken != nil
+    }
+
     // MARK: - Zone Setup
+
+    enum CloudSharingError: Error {
+        case cloudKitUnavailable
+    }
 
     private func ensureZoneExists() async throws {
         let zone = CKRecordZone(zoneName: Self.zoneName)
@@ -29,6 +49,7 @@ final class CloudSharingService {
         includeRatings: Bool,
         includeNotes: Bool
     ) async throws -> (CKRecord, CKShare, CKContainer) {
+        let ckContainer = try container
         try await ensureZoneExists()
 
         let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
@@ -53,17 +74,21 @@ final class CloudSharingService {
         share[CKShare.SystemFieldKey.title] = list.name as CKRecordValue
         share.publicPermission = .none
 
-        _ = try await container.privateCloudDatabase.modifyRecords(
+        _ = try await ckContainer.privateCloudDatabase.modifyRecords(
             saving: [record, share], deleting: []
         )
 
         cachedShares[record.recordID.recordName] = share
 
-        return (record, share, container)
+        return (record, share, ckContainer)
     }
 
     func cachedShare(forRecordName recordName: String) -> CKShare? {
         cachedShares[recordName]
+    }
+
+    func resolveContainer() throws -> CKContainer {
+        try container
     }
 
     func updateSharedRecord(
@@ -116,6 +141,7 @@ final class CloudSharingService {
     // MARK: - Shared With Me
 
     func fetchSharedWithMe() async {
+        guard Self.isAvailable else { return }
         isLoading = true
         defer { isLoading = false }
 
