@@ -117,6 +117,8 @@ struct StatsView: View {
                     .font(.caption2)
             }
         }
+        .accessibilityLabel("Filter by year")
+        .accessibilityHint("Double tap to change year filter")
     }
 
     // MARK: - Dashboard
@@ -377,6 +379,7 @@ struct StatsView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Format Breakdown")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
 
                 ForEach(breakdown, id: \.format) { item in
                     HStack {
@@ -587,6 +590,7 @@ struct PagesPerMonthChart: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Pages Per Month")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             chartContent
                 .frame(height: 200)

@@ -103,5 +103,17 @@ struct ReadingSessionLiveActivity: Widget {
             }
         }
         .padding()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(lockScreenAccessibilityLabel(context: context))
+    }
+
+    private func lockScreenAccessibilityLabel(context: ActivityViewContext<ReadingSessionAttributes>) -> String {
+        var label = "Reading \(context.attributes.bookTitle)"
+        label += ", page \(context.state.currentPage)"
+        if let pageCount = context.attributes.pageCount, pageCount > 0 {
+            let pct = Int(Double(context.state.currentPage) / Double(pageCount) * 100)
+            label += ", \(pct) percent complete"
+        }
+        return label
     }
 }

@@ -38,6 +38,8 @@ struct BadgesView: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Badges earned: \(unlocked) of \(badges.count)")
     }
 
     // MARK: - Grid
@@ -65,12 +67,14 @@ private struct BadgeCell: View {
     let isNewlyViewed: Bool
     let reduceMotion: Bool
 
+    @ScaledMetric(relativeTo: .title2) private var badgeSize: CGFloat = 64
+
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
                     .fill(badge.isUnlocked ? Color.accentColor.opacity(0.15) : Color.gray.opacity(0.1))
-                    .frame(width: 64, height: 64)
+                    .frame(width: badgeSize, height: badgeSize)
 
                 Image(systemName: badge.icon)
                     .font(.title2)

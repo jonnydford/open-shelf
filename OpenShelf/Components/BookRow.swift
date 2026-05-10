@@ -7,6 +7,8 @@ struct BookRow: View {
     @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 60
     @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 90
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     var body: some View {
         HStack(spacing: 12) {
@@ -17,7 +19,7 @@ struct BookRow: View {
 
                 if let formatBadge = formatAbbreviation {
                     Text(formatBadge)
-                        .font(.system(size: 9, weight: .semibold))
+                        .font(.caption2.weight(.semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 2)
@@ -95,15 +97,21 @@ struct BookRow: View {
     // MARK: - Shelf Badge
 
     private var shelfBadge: some View {
-        Text(book.shelf.displayName)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
-            .background(shelfColor.opacity(0.15))
-            .foregroundStyle(shelfColor)
-            .clipShape(Capsule())
-            .accessibilityLabel("Shelf: \(book.shelf.displayName)")
+        HStack(spacing: 4) {
+            if differentiateWithoutColor {
+                Image(systemName: book.shelf.systemImage)
+                    .imageScale(.small)
+            }
+            Text(book.shelf.displayName)
+        }
+        .font(.caption2)
+        .fontWeight(.medium)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
+        .background(shelfColor.opacity(colorSchemeContrast == .increased ? 0.25 : 0.15))
+        .foregroundStyle(shelfColor)
+        .clipShape(Capsule())
+        .accessibilityLabel("Shelf: \(book.shelf.displayName)")
     }
 
     private var shelfColor: Color {

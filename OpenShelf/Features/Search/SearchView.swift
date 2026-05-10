@@ -96,6 +96,7 @@ struct SearchView: View {
         VStack(spacing: 12) {
             ProgressView()
                 .controlSize(.large)
+                .accessibilityLabel("Searching for books")
             Text("Searching...")
                 .foregroundStyle(.secondary)
         }
@@ -113,6 +114,7 @@ struct SearchView: View {
                     searchResultRow(result)
                 }
                 .buttonStyle(.plain)
+                .accessibilityHint("Double tap to view book details")
             }
 
             Section {

@@ -23,6 +23,7 @@ struct OnboardingView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .always))
         .indexViewStyle(.page(backgroundDisplayMode: .always))
+        .accessibilityValue("Step \(currentPage + 1) of 3")
         .interactiveDismissDisabled()
     }
 
@@ -33,7 +34,7 @@ struct OnboardingView: View {
             Spacer()
 
             Image(systemName: "books.vertical.fill")
-                .font(.system(size: 72))
+                .font(.largeTitle)
                 .foregroundStyle(Color.accentColor)
 
             Text("Open Shelf")
@@ -127,7 +128,7 @@ struct OnboardingView: View {
             Spacer()
 
             Image(systemName: "target")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundStyle(Color.accentColor)
 
             Text("Set a reading goal for \(String(currentYear))?")

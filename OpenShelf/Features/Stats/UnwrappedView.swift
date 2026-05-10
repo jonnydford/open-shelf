@@ -93,6 +93,7 @@ struct UnwrappedView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .always))
+            .accessibilityValue("Card \(currentPage + 1) of \(totalCards)")
 
             // Tap targets on left/right edges for tap-to-navigate
             HStack(spacing: 0) {
@@ -119,6 +120,22 @@ struct UnwrappedView: View {
                     .frame(width: 60)
             }
             .allowsHitTesting(true)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityAction(named: "Next card") {
+            withAnimation {
+                currentPage = min(currentPage + 1, totalCards - 1)
+            }
+            autoAdvanceActive = false
+        }
+        .accessibilityAction(named: "Previous card") {
+            withAnimation {
+                currentPage = max(currentPage - 1, 0)
+            }
+            autoAdvanceActive = false
+        }
+        .accessibilityAction(.magicTap) {
+            autoAdvanceActive.toggle()
         }
         .overlay(alignment: .topTrailing) {
             closeButton
@@ -186,6 +203,8 @@ struct UnwrappedView: View {
                 .foregroundStyle(.white.opacity(0.7))
                 .padding()
         }
+        .accessibilityLabel("Close")
+        .accessibilityAddTraits(.isButton)
     }
 
     private var shareYearButton: some View {
@@ -200,6 +219,8 @@ struct UnwrappedView: View {
                 .background(.white.opacity(0.2), in: Capsule())
         }
         .padding()
+        .accessibilityLabel("Share your year in review")
+        .accessibilityHint("Opens share options")
     }
 
     // MARK: - Cards
@@ -209,7 +230,7 @@ struct UnwrappedView: View {
             VStack(spacing: 24) {
                 Spacer()
                 Image(systemName: "books.vertical.fill")
-                    .font(.system(size: 64))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.accentColor)
                     .symbolEffect(.bounce, options: reduceMotion ? .nonRepeating : .repeating.speed(0.3))
 
@@ -229,7 +250,7 @@ struct UnwrappedView: View {
 
                 VStack(spacing: 8) {
                     Text("\(readBooks.count)")
-                        .font(.system(size: 72, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).bold())
                         .foregroundStyle(Color.accentColor)
                     Text("books read")
                         .font(.title3)
@@ -272,7 +293,7 @@ struct UnwrappedView: View {
                 if let book = topBook {
                     VStack(spacing: 12) {
                         Image(systemName: "star.fill")
-                            .font(.system(size: 48))
+                            .font(.largeTitle)
                             .foregroundStyle(.yellow)
 
                         Text(book.title)
@@ -318,7 +339,7 @@ struct UnwrappedView: View {
                 if let genre = topGenre {
                     VStack(spacing: 12) {
                         Image(systemName: "tag.fill")
-                            .font(.system(size: 48))
+                            .font(.largeTitle)
                             .foregroundStyle(Color.accentColor)
 
                         Text(genre.genre)
@@ -352,7 +373,7 @@ struct UnwrappedView: View {
                 if let author = favouriteAuthor {
                     VStack(spacing: 12) {
                         Image(systemName: "person.fill")
-                            .font(.system(size: 48))
+                            .font(.largeTitle)
                             .foregroundStyle(Color.accentColor)
 
                         Text(author)
@@ -384,7 +405,7 @@ struct UnwrappedView: View {
                 if let avg = averageDays {
                     VStack(spacing: 8) {
                         Text("\(avg)")
-                            .font(.system(size: 72, weight: .bold, design: .rounded))
+                            .font(.system(.largeTitle, design: .rounded).bold())
                             .foregroundStyle(Color.accentColor)
                         Text("days per book on average")
                             .font(.title3)
@@ -471,11 +492,11 @@ struct UnwrappedView: View {
 
                 VStack(spacing: 8) {
                     Image(systemName: "flame.fill")
-                        .font(.system(size: 48))
+                        .font(.largeTitle)
                         .foregroundStyle(.orange)
 
                     Text("\(longestStreak)")
-                        .font(.system(size: 72, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).bold())
                         .foregroundStyle(.orange)
 
                     Text("consecutive days reading")
@@ -502,11 +523,11 @@ struct UnwrappedView: View {
                     let met = readBooks.count >= goal.target
                     VStack(spacing: 12) {
                         Image(systemName: met ? "trophy.fill" : "target")
-                            .font(.system(size: 48))
+                            .font(.largeTitle)
                             .foregroundStyle(met ? Color.yellow : Color.accentColor)
 
                         Text("\(readBooks.count) of \(goal.target)")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .font(.system(.largeTitle, design: .rounded).bold())
 
                         Text(met ? "Goal reached!" : "books towards your goal")
                             .font(.title3)
@@ -515,7 +536,7 @@ struct UnwrappedView: View {
                 } else {
                     VStack(spacing: 8) {
                         Image(systemName: "target")
-                            .font(.system(size: 48))
+                            .font(.largeTitle)
                             .foregroundStyle(.secondary)
                         Text("No goal set for \(String(year))")
                             .foregroundStyle(.secondary)
@@ -533,7 +554,7 @@ struct UnwrappedView: View {
                 Spacer()
 
                 Image(systemName: "sparkles")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.accentColor)
 
                 Text("See you in\n\(String(year + 1))")

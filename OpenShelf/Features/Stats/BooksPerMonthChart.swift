@@ -12,6 +12,7 @@ struct BooksPerMonthChart: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Books Per Month")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             chartContent
                 .frame(height: 200)
@@ -21,6 +22,7 @@ struct BooksPerMonthChart: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Books Per Month chart")
         .accessibilityValue(chartAccessibilityValue)
+        .accessibilityHint("Tap a bar to see count for that month")
     }
 
     private var chartAccessibilityValue: String {

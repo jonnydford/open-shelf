@@ -23,6 +23,7 @@ struct GenreBreakdownChart: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Genre Breakdown")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             if genres.isEmpty {
                 ContentUnavailableView("No genre data", systemImage: "tag")
