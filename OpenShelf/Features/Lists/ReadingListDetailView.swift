@@ -110,7 +110,7 @@ struct ReadingListDetailView: View {
             updateSharedRecordIfNeeded()
         }
         .sheet(isPresented: $showCloudSharing) {
-            if let share = activeShare {
+            if let share = activeShare, CloudSharingService.isAvailable {
                 CloudSharingSheet(
                     share: share,
                     container: CKContainer(
@@ -180,25 +180,27 @@ struct ReadingListDetailView: View {
 
         Divider()
 
-        if readingList.ckRecordName != nil {
-            Button {
-                Task { await manageExistingShare() }
-            } label: {
-                Label("Manage iCloud Sharing", systemImage: "person.2.circle")
-            }
+        if CloudSharingService.isAvailable {
+            if readingList.ckRecordName != nil {
+                Button {
+                    Task { await manageExistingShare() }
+                } label: {
+                    Label("Manage iCloud Sharing", systemImage: "person.2.circle")
+                }
 
-            Button {
-                Task { await stopSharing() }
-            } label: {
-                Label("Stop Sharing", systemImage: "xmark.circle")
+                Button {
+                    Task { await stopSharing() }
+                } label: {
+                    Label("Stop Sharing", systemImage: "xmark.circle")
+                }
+            } else {
+                Button {
+                    Task { await startSharing() }
+                } label: {
+                    Label("Share via iCloud", systemImage: "icloud.and.arrow.up")
+                }
+                .disabled(isSharingInProgress)
             }
-        } else {
-            Button {
-                Task { await startSharing() }
-            } label: {
-                Label("Share via iCloud", systemImage: "icloud.and.arrow.up")
-            }
-            .disabled(isSharingInProgress)
         }
     }
 

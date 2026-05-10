@@ -18,7 +18,7 @@ final class CloudSharingService {
         get throws {
             if let c = _container { return c }
             guard Self.isAvailable else {
-                throw CloudSharingError.entitlementMissing
+                throw CloudSharingError.cloudKitUnavailable
             }
             let c = CKContainer(identifier: Self.containerIdentifier)
             _container = c
@@ -33,7 +33,7 @@ final class CloudSharingService {
     // MARK: - Zone Setup
 
     enum CloudSharingError: Error {
-        case entitlementMissing
+        case cloudKitUnavailable
     }
 
     private func ensureZoneExists() async throws {
@@ -49,6 +49,7 @@ final class CloudSharingService {
         includeRatings: Bool,
         includeNotes: Bool
     ) async throws -> (CKRecord, CKShare, CKContainer) {
+        let ckContainer = try container
         try await ensureZoneExists()
 
         let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
@@ -73,13 +74,13 @@ final class CloudSharingService {
         share[CKShare.SystemFieldKey.title] = list.name as CKRecordValue
         share.publicPermission = .none
 
-        _ = try await container.privateCloudDatabase.modifyRecords(
+        _ = try await ckContainer.privateCloudDatabase.modifyRecords(
             saving: [record, share], deleting: []
         )
 
         cachedShares[record.recordID.recordName] = share
 
-        return (record, share, try container)
+        return (record, share, ckContainer)
     }
 
     func cachedShare(forRecordName recordName: String) -> CKShare? {
