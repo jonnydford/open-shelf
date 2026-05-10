@@ -312,8 +312,10 @@ struct ReadingListDetailView: View {
 
     private func manageExistingShare() async {
         guard let recordName = readingList.ckRecordName else { return }
-        if let cached = sharingService.cachedShare(forRecordName: recordName) {
+        if let cached = sharingService.cachedShare(forRecordName: recordName),
+           let ckContainer = try? sharingService.resolveContainer() {
             activeShare = cached
+            activeContainer = ckContainer
             showCloudSharing = true
             return
         }

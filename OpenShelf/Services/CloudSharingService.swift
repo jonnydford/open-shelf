@@ -87,6 +87,10 @@ final class CloudSharingService {
         cachedShares[recordName]
     }
 
+    func resolveContainer() throws -> CKContainer {
+        try container
+    }
+
     func updateSharedRecord(
         list: ReadingList,
         books: [Book],
