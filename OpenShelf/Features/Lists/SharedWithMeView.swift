@@ -67,7 +67,7 @@ struct SharedListDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                     .frame(width: 44, height: 66)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xSmall))
                 } else {
                     Image(systemName: "book.closed.fill")
                         .font(.title2)
