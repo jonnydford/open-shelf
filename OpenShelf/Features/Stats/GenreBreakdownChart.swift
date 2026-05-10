@@ -104,7 +104,6 @@ struct GenreBreakdownChart: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                .accessibilityHint("Double tap to highlight this genre")
                 .onTapGesture {
                     withAnimation {
                         selectedGenre = selectedGenre == genre.genre ? nil : genre.genre

@@ -304,6 +304,9 @@ struct CurrentlyReadingWidgetView: View {
             return "No books currently being read"
         }
         var label = "Currently reading \(title)"
+        if let author = entry.authorName {
+            label += " by \(author)"
+        }
         if entry.pageCount != nil {
             label += ", \(entry.percentage) percent complete"
         }
@@ -404,6 +407,22 @@ struct CurrentlyReadingWidgetView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(mediumViewAccessibilityLabel)
+    }
+
+    private var mediumViewAccessibilityLabel: String {
+        guard let title = entry.title else {
+            return "No books currently being read. Open Open Shelf to start reading."
+        }
+        var label = "Currently reading \(title)"
+        if let author = entry.authorName {
+            label += " by \(author)"
+        }
+        if let currentPage = entry.currentPage, let pageCount = entry.pageCount, pageCount > 0 {
+            label += ", page \(currentPage) of \(pageCount), \(entry.percentage) percent complete"
+        }
+        return label
     }
 
     // MARK: - Lock Screen Circular
@@ -422,6 +441,7 @@ struct CurrentlyReadingWidgetView: View {
                 Image(systemName: "book.closed")
                     .font(.title3)
             }
+            .accessibilityLabel("No books currently being read")
         }
     }
 

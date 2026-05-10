@@ -22,6 +22,7 @@ struct BooksPerMonthChart: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Books Per Month chart")
         .accessibilityValue(chartAccessibilityValue)
+        .accessibilityHint("Tap a bar to see count for that month")
     }
 
     private var chartAccessibilityValue: String {
@@ -75,7 +76,6 @@ struct BooksPerMonthChart: View {
         .chartXSelection(value: $selectedMonthName)
         .chartYAxisLabel("Books")
         .animation(.easeInOut, value: data.map(\.count))
-        .accessibilityHint("Tap a bar to see count for that month")
     }
 
     private var yearlyChart: some View {

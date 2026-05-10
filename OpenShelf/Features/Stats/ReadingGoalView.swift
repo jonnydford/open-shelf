@@ -11,6 +11,7 @@ struct ReadingGoalView: View {
     @State private var celebrationScale: CGFloat = 1.0
     @State private var celebrationOpacity: Double = 1.0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     private var progress: Double {
         guard let goal, goal.target > 0 else { return 0 }
@@ -46,7 +47,7 @@ struct ReadingGoalView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(Color.accentColor.opacity(0.2), lineWidth: 12)
+                    .stroke(Color.accentColor.opacity(colorSchemeContrast == .increased ? 0.35 : 0.2), lineWidth: 12)
 
                 Circle()
                     .trim(from: 0, to: progress)

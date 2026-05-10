@@ -8,6 +8,7 @@ struct BookRow: View {
     @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 90
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     var body: some View {
         HStack(spacing: 12) {
@@ -107,7 +108,7 @@ struct BookRow: View {
         .fontWeight(.medium)
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
-        .background(shelfColor.opacity(0.15))
+        .background(shelfColor.opacity(colorSchemeContrast == .increased ? 0.25 : 0.15))
         .foregroundStyle(shelfColor)
         .clipShape(Capsule())
         .accessibilityLabel("Shelf: \(book.shelf.displayName)")

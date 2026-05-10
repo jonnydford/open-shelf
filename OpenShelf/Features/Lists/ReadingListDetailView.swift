@@ -67,6 +67,7 @@ struct ReadingListDetailView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
+                .accessibilityLabel("List options")
             }
         }
         .sheet(isPresented: $showAddBooks) {
@@ -150,6 +151,10 @@ struct ReadingListDetailView: View {
                     BookDetailView(book: book)
                 } label: {
                     BookRow(book: book)
+                }
+                .accessibilityAction(named: "Remove from list") {
+                    readingList.bookKeys.removeAll { $0 == book.olWorkKey }
+                    try? modelContext.save()
                 }
             }
             .onDelete(perform: removeBooks)

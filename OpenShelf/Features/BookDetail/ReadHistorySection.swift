@@ -62,7 +62,7 @@ struct ReadHistorySection: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Double tap to expand details")
+            .accessibilityHint(isExpanded ? "Collapses reading session details" : "Expands reading session details")
 
             if isExpanded {
                 expandedContent(entry)

@@ -121,6 +121,22 @@ struct UnwrappedView: View {
             }
             .allowsHitTesting(true)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityAction(named: "Next card") {
+            withAnimation {
+                currentPage = min(currentPage + 1, totalCards - 1)
+            }
+            autoAdvanceActive = false
+        }
+        .accessibilityAction(named: "Previous card") {
+            withAnimation {
+                currentPage = max(currentPage - 1, 0)
+            }
+            autoAdvanceActive = false
+        }
+        .accessibilityAction(.magicTap) {
+            autoAdvanceActive.toggle()
+        }
         .overlay(alignment: .topTrailing) {
             closeButton
         }
@@ -174,22 +190,6 @@ struct UnwrappedView: View {
             autoAdvanceActive = false
         }
         .statusBarHidden()
-        .accessibilityElement(children: .contain)
-        .accessibilityAction(named: "Next card") {
-            withAnimation {
-                currentPage = min(currentPage + 1, totalCards - 1)
-            }
-            autoAdvanceActive = false
-        }
-        .accessibilityAction(named: "Previous card") {
-            withAnimation {
-                currentPage = max(currentPage - 1, 0)
-            }
-            autoAdvanceActive = false
-        }
-        .accessibilityAction(.magicTap) {
-            autoAdvanceActive.toggle()
-        }
     }
 
     // MARK: - Navigation

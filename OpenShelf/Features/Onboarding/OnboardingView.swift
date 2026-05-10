@@ -23,7 +23,7 @@ struct OnboardingView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .always))
         .indexViewStyle(.page(backgroundDisplayMode: .always))
-        .accessibilityLabel("Onboarding step \(currentPage + 1) of 3")
+        .accessibilityValue("Step \(currentPage + 1) of 3")
         .interactiveDismissDisabled()
     }
 

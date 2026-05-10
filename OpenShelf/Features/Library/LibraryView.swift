@@ -633,6 +633,7 @@ struct LibraryView: View {
         } label: {
             Image(systemName: "plus")
         }
+        .accessibilityLabel("Add book")
     }
 
     private var readingListsButton: some View {
@@ -686,6 +687,7 @@ struct LibraryView: View {
         } label: {
             Image(systemName: "arrow.up.arrow.down")
         }
+        .accessibilityLabel("Sort and filter")
     }
 
     private var privateToggleButton: some View {
