@@ -632,7 +632,7 @@ struct PagesPerMonthChart: View {
                     y: .value("Pages", item.pages)
                 )
                 .foregroundStyle(Color.indigo.gradient)
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xSmall)
             }
             .chartYAxisLabel("Pages")
             .animation(.easeInOut, value: data.map(\.pages))
@@ -645,7 +645,7 @@ struct PagesPerMonthChart: View {
                     y: .value("Pages", item.pages)
                 )
                 .foregroundStyle(Color.indigo.gradient)
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xSmall)
             }
             .chartYAxisLabel("Pages")
         }

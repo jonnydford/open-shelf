@@ -56,7 +56,7 @@ struct GenreBreakdownChart: View {
                 angularInset: 1.5
             )
             .foregroundStyle(by: .value("Genre", item.genre))
-            .cornerRadius(4)
+            .cornerRadius(CornerRadius.xSmall)
             .opacity(selectedGenre == nil || selectedGenre == item.genre ? 1 : 0.4)
         }
         .chartForegroundStyleScale(

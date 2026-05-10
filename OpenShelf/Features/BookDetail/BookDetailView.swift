@@ -589,10 +589,12 @@ struct BookDetailView: View {
             Form {
                 Section("Series Name") {
                     TextField("e.g. The Lord of the Rings", text: $editingSeriesName)
+                        .accessibilityLabel("Series name")
                 }
                 Section("Volume Number") {
                     TextField("e.g. 1", text: $editingSeriesPosition)
                         .keyboardType(.numberPad)
+                        .accessibilityLabel("Volume number")
                 }
             }
             .navigationTitle("Series")
@@ -1013,10 +1015,12 @@ struct BookDetailView: View {
                 Section("Page stopped at (optional)") {
                     TextField("Page number", text: $dnfPage)
                         .keyboardType(.numberPad)
+                        .accessibilityLabel("Page stopped at")
                 }
                 Section("Reason (optional)") {
                     TextField("Why did you stop?", text: $dnfReason, axis: .vertical)
                         .lineLimit(3...6)
+                        .accessibilityLabel("Reason for not finishing")
 
                     // Suggestion chips
                     FlowLayout(spacing: 6) {
@@ -1285,6 +1289,7 @@ struct AddBookToListSheet: View {
         }
         .alert("New Reading List", isPresented: $showNewListAlert) {
             TextField("List name", text: $newListName)
+                .accessibilityLabel("New list name")
             Button("Cancel", role: .cancel) {}
             Button("Create") {
                 createListAndAdd()

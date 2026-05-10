@@ -18,6 +18,9 @@ struct ManualEntryView: View {
     @State private var isSaving = false
     @State private var validationError: String?
 
+    @ScaledMetric(relativeTo: .body) private var coverPreviewWidth: CGFloat = 60
+    @ScaledMetric(relativeTo: .body) private var coverPreviewHeight: CGFloat = 90
+
     var body: some View {
         NavigationStack {
             Form {
@@ -97,7 +100,7 @@ struct ManualEntryView: View {
                     Image(uiImage: coverImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 60, height: 90)
+                        .frame(width: coverPreviewWidth, height: coverPreviewHeight)
                         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
                 }
 

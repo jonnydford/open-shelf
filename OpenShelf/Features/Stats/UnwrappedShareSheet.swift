@@ -364,7 +364,7 @@ struct UnwrappedShareSheet: View {
                         y: .value("Books", item.count)
                     )
                     .foregroundStyle(Color.accentColor.gradient)
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xSmall)
                 }
                 .chartYAxisLabel("Books")
                 .frame(height: chartHeight)
