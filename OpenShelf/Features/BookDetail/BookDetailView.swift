@@ -44,6 +44,13 @@ struct BookDetailView: View {
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
 
+    // Bookshop & audiobook preferences
+    @AppStorage("preferredBookshop") private var preferredBookshop: String = BookshopPreference.bookshopOrg.rawValue
+    @AppStorage("preferredAudiobook") private var preferredAudiobook: String = AudiobookPreference.libroFm.rawValue
+
+    // Author page state
+    @State private var showAuthorPage = false
+
     @Query(sort: \ReadingList.dateCreated, order: .reverse) private var readingLists: [ReadingList]
     @Query private var allLibraryBooks: [Book]
 
@@ -62,6 +69,8 @@ struct BookDetailView: View {
                 similarBooksSection
                 moreByAuthorSection
                 libraryAvailabilitySection
+                buySection
+                listenSection
                 socialSection
                 actionsSection
             }
@@ -93,6 +102,14 @@ struct BookDetailView: View {
         }
         .sheet(isPresented: $showAddToListSheet) {
             addToListSheet
+        }
+        .sheet(isPresented: $showAuthorPage) {
+            AuthorPageView(
+                authorName: book.authorName,
+                authorKey: nil,
+                authorBooks: authorBooks
+            )
+            .environment(repository)
         }
         .alert("Delete Book", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -132,9 +149,20 @@ struct BookDetailView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            Text(book.authorName)
-                .font(.title3)
-                .foregroundStyle(.secondary)
+            Button {
+                showAuthorPage = true
+            } label: {
+                HStack(spacing: 4) {
+                    Text(book.authorName)
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("View author page for \(book.authorName)")
 
             if let year = book.firstPublishYear {
                 Text(String(year))
@@ -502,6 +530,110 @@ struct BookDetailView: View {
 
         if let url {
             UIApplication.shared.open(url)
+        }
+    }
+
+    // MARK: - Buy Section
+
+    @ViewBuilder
+    private var buySection: some View {
+        let isbn = book.isbn13 ?? book.isbn10
+        if let isbn {
+            VStack(spacing: 12) {
+                Divider()
+                    .padding(.horizontal)
+
+                let preference = BookshopPreference(rawValue: preferredBookshop) ?? .bookshopOrg
+
+                if preference == .all {
+                    Menu {
+                        ForEach(BookshopService.allCases) { service in
+                            if let url = service.url(for: isbn) {
+                                Button {
+                                    UIApplication.shared.open(url)
+                                } label: {
+                                    Text(service.rawValue)
+                                }
+                            }
+                        }
+                    } label: {
+                        Label("Buy from independent bookshop", systemImage: "cart")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .padding(.horizontal)
+                } else {
+                    let service: BookshopService? = {
+                        switch preference {
+                        case .bookshopOrg: return .bookshopOrg
+                        case .hive: return .hive
+                        case .blackwells: return .blackwells
+                        case .all: return nil
+                        }
+                    }()
+
+                    if let service, let url = service.url(for: isbn) {
+                        Button {
+                            UIApplication.shared.open(url)
+                        } label: {
+                            Label("Buy from \(service.rawValue)", systemImage: "cart")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .padding(.horizontal)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Listen Section
+
+    @ViewBuilder
+    private var listenSection: some View {
+        let isbn = book.isbn13 ?? book.isbn10
+        if let isbn {
+            VStack(spacing: 12) {
+                let preference = AudiobookPreference(rawValue: preferredAudiobook) ?? .libroFm
+
+                if preference == .both {
+                    Menu {
+                        ForEach(AudiobookService.allCases) { service in
+                            if let url = service.url(for: isbn) {
+                                Button {
+                                    UIApplication.shared.open(url)
+                                } label: {
+                                    Text(service.rawValue)
+                                }
+                            }
+                        }
+                    } label: {
+                        Label("Listen", systemImage: "headphones")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .padding(.horizontal)
+                } else {
+                    let service: AudiobookService? = {
+                        switch preference {
+                        case .libroFm: return .libroFm
+                        case .audibleUK: return .audibleUK
+                        case .both: return nil
+                        }
+                    }()
+
+                    if let service, let url = service.url(for: isbn) {
+                        Button {
+                            UIApplication.shared.open(url)
+                        } label: {
+                            Label("Listen on \(service.rawValue)", systemImage: "headphones")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .padding(.horizontal)
+                    }
+                }
+            }
         }
     }
 

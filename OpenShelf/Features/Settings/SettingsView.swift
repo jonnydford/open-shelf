@@ -14,6 +14,8 @@ struct SettingsView: View {
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
     @AppStorage("streakReminderEnabled") private var streakReminderEnabled: Bool = false
+    @AppStorage("preferredBookshop") private var preferredBookshop: String = BookshopPreference.bookshopOrg.rawValue
+    @AppStorage("preferredAudiobook") private var preferredAudiobook: String = AudiobookPreference.libroFm.rawValue
 
     private var currentYear: Int {
         Calendar.current.component(.year, from: .now)
@@ -25,12 +27,14 @@ struct SettingsView: View {
                 readingGoalSection
                 notificationsSection
                 followedAuthorsSection
+                bookshopsSection
                 librarySection
                 importSection
                 exportSection
                 pastUnwrappedSection
                 goalHistorySection
                 aboutSection
+                TipJarSection()
             }
             .navigationTitle("Settings")
             .sheet(isPresented: $showImportView) {
@@ -187,6 +191,42 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Bookshops Section
+
+    private var selectedBookshopPreference: Binding<BookshopPreference> {
+        Binding(
+            get: { BookshopPreference(rawValue: preferredBookshop) ?? .bookshopOrg },
+            set: { preferredBookshop = $0.rawValue }
+        )
+    }
+
+    private var selectedAudiobookPreference: Binding<AudiobookPreference> {
+        Binding(
+            get: { AudiobookPreference(rawValue: preferredAudiobook) ?? .libroFm },
+            set: { preferredAudiobook = $0.rawValue }
+        )
+    }
+
+    private var bookshopsSection: some View {
+        Section("Bookshops") {
+            Picker("Preferred bookshop", selection: selectedBookshopPreference) {
+                ForEach(BookshopPreference.allCases, id: \.self) { pref in
+                    Text(pref.rawValue).tag(pref)
+                }
+            }
+
+            Picker("Audiobook service", selection: selectedAudiobookPreference) {
+                ForEach(AudiobookPreference.allCases, id: \.self) { pref in
+                    Text(pref.rawValue).tag(pref)
+                }
+            }
+
+            Text("Open Shelf uses affiliate links for Bookshop.org, Hive, and Libro.fm. This helps fund development and supports independent bookshops. Your purchase data is never tracked by us.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
     // MARK: - Library Section
 
     private var selectedLibraryService: Binding<LibraryService> {
@@ -300,8 +340,15 @@ struct SettingsView: View {
             HStack {
                 Text("Version")
                 Spacer()
-                Text("1.0")
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Text("1.0")
+                        .foregroundStyle(.secondary)
+                    if UserDefaults.standard.bool(forKey: "hasTipped") {
+                        Image(systemName: "heart.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                    }
+                }
             }
 
             HStack {

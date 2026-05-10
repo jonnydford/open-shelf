@@ -11,7 +11,7 @@ struct Badge: Identifiable, Sendable {
 @MainActor
 struct BadgeEngine {
 
-    static let totalBadgeCount = 9
+    static let totalBadgeCount = 10
 
     static func evaluateBadges(books: [Book], streak: Int, goalMet: Bool) -> [Badge] {
         let readBooks = books.filter { $0.shelf == .read }
@@ -27,6 +27,7 @@ struct BadgeEngine {
             loyalFanBadge(readBooks: readBooks),
             streakMasterBadge(streak: streak),
             goalCrusherBadge(goalMet: goalMet),
+            worldBookDayBadge(readBooks: readBooks),
         ]
     }
 
@@ -133,6 +134,23 @@ struct BadgeEngine {
             description: "Hit your annual reading goal",
             icon: "trophy.fill",
             isUnlocked: goalMet
+        )
+    }
+
+    private static func worldBookDayBadge(readBooks: [Book]) -> Badge {
+        let calendar = Calendar.current
+        let hasWBDRead = readBooks.contains { book in
+            guard let finished = book.dateFinished else { return false }
+            let year = calendar.component(.year, from: finished)
+            guard let range = WorldBookDay.wbdWeekRange(year: year) else { return false }
+            return range.contains(finished)
+        }
+        return Badge(
+            id: "world_book_day",
+            title: "World Book Day Reader",
+            description: "Finish a book during World Book Day week",
+            icon: "globe.europe.africa.fill",
+            isUnlocked: hasWBDRead
         )
     }
 }

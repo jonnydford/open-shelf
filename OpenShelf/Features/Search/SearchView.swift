@@ -59,11 +59,17 @@ struct SearchView: View {
     // MARK: - States
 
     private var initialState: some View {
-        ContentUnavailableView(
-            "Search Open Library",
-            systemImage: "magnifyingglass",
-            description: Text("Find books by title, author, or ISBN.")
-        )
+        ScrollView {
+            VStack(spacing: 16) {
+                DiscoverSection()
+
+                ContentUnavailableView(
+                    "Search Open Library",
+                    systemImage: "magnifyingglass",
+                    description: Text("Find books by title, author, or ISBN.")
+                )
+            }
+        }
     }
 
     private var noResultsState: some View {
