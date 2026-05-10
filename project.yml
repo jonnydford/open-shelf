@@ -21,7 +21,6 @@ targets:
     platform: iOS
     sources:
       - path: OpenShelf
-        type: group
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.openshelf.app
@@ -42,6 +41,7 @@ targets:
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Open Shelf lets you pick a cover image from your photos for manually added books."
         INFOPLIST_KEY_NSFaceIDUsageDescription: "Open Shelf uses Face ID to protect your private books."
     info:
+      path: OpenShelf/Info.plist
       properties:
         BGTaskSchedulerPermittedIdentifiers:
           - com.openshelf.authorcheck
@@ -51,21 +51,18 @@ targets:
               - openshelf
 
   OpenShelfWidget:
-    type: appExtension
+    type: app-extension
     platform: iOS
     sources:
       - path: OpenShelfWidget
-        type: group
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.openshelf.app.widget
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: "NO"
         CODE_SIGNING_ALLOWED: "NO"
-        CODE_SIGN_ENTITLEMENTS: OpenShelfWidget/OpenShelfWidget.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: OpenShelf Widget
         INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: com.apple.widgetkit-extension
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     dependencies:
       - target: OpenShelf
-        embed: false

@@ -12,6 +12,7 @@ struct UnwrappedView: View {
 
     @State private var currentPage = 0
     @State private var autoAdvanceActive = true
+    @State private var showUnwrappedShareSheet = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -123,7 +124,37 @@ struct UnwrappedView: View {
             closeButton
         }
         .overlay(alignment: .bottomTrailing) {
-            shareButton
+            if currentPage < totalCards - 1 {
+                shareYearButton
+            }
+        }
+        .sheet(isPresented: $showUnwrappedShareSheet) {
+            // Always exclude private books from shared content regardless of stats toggle
+            let shareBooks = StatsCalculator.booksRead(from: allBooks.filter { !$0.isPrivate }, filter: .year(year))
+            let shareTopBook = shareBooks.filter { ($0.userRating ?? 0) > 0 }
+                .max { ($0.userRating ?? 0) < ($1.userRating ?? 0) }
+            let shareGenres = StatsCalculator.genreBreakdown(shareBooks)
+            let shareTopGenre: (genre: String, count: Int, percentage: String)? = shareGenres.first.map { top in
+                let total = shareGenres.reduce(0) { $0 + $1.count }
+                let pct = total > 0 ? String(format: "%.0f%%", Double(top.count) / Double(total) * 100) : "0%"
+                return (top.genre, top.count, pct)
+            }
+            UnwrappedShareSheet(
+                year: year,
+                booksReadCount: shareBooks.count,
+                totalPages: StatsCalculator.totalPages(shareBooks),
+                estimatedHours: StatsCalculator.estimatedReadingHours(books: shareBooks),
+                topBook: shareTopBook,
+                topGenre: shareTopGenre,
+                favouriteAuthor: StatsCalculator.favouriteAuthor(books: shareBooks),
+                longestStreak: StatsCalculator.longestStreak(books: allBooks.filter { !$0.isPrivate }, year: year),
+                goalTarget: goalForYear?.target,
+                goalMet: goalForYear.map { shareBooks.count >= $0.target } ?? false,
+                averageDays: StatsCalculator.averageDaysPerBook(shareBooks),
+                fastestRead: StatsCalculator.fastestRead(shareBooks).map { (title: $0.book.title, days: $0.days) },
+                longestRead: StatsCalculator.slowestRead(shareBooks).map { (title: $0.book.title, days: $0.days) },
+                monthlyData: StatsCalculator.booksPerMonth(shareBooks)
+            )
         }
         .onReceive(
             Timer.publish(every: 5, on: .main, in: .common).autoconnect()
@@ -157,15 +188,10 @@ struct UnwrappedView: View {
         }
     }
 
-    private var shareButton: some View {
-        let snapshot = cardSnapshot()
-        return ShareLink(
-            item: snapshot,
-            preview: SharePreview(
-                "My \(year) in Books",
-                image: snapshot
-            )
-        ) {
+    private var shareYearButton: some View {
+        Button {
+            showUnwrappedShareSheet = true
+        } label: {
             Label("Share", systemImage: "square.and.arrow.up")
                 .font(.subheadline.bold())
                 .foregroundStyle(.white)
@@ -174,44 +200,6 @@ struct UnwrappedView: View {
                 .background(.white.opacity(0.2), in: Capsule())
         }
         .padding()
-    }
-
-    // MARK: - Snapshot
-
-    @MainActor
-    private func cardSnapshot() -> Image {
-        let cardView = currentCardView()
-            .frame(width: 390, height: 700)
-            .overlay(alignment: .bottom) {
-                Text("Open Shelf")
-                    .font(.caption.bold())
-                    .foregroundStyle(.white.opacity(0.5))
-                    .padding(.bottom, 16)
-            }
-
-        let renderer = ImageRenderer(content: cardView)
-        renderer.scale = 2.0
-
-        if let uiImage = renderer.uiImage {
-            return Image(uiImage: uiImage)
-        }
-        return Image(systemName: "book.fill")
-    }
-
-    @ViewBuilder
-    private func currentCardView() -> some View {
-        switch currentPage {
-        case 0: openerCard
-        case 1: totalStatsCard
-        case 2: topBookCard
-        case 3: topGenreCard
-        case 4: favouriteAuthorCard
-        case 5: readingPaceCard
-        case 6: monthlyBreakdownCard
-        case 7: streakCard
-        case 8: goalProgressCard
-        default: closerCard
-        }
     }
 
     // MARK: - Cards
@@ -556,6 +544,18 @@ struct UnwrappedView: View {
                     .font(.title3)
                     .foregroundStyle(.secondary)
 
+                Button {
+                    showUnwrappedShareSheet = true
+                } label: {
+                    Label("Share Your Year", systemImage: "square.and.arrow.up")
+                        .font(.headline)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor, in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
                 Spacer()
             }
         }
@@ -564,7 +564,7 @@ struct UnwrappedView: View {
 
 // MARK: - Unwrapped Card Container
 
-private struct UnwrappedCard<Content: View>: View {
+struct UnwrappedCard<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {

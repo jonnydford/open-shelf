@@ -5,9 +5,26 @@ import SwiftUI
 struct ShareCardView: View {
     let book: Book
     let coverImage: UIImage?
+    var format: ShareFormat = .portrait
 
-    private var cardWidth: CGFloat { 1080 }
-    private var cardHeight: CGFloat { 1350 }
+    private var cardWidth: CGFloat { format.dimensions.width }
+    private var cardHeight: CGFloat { format.dimensions.height }
+
+    private var coverSize: CGSize {
+        switch format {
+        case .story: return CGSize(width: 360, height: 540)
+        case .portrait: return CGSize(width: 320, height: 480)
+        case .square: return CGSize(width: 240, height: 360)
+        }
+    }
+
+    private var showNotes: Bool {
+        format != .square
+    }
+
+    private var titleLineLimit: Int {
+        format == .square ? 2 : 3
+    }
 
     var body: some View {
         ZStack {
@@ -15,24 +32,29 @@ struct ShareCardView: View {
 
             VStack(spacing: 0) {
                 Spacer()
-                    .frame(height: 80)
+                    .frame(height: format == .story ? 120 : 80)
 
                 coverSection
-                    .padding(.bottom, 40)
+                    .padding(.bottom, format == .story ? 48 : 40)
 
                 titleSection
                     .padding(.bottom, 12)
 
                 authorSection
-                    .padding(.bottom, 32)
+                    .padding(.bottom, format == .square ? 20 : 32)
 
                 statusSection
-                    .padding(.bottom, 24)
+                    .padding(.bottom, format == .square ? 16 : 24)
 
-                quoteSection
-                    .padding(.bottom, 32)
+                if showNotes {
+                    quoteSection
+                        .padding(.bottom, 32)
+                }
 
                 Spacer()
+
+                deepLinkSection
+                    .padding(.bottom, 16)
 
                 brandingSection
                     .padding(.bottom, 48)
@@ -61,16 +83,16 @@ struct ShareCardView: View {
                 Image(uiImage: coverImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 320, height: 480)
+                    .frame(width: coverSize.width, height: coverSize.height)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
             } else {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color.white.opacity(0.1))
-                        .frame(width: 320, height: 480)
+                        .frame(width: coverSize.width, height: coverSize.height)
                     Image(systemName: "book.closed.fill")
-                        .font(.system(size: 80))
+                        .font(.system(size: format == .square ? 60 : 80))
                         .foregroundStyle(.white.opacity(0.3))
                 }
                 .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
@@ -85,7 +107,7 @@ struct ShareCardView: View {
             .font(.system(size: 40, weight: .bold, design: .serif))
             .foregroundStyle(.white)
             .multilineTextAlignment(.center)
-            .lineLimit(3)
+            .lineLimit(titleLineLimit)
     }
 
     // MARK: - Author
@@ -185,6 +207,17 @@ struct ShareCardView: View {
         }
     }
 
+    // MARK: - Deep Link
+
+    @ViewBuilder
+    private var deepLinkSection: some View {
+        if !book.isPrivate {
+            Text("Open in Open Shelf")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(.white.opacity(0.3))
+        }
+    }
+
     // MARK: - Branding
 
     private var brandingSection: some View {
@@ -214,10 +247,10 @@ struct ShareCardView: View {
 
 @MainActor
 enum ShareCardRenderer {
-    static func renderImage(for book: Book, coverImage: UIImage?) -> UIImage? {
-        let cardView = ShareCardView(book: book, coverImage: coverImage)
+    static func renderImage(for book: Book, coverImage: UIImage?, format: ShareFormat = .portrait) -> UIImage? {
+        let cardView = ShareCardView(book: book, coverImage: coverImage, format: format)
         let renderer = ImageRenderer(content: cardView)
-        renderer.scale = 2.0 // High resolution
+        renderer.scale = 2.0
         return renderer.uiImage
     }
 }

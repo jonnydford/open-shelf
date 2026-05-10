@@ -24,7 +24,6 @@ struct BookDetailView: View {
     // Social/sharing state
     @State private var showShareCardSheet = false
     @State private var showRecommendSheet = false
-    @State private var shareCardItems: [Any] = []
     @State private var recommendText: String = ""
     @State private var showAddToListSheet = false
     @State private var coverImageForShare: UIImage?
@@ -94,7 +93,12 @@ struct BookDetailView: View {
             if !book.isPrivate {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        generateShareCard()
+                        Task {
+                            if let coverID = book.coverImageID {
+                                coverImageForShare = await repository.imageCache.image(for: coverID, size: .large)
+                            }
+                            showShareCardSheet = true
+                        }
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
@@ -106,7 +110,7 @@ struct BookDetailView: View {
             dnfSheet
         }
         .sheet(isPresented: $showShareCardSheet) {
-            ActivityView(activityItems: shareCardItems, applicationActivities: nil)
+            ShareCardSheet(book: book, coverImage: coverImageForShare)
         }
         .sheet(isPresented: $showRecommendSheet) {
             ActivityView(activityItems: [recommendText], applicationActivities: nil)
@@ -978,7 +982,12 @@ struct BookDetailView: View {
                 .padding(.horizontal)
 
             Button {
-                generateShareCard()
+                Task {
+                    if let coverID = book.coverImageID {
+                        coverImageForShare = await repository.imageCache.image(for: coverID, size: .large)
+                    }
+                    showShareCardSheet = true
+                }
             } label: {
                 Label("Share Book Card", systemImage: "square.and.arrow.up")
                     .frame(maxWidth: .infinity)
@@ -1020,22 +1029,6 @@ struct BookDetailView: View {
                         }
                     }
                 }
-        }
-    }
-
-    // MARK: - Share Card Generation
-
-    private func generateShareCard() {
-        Task {
-            var coverImage: UIImage?
-            if let coverID = book.coverImageID {
-                coverImage = await repository.imageCache.image(for: coverID, size: .large)
-            }
-            let image = ShareCardRenderer.renderImage(for: book, coverImage: coverImage)
-            if let image {
-                shareCardItems = [image]
-                showShareCardSheet = true
-            }
         }
     }
 
