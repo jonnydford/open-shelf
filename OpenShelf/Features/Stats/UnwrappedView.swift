@@ -12,6 +12,7 @@ struct UnwrappedView: View {
 
     @State private var currentPage = 0
     @State private var autoAdvanceActive = true
+    @State private var showUnwrappedShareSheet = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -123,7 +124,21 @@ struct UnwrappedView: View {
             closeButton
         }
         .overlay(alignment: .bottomTrailing) {
-            shareButton
+            shareYearButton
+        }
+        .sheet(isPresented: $showUnwrappedShareSheet) {
+            UnwrappedShareSheet(
+                year: year,
+                booksReadCount: readBooks.count,
+                totalPages: totalPages,
+                estimatedHours: estimatedHours,
+                topBook: topBook,
+                topGenre: topGenre,
+                favouriteAuthor: favouriteAuthor,
+                longestStreak: longestStreak,
+                goalTarget: goalForYear?.target,
+                goalMet: goalForYear.map { readBooks.count >= $0.target } ?? false
+            )
         }
         .onReceive(
             Timer.publish(every: 5, on: .main, in: .common).autoconnect()
@@ -157,15 +172,10 @@ struct UnwrappedView: View {
         }
     }
 
-    private var shareButton: some View {
-        let snapshot = cardSnapshot()
-        return ShareLink(
-            item: snapshot,
-            preview: SharePreview(
-                "My \(year) in Books",
-                image: snapshot
-            )
-        ) {
+    private var shareYearButton: some View {
+        Button {
+            showUnwrappedShareSheet = true
+        } label: {
             Label("Share", systemImage: "square.and.arrow.up")
                 .font(.subheadline.bold())
                 .foregroundStyle(.white)
@@ -179,23 +189,20 @@ struct UnwrappedView: View {
     // MARK: - Snapshot
 
     @MainActor
-    private func cardSnapshot() -> Image {
+    func cardSnapshot(format: ShareFormat = .story) -> UIImage? {
+        let dims = format.dimensions
         let cardView = currentCardView()
-            .frame(width: 390, height: 700)
+            .frame(width: dims.width, height: dims.height)
             .overlay(alignment: .bottom) {
                 Text("Open Shelf")
-                    .font(.caption.bold())
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.white.opacity(0.5))
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 32)
             }
 
         let renderer = ImageRenderer(content: cardView)
         renderer.scale = 2.0
-
-        if let uiImage = renderer.uiImage {
-            return Image(uiImage: uiImage)
-        }
-        return Image(systemName: "book.fill")
+        return renderer.uiImage
     }
 
     @ViewBuilder
@@ -556,6 +563,18 @@ struct UnwrappedView: View {
                     .font(.title3)
                     .foregroundStyle(.secondary)
 
+                Button {
+                    showUnwrappedShareSheet = true
+                } label: {
+                    Label("Share Your Year", systemImage: "square.and.arrow.up")
+                        .font(.headline)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor, in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+
                 Spacer()
             }
         }
@@ -564,7 +583,7 @@ struct UnwrappedView: View {
 
 // MARK: - Unwrapped Card Container
 
-private struct UnwrappedCard<Content: View>: View {
+struct UnwrappedCard<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
