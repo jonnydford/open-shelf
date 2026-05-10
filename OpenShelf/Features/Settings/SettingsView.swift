@@ -10,9 +10,12 @@ struct SettingsView: View {
     @State private var showImportView = false
     @State private var showExportView = false
     @State private var showSetGoal = false
+    @State private var showLibraryPicker = false
 
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
+    @AppStorage("spydusCloudSlug") private var spydusCloudSlug: String = ""
+    @AppStorage("kohaLibraryDomain") private var kohaLibraryDomain: String = ""
     @AppStorage("streakReminderEnabled") private var streakReminderEnabled: Bool = false
     @AppStorage("preferredBookshop") private var preferredBookshop: String = BookshopPreference.bookshopOrg.rawValue
     @AppStorage("preferredAudiobook") private var preferredAudiobook: String = AudiobookPreference.libroFm.rawValue
@@ -49,6 +52,9 @@ struct SettingsView: View {
                     year: currentYear,
                     existingGoal: goals.first { $0.year == currentYear }
                 )
+            }
+            .sheet(isPresented: $showLibraryPicker) {
+                LibraryPickerView()
             }
         }
     }
@@ -257,9 +263,40 @@ struct SettingsView: View {
 
     private var librarySection: some View {
         Section("Library") {
+            Button {
+                showLibraryPicker = true
+            } label: {
+                Label("Find your library", systemImage: "building.columns.fill")
+            }
+
             Picker("Preferred library service", selection: selectedLibraryService) {
                 ForEach(LibraryService.allCases) { service in
                     Text(service.rawValue).tag(service)
+                }
+            }
+
+            if selectedLibraryService.wrappedValue == .spydusCloud {
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Council slug", text: $spydusCloudSlug)
+                        .accessibilityLabel("Spydus Cloud council slug")
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Text("Your council's identifier, e.g. manchester, birmingham")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if selectedLibraryService.wrappedValue == .koha {
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Catalogue domain", text: $kohaLibraryDomain)
+                        .accessibilityLabel("Koha library catalogue domain")
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+                    Text("Your library's catalogue domain, e.g. norfolk.spydus.co.uk")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
 
