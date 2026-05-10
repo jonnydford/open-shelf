@@ -50,6 +50,11 @@ struct BookDetailView: View {
     // Library availability
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
+    @AppStorage("spydusCloudSlug") private var spydusCloudSlug: String = ""
+    @AppStorage("kohaLibraryDomain") private var kohaLibraryDomain: String = ""
+
+    // Library availability check state
+    @State private var availabilityStatus: LibraryAvailabilityChecker.AvailabilityStatus = .unknown
 
     // Bookshop & audiobook preferences
     @AppStorage("preferredBookshop") private var preferredBookshop: String = BookshopPreference.bookshopOrg.rawValue
@@ -831,11 +836,29 @@ struct BookDetailView: View {
                 Button {
                     openLibraryLink(isbn: isbn)
                 } label: {
-                    Label("Check library availability", systemImage: "building.columns")
-                        .frame(maxWidth: .infinity)
+                    HStack {
+                        Label("Check library availability", systemImage: "building.columns")
+                        if availabilityStatus == .likelyAvailable {
+                            Text("Likely available")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.green.opacity(0.15))
+                                .foregroundStyle(.green)
+                                .clipShape(Capsule())
+                        } else if availabilityStatus == .checking {
+                            ProgressView()
+                                .controlSize(.mini)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
                 .padding(.horizontal)
+            }
+            .task(id: isbn) {
+                await checkLibraryAvailability(isbn: isbn)
             }
         }
     }
@@ -844,15 +867,35 @@ struct BookDetailView: View {
         let service = LibraryService(rawValue: preferredLibraryService) ?? .libby
         let url: URL?
 
-        if service == .custom {
+        switch service {
+        case .custom:
             url = LibraryService.customURL(template: customLibraryURLTemplate, isbn: isbn)
-        } else {
+        case .spydusCloud:
+            url = LibraryService.spydusCloudURL(slug: spydusCloudSlug, isbn: isbn)
+        case .koha:
+            url = LibraryService.kohaURL(domain: kohaLibraryDomain, isbn: isbn)
+        default:
             url = service.url(for: isbn)
         }
 
         if let url {
             UIApplication.shared.open(url)
         }
+    }
+
+    private func checkLibraryAvailability(isbn: String) async {
+        let service = LibraryService(rawValue: preferredLibraryService) ?? .libby
+        guard service == .spydusCloud, !spydusCloudSlug.isEmpty else { return }
+
+        // Check cache first
+        let cached = await LibraryAvailabilityChecker.shared.cachedStatus(for: isbn)
+        if cached != .unknown {
+            availabilityStatus = cached
+            return
+        }
+
+        availabilityStatus = .checking
+        availabilityStatus = await LibraryAvailabilityChecker.shared.check(isbn: isbn, slug: spydusCloudSlug)
     }
 
     // MARK: - Buy Section
