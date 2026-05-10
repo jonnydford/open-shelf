@@ -100,10 +100,10 @@ struct ReadingGoalProvider: TimelineProvider {
                 return .empty
             }
 
-            // Count books finished this year
+            // Count books finished this year (excluding private)
             let bookDescriptor = FetchDescriptor<Book>()
             let allBooks = try context.fetch(bookDescriptor)
-            let booksRead = allBooks.filter { $0.shelf == .read }.filter { book in
+            let booksRead = allBooks.filter { $0.shelf == .read && !$0.isPrivate }.filter { book in
                 guard let date = book.dateFinished else { return false }
                 return Calendar.current.component(.year, from: date) == currentYear
             }.count

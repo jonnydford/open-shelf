@@ -33,6 +33,13 @@ struct BookDetailView: View {
     @State private var showUpNextPrompt = false
     @State private var upNextBook: Book?
 
+    // Privacy state
+    @State private var showPrivacyConfirmation = false
+
+    // Series editing state
+    @State private var editingSeriesName: String = ""
+    @State private var editingSeriesPosition: String = ""
+
     // Author search state
     @State private var authorBooks: [SearchResult] = []
     @State private var isLoadingAuthorBooks = false
@@ -110,6 +117,22 @@ struct BookDetailView: View {
                 authorBooks: authorBooks
             )
             .environment(repository)
+        }
+        .sheet(isPresented: $showSeriesEditor) {
+            seriesEditorSheet
+        }
+        .confirmationDialog(
+            "Private Book",
+            isPresented: $showPrivacyConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(book.isPrivate ? "Make Visible" : "Make Private") {
+                book.isPrivate.toggle()
+                try? modelContext.save()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Private books are hidden from stats, widgets, and shared content.")
         }
         .alert("Delete Book", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -355,7 +378,19 @@ struct BookDetailView: View {
                 GridItem(.flexible())
             ], alignment: .leading, spacing: 8) {
                 if let pageCount = book.pageCount {
-                    detailItem(label: "Pages", value: "\(pageCount)")
+                    HStack(spacing: 4) {
+                        detailItem(label: "Pages", value: "\(pageCount)")
+                        if book.format != .book {
+                            Text(book.format.rawValue)
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.purple.opacity(0.15))
+                                .foregroundStyle(.purple)
+                                .clipShape(Capsule())
+                        }
+                    }
                 }
                 if let publisher = book.publisher {
                     detailItem(label: "Publisher", value: publisher)
@@ -368,12 +403,134 @@ struct BookDetailView: View {
                 }
             }
 
+            // Format picker
+            HStack {
+                Text("Format")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                Picker("Format", selection: Binding(
+                    get: { book.format },
+                    set: { newValue in
+                        book.format = newValue
+                        try? modelContext.save()
+                    }
+                )) {
+                    ForEach(BookFormat.allCases, id: \.self) { format in
+                        Text(format.rawValue).tag(format)
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+            }
+
+            // Series section
+            seriesSection
+
             if !book.subjects.isEmpty {
                 subjectTags
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
+    }
+
+    // MARK: - Series Section
+
+    @ViewBuilder
+    private var seriesSection: some View {
+        if let seriesName = book.seriesName, !seriesName.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Series")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        HStack(spacing: 4) {
+                            Text(seriesName)
+                                .font(.subheadline)
+                            if let position = book.seriesPosition {
+                                Text("#\(position)")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+
+                    Spacer()
+
+                    Button("Edit") {
+                        editingSeriesName = book.seriesName ?? ""
+                        editingSeriesPosition = book.seriesPosition.map { String($0) } ?? ""
+                        showSeriesEditor = true
+                    }
+                    .font(.caption)
+
+                    Button(role: .destructive) {
+                        book.seriesName = nil
+                        book.seriesPosition = nil
+                        try? modelContext.save()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        } else {
+            Button {
+                editingSeriesName = ""
+                editingSeriesPosition = ""
+                showSeriesEditor = true
+            } label: {
+                Label("Add to Series", systemImage: "books.vertical")
+                    .font(.subheadline)
+            }
+        }
+    }
+
+    @State private var showSeriesEditor = false
+
+    private var seriesEditorSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Series Name") {
+                    TextField("e.g. The Lord of the Rings", text: $editingSeriesName)
+                }
+                Section("Volume Number") {
+                    TextField("e.g. 1", text: $editingSeriesPosition)
+                        .keyboardType(.numberPad)
+                }
+            }
+            .navigationTitle("Series")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveSeriesEdits()
+                        showSeriesEditor = false
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        showSeriesEditor = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func saveSeriesEdits() {
+        let trimmedName = editingSeriesName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedName.isEmpty {
+            book.seriesName = nil
+            book.seriesPosition = nil
+        } else {
+            book.seriesName = trimmedName
+            book.seriesPosition = Int(editingSeriesPosition)
+        }
+        try? modelContext.save()
     }
 
     private func detailItem(label: String, value: String) -> some View {
@@ -702,6 +859,19 @@ struct BookDetailView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
+
+            // Make Private / Make Visible
+            Button {
+                showPrivacyConfirmation = true
+            } label: {
+                Label(
+                    book.isPrivate ? "Make Visible" : "Make Private",
+                    systemImage: book.isPrivate ? "eye" : "eye.slash"
+                )
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal)
 
             // Delete
             Button(role: .destructive) {

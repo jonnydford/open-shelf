@@ -62,6 +62,7 @@ struct ExportView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedFormat: ExportFormat = .csv
+    @State private var includePrivateBooks = false
     @State private var isExporting = false
     @State private var exportDocument: ExportDocument?
 
@@ -84,10 +85,12 @@ struct ExportView: View {
                 }
 
                 Section {
+                    Toggle("Include private books", isOn: $includePrivateBooks)
+
                     HStack {
-                        Text("Books in library")
+                        Text("Books in export")
                         Spacer()
-                        Text("\(books.count)")
+                        Text("\(booksForExport.count)")
                             .foregroundStyle(.secondary)
                     }
                 } header: {
@@ -111,7 +114,7 @@ struct ExportView: View {
                         Label("Export \(selectedFormat.rawValue)", systemImage: "square.and.arrow.up")
                             .frame(maxWidth: .infinity)
                     }
-                    .disabled(books.isEmpty)
+                    .disabled(booksForExport.isEmpty)
                 }
             }
             .navigationTitle("Export Library")
@@ -169,15 +172,24 @@ struct ExportView: View {
         }
     }
 
+    // MARK: - Filtered Books
+
+    private var booksForExport: [Book] {
+        if includePrivateBooks {
+            return books
+        }
+        return books.filter { !$0.isPrivate }
+    }
+
     // MARK: - Generate Export
 
     private func generateExport() {
         let data: Data
         switch selectedFormat {
         case .csv:
-            data = DataExporter.exportCSV(books: books)
+            data = DataExporter.exportCSV(books: booksForExport)
         case .json:
-            data = DataExporter.exportJSON(books: books)
+            data = DataExporter.exportJSON(books: booksForExport)
         }
 
         exportDocument = ExportDocument(data: data, contentType: selectedFormat.contentType)

@@ -183,6 +183,23 @@ struct StatsCalculator {
         return subjects.isEmpty ? "Uncategorised" : "Other"
     }
 
+    // MARK: - Format breakdown
+
+    struct FormatCount: Identifiable {
+        let format: String
+        let count: Int
+        var id: String { format }
+    }
+
+    static func formatBreakdown(_ books: [Book]) -> [FormatCount] {
+        var counts = [String: Int]()
+        for book in books {
+            counts[book.format.rawValue, default: 0] += 1
+        }
+        return counts.sorted { $0.value > $1.value }
+            .map { FormatCount(format: $0.key, count: $0.value) }
+    }
+
     // MARK: - Reading pace
 
     static func averageDaysPerBook(_ books: [Book]) -> Int? {

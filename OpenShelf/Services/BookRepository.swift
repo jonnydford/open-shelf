@@ -23,6 +23,7 @@ final class BookRepository {
     // MARK: - Local operations
 
     func addBook(from searchResult: SearchResult, detail: WorkDetail?, shelf: Shelf) {
+        let subjects = detail?.subjects ?? searchResult.subject ?? []
         let book = Book(
             olWorkKey: searchResult.key,
             isbn13: searchResult.primaryISBN13,
@@ -34,9 +35,10 @@ final class BookRepository {
             pageCount: searchResult.numberOfPagesMedian,
             firstPublishYear: searchResult.firstPublishYear,
             synopsis: detail?.synopsis,
-            subjects: detail?.subjects ?? searchResult.subject ?? [],
+            subjects: subjects,
             shelf: shelf,
-            dateAdded: .now
+            dateAdded: .now,
+            format: BookFormat.detectFormat(subjects: subjects)
         )
 
         modelContext.insert(book)
@@ -233,6 +235,7 @@ final class BookRepository {
                 // Insert book on MainActor (SwiftData requires it)
                 let matched = await MainActor.run { () -> Bool in
                     if let edition = matchedEdition {
+                        let importSubjects = matchedWorkDetail?.subjects ?? []
                         let book = Book(
                             olWorkKey: edition.workKey ?? edition.key,
                             olEditionKey: edition.key,
@@ -243,20 +246,22 @@ final class BookRepository {
                             coverImageID: edition.primaryCoverID ?? matchedWorkDetail?.primaryCoverID,
                             pageCount: edition.numberOfPages ?? row.numberOfPages,
                             synopsis: matchedWorkDetail?.synopsis,
-                            subjects: matchedWorkDetail?.subjects ?? [],
+                            subjects: importSubjects,
                             publisher: edition.primaryPublisher,
                             language: edition.primaryLanguage,
                             shelf: GoodreadsImporter.mapShelf(row.bookshelf),
                             userRating: row.myRating,
                             dateAdded: row.dateAdded ?? .now,
                             dateFinished: row.dateRead,
-                            notes: row.myReview
+                            notes: row.myReview,
+                            format: BookFormat.detectFormat(subjects: importSubjects)
                         )
                         self.applyImportedDates(book, row: row)
                         self.modelContext.insert(book)
                         try? self.modelContext.save()
                         return true
                     } else if let result = matchedResult {
+                        let importSubjects2 = matchedWorkDetail?.subjects ?? result.subject ?? []
                         let book = Book(
                             olWorkKey: result.key,
                             isbn13: result.primaryISBN13 ?? row.isbn13,
@@ -267,12 +272,13 @@ final class BookRepository {
                             pageCount: result.numberOfPagesMedian ?? row.numberOfPages,
                             firstPublishYear: result.firstPublishYear,
                             synopsis: matchedWorkDetail?.synopsis,
-                            subjects: matchedWorkDetail?.subjects ?? result.subject ?? [],
+                            subjects: importSubjects2,
                             shelf: GoodreadsImporter.mapShelf(row.bookshelf),
                             userRating: row.myRating,
                             dateAdded: row.dateAdded ?? .now,
                             dateFinished: row.dateRead,
-                            notes: row.myReview
+                            notes: row.myReview,
+                            format: BookFormat.detectFormat(subjects: importSubjects2)
                         )
                         self.applyImportedDates(book, row: row)
                         self.modelContext.insert(book)

@@ -165,7 +165,8 @@ struct ReadingListDetailView: View {
     private func shareAsText() {
         var text = "\u{1F4DA} \(readingList.name)\n\n"
 
-        for (index, book) in booksInList.enumerated() {
+        let shareableBooks = booksInList.filter { !$0.isPrivate }
+        for (index, book) in shareableBooks.enumerated() {
             var line = "\(index + 1). \(book.title) by \(book.authorName)"
 
             if readingList.includeRatings, let rating = book.userRating {
@@ -193,9 +194,10 @@ struct ReadingListDetailView: View {
     }
 
     private func shareAsCardImage() {
+        let shareableBooks = booksInList.filter { !$0.isPrivate }
         let cardView = ReadingListCardView(
             listName: readingList.name,
-            books: booksInList,
+            books: shareableBooks,
             includeRatings: readingList.includeRatings
         )
         let renderer = ImageRenderer(content: cardView)
