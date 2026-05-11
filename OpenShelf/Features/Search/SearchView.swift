@@ -63,8 +63,8 @@ struct SearchView: View {
                     resultsList
                 }
             }
-            .navigationTitle("Search")
-            .searchable(text: $searchText, prompt: "Title, author, or ISBN")
+            .navigationTitle("Discover")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Title, author, or ISBN")
             .navigationDestination(for: SearchResult.self) { result in
                 if let existingBook = allLibraryBooks.first(where: { $0.olWorkKey == result.key }) {
                     BookDetailView(book: existingBook)
