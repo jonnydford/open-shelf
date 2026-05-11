@@ -309,6 +309,29 @@ struct StatsCalculator {
         return longest
     }
 
+    // MARK: - Best streak (all-time)
+
+    static func bestStreak(from readingDays: [ReadingDay]) -> Int {
+        let calendar = Calendar.current
+        let dates = Set(readingDays.map { calendar.startOfDay(for: $0.date) })
+        guard !dates.isEmpty else { return 0 }
+
+        let sorted = dates.sorted()
+        var longest = 1
+        var current = 1
+
+        for i in 1..<sorted.count {
+            let expected = calendar.date(byAdding: .day, value: 1, to: sorted[i - 1])!
+            if calendar.isDate(sorted[i], inSameDayAs: expected) {
+                current += 1
+                longest = max(longest, current)
+            } else {
+                current = 1
+            }
+        }
+        return longest
+    }
+
     // MARK: - Estimated reading hours
 
     static func estimatedReadingHours(books: [Book]) -> Int {

@@ -77,6 +77,7 @@ struct LargeWidgetData {
     let books: [CurrentlyReadingEntry]
     let booksReadThisYear: Int
     let goalProgress: (read: Int, target: Int)?
+    let streak: Int
 }
 
 // MARK: - Timeline Provider
@@ -145,7 +146,8 @@ struct LargeWidgetProvider: TimelineProvider {
         LargeEntry(date: .now, data: LargeWidgetData(
             books: [.placeholder],
             booksReadThisYear: 23,
-            goalProgress: (read: 23, target: 40)
+            goalProgress: (read: 23, target: 40),
+            streak: 12
         ))
     }
 
@@ -196,18 +198,41 @@ struct LargeWidgetProvider: TimelineProvider {
             let goal = (try? context.fetch(goalDescriptor))?.first
             let goalProgress = goal.map { (read: booksReadThisYear, target: $0.target) }
 
+            let privateKeys = Set(allBooks.filter(\.isPrivate).map(\.olWorkKey))
+            let dayDescriptor = FetchDescriptor<ReadingDay>()
+            let allDays = (try? context.fetch(dayDescriptor))?.filter { day in
+                guard let key = day.bookKey else { return true }
+                return !privateKeys.contains(key)
+            } ?? []
+            let streak = Self.calculateStreak(from: allDays)
+
             let data = LargeWidgetData(
                 books: Array(readingBooks),
                 booksReadThisYear: booksReadThisYear,
-                goalProgress: goalProgress
+                goalProgress: goalProgress,
+                streak: streak
             )
 
             return LargeEntry(date: .now, data: data)
         } catch {
             return LargeEntry(date: .now, data: LargeWidgetData(
-                books: [], booksReadThisYear: 0, goalProgress: nil
+                books: [], booksReadThisYear: 0, goalProgress: nil, streak: 0
             ))
         }
+    }
+    private static func calculateStreak(from readingDays: [ReadingDay]) -> Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let dates = Set(readingDays.map { calendar.startOfDay(for: $0.date) })
+        guard dates.contains(today) || dates.contains(yesterday) else { return 0 }
+        var streak = 0
+        var day = dates.contains(today) ? today : yesterday
+        while dates.contains(day) {
+            streak += 1
+            day = calendar.date(byAdding: .day, value: -1, to: day)!
+        }
+        return streak
     }
 }
 
@@ -597,6 +622,15 @@ struct LargeWidgetView: View {
                         value: "\(goal.read)/\(goal.target)",
                         label: "goal",
                         color: goal.read >= goal.target ? .green : .blue
+                    )
+                }
+
+                if entry.data.streak > 0 {
+                    statPill(
+                        icon: "flame.fill",
+                        value: "\(entry.data.streak)",
+                        label: "day streak",
+                        color: .orange
                     )
                 }
 
