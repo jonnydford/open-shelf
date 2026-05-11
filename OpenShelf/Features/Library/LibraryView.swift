@@ -278,8 +278,6 @@ struct LibraryView: View {
                             if filter == .favourites {
                                 Image(systemName: "heart.fill")
                                     .font(.caption)
-                            }
-                            if filter == .favourites {
                                 Text("\(filter.shortName) (\(favouritesCount))")
                             } else {
                                 Text(filter.shortName)

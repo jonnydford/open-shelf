@@ -254,7 +254,7 @@ struct SearchView: View {
         let query = searchText.trimmingCharacters(in: .whitespaces)
 
         do {
-            let searchResults = try await repository.search(query: searchText)
+            let searchResults = try await repository.search(query: query)
             guard !Task.isCancelled else { return }
             results = searchResults
             hasSearched = true
