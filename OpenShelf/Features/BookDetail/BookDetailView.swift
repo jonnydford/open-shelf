@@ -151,29 +151,6 @@ struct BookDetailView: View {
         .sheet(isPresented: $showSeriesEditor) {
             seriesEditorSheet
         }
-        .confirmationDialog(
-            "Private Book",
-            isPresented: $showPrivacyConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(book.isPrivate ? "Make Visible" : "Make Private") {
-                book.isPrivate.toggle()
-                try? modelContext.save()
-                SpotlightIndexer.indexBook(book)
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Private books are hidden from stats, widgets, and shared content.")
-        }
-        .alert("Delete Book", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
-                repository.deleteBook(book)
-                dismiss()
-            }
-        } message: {
-            Text("Are you sure you want to remove \"\(book.title)\" from your library? This cannot be undone.")
-        }
         .alert("Start reading \(upNextBook?.title ?? "")?", isPresented: $showUpNextPrompt) {
             Button("Start Reading") {
                 if let nextBook = upNextBook {
@@ -1219,6 +1196,20 @@ struct BookDetailView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
+            .confirmationDialog(
+                "Private Book",
+                isPresented: $showPrivacyConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button(book.isPrivate ? "Make Visible" : "Make Private") {
+                    book.isPrivate.toggle()
+                    try? modelContext.save()
+                    SpotlightIndexer.indexBook(book)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Private books are hidden from stats, widgets, and shared content.")
+            }
 
             // Delete
             Button(role: .destructive) {
@@ -1228,6 +1219,15 @@ struct BookDetailView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
+            .alert("Delete Book", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    repository.deleteBook(book)
+                    dismiss()
+                }
+            } message: {
+                Text("Are you sure you want to remove \"\(book.title)\" from your library? This cannot be undone.")
+            }
         }
     }
 
