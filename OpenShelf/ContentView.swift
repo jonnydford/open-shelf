@@ -25,12 +25,12 @@ struct ContentView: View {
                 SearchView(prefillQuery: $deepLinkSearchQuery)
             }
 
-            Tab("Stats", systemImage: "chart.bar", value: "Stats") {
-                StatsView()
+            Tab("Following", systemImage: "person.2", value: "Following") {
+                FollowingView()
             }
 
-            Tab("Settings", systemImage: "gearshape", value: "Settings") {
-                SettingsView()
+            Tab("Stats", systemImage: "chart.bar", value: "Stats") {
+                StatsView()
             }
         }
         .fullScreenCover(isPresented: Binding(

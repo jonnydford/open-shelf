@@ -77,6 +77,7 @@ struct LibraryView: View {
     // Add-book flow states
     @State private var showBarcodeScanner = false
     @State private var showManualEntry = false
+    @State private var showSettings = false
 
     private var filteredBooks: [Book] {
         var books = allBooks
@@ -174,6 +175,14 @@ struct LibraryView: View {
             }
             .searchable(text: $localSearchText, prompt: "Filter by title or author")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
                 ToolbarItem(placement: .primaryAction) {
                     addButton
                 }
@@ -213,6 +222,9 @@ struct LibraryView: View {
             }
             .sheet(isPresented: $showManualEntry) {
                 ManualEntryView()
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
             }
         }
     }
