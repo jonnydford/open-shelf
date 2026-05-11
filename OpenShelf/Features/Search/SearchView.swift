@@ -4,6 +4,7 @@ struct SearchView: View {
     @Binding var prefillQuery: String?
 
     @Environment(BookRepository.self) private var repository
+    @AppStorage("searchHistory") private var searchHistoryData: String = "[]"
     @State private var searchText = ""
     @State private var results: [SearchResult] = []
     @State private var isSearching = false
@@ -13,6 +14,31 @@ struct SearchView: View {
     @State private var selectedResult: SearchResult?
     @State private var showManualEntry = false
 
+    private var searchHistory: [String] {
+        (try? JSONDecoder().decode([String].self, from: Data(searchHistoryData.utf8))) ?? []
+    }
+
+    private func saveToHistory(_ query: String) {
+        var history = searchHistory
+        history.removeAll { $0.lowercased() == query.lowercased() }
+        history.insert(query, at: 0)
+        if history.count > 10 {
+            history = Array(history.prefix(10))
+        }
+        if let data = try? JSONEncoder().encode(history),
+           let json = String(data: data, encoding: .utf8) {
+            searchHistoryData = json
+        }
+    }
+
+    private func clearHistory() {
+        searchHistoryData = "[]"
+    }
+
+    private var showSuggestions: Bool {
+        searchText.isEmpty && !searchHistory.isEmpty && !hasSearched
+    }
+
     init(prefillQuery: Binding<String?> = .constant(nil)) {
         self._prefillQuery = prefillQuery
     }
@@ -20,7 +46,9 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if let errorMessage {
+                if showSuggestions {
+                    searchHistoryList
+                } else if let errorMessage {
                     errorState(message: errorMessage)
                 } else if results.isEmpty && !isSearching && !hasSearched {
                     initialState
@@ -186,6 +214,36 @@ struct SearchView: View {
         }
     }
 
+    // MARK: - Search History
+
+    private var searchHistoryList: some View {
+        List {
+            Section {
+                ForEach(searchHistory, id: \.self) { query in
+                    Button {
+                        searchText = query
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "clock")
+                                .foregroundStyle(.secondary)
+                            Text(query)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            } footer: {
+                Button("Clear History") {
+                    clearHistory()
+                }
+                .font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 8)
+            }
+        }
+    }
+
     // MARK: - Search
 
     private func performSearch() async {
@@ -193,11 +251,16 @@ struct SearchView: View {
         errorMessage = nil
         defer { isSearching = false }
 
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+
         do {
-            let searchResults = try await repository.search(query: searchText)
+            let searchResults = try await repository.search(query: query)
             guard !Task.isCancelled else { return }
             results = searchResults
             hasSearched = true
+            if !query.isEmpty {
+                saveToHistory(query)
+            }
         } catch {
             guard !Task.isCancelled else { return }
             results = []
