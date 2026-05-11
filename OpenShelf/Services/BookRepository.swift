@@ -61,6 +61,10 @@ final class BookRepository {
         WidgetCenter.shared.reloadAllTimelines()
         SpotlightIndexer.indexBook(book)
 
+        if shelf == .reading || shelf == .read {
+            recordReadingDay(bookKey: book.olWorkKey)
+        }
+
         // Prefetch cover in background
         if let coverID = book.coverImageID {
             Task {
@@ -386,10 +390,17 @@ final class BookRepository {
         let shelf = GoodreadsImporter.mapShelf(row.bookshelf)
         switch shelf {
         case .reading:
-            book.dateStarted = row.dateAdded ?? .now
+            let started = row.dateAdded ?? .now
+            book.dateStarted = started
+            recordReadingDay(for: started, bookKey: book.olWorkKey)
         case .read:
             book.dateStarted = row.dateAdded
-            book.dateFinished = row.dateRead ?? row.dateAdded
+            let finished = row.dateRead ?? row.dateAdded ?? .now
+            book.dateFinished = finished
+            if let started = row.dateAdded {
+                recordReadingDay(for: started, bookKey: book.olWorkKey)
+            }
+            recordReadingDay(for: finished, bookKey: book.olWorkKey)
         case .wantToRead, .dnf:
             break
         }

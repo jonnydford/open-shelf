@@ -40,6 +40,7 @@ struct UpdateReadingProgressIntent: AppIntent {
             foundBook.dateStarted = .now
         }
 
+        ReadingDay.record(bookKey: foundBook.olWorkKey, in: context)
         try? context.save()
         WidgetCenter.shared.reloadAllTimelines()
 
