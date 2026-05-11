@@ -23,7 +23,7 @@ struct DiscoverSection: View {
     var body: some View {
         if !lists.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Discover")
+                Text("Curated Lists")
                     .font(.headline)
                     .padding(.horizontal)
 
