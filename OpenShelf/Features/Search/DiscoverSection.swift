@@ -65,6 +65,7 @@ struct DiscoverSection: View {
         .frame(minHeight: 100)
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
+        .accessibilityElement(children: .combine)
     }
 
     init() {

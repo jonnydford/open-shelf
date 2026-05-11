@@ -107,9 +107,10 @@ struct SearchView: View {
         ScrollView {
             VStack(spacing: 24) {
                 HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass")
+                    Image(systemName: "books.vertical")
                         .foregroundStyle(.secondary)
-                    Text("Find books by title, author, or ISBN.")
+                        .accessibilityHidden(true)
+                    Text("Search millions of books on Open Library.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
