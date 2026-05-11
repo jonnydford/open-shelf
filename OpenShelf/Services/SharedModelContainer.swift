@@ -58,16 +58,60 @@ enum SharedModelContainer {
             ReadingGoal.self,
             ReadingList.self,
             FollowedAuthor.self,
-            DismissedBook.self
+            DismissedBook.self,
+            ReadingDay.self
         ])
         let configuration = ModelConfiguration(
             schema: schema,
             url: storeURL,
             cloudKitDatabase: .automatic
         )
-        return try ModelContainer(
+        let container = try ModelContainer(
             for: schema,
             configurations: [configuration]
         )
+
+        backfillReadingDays(in: container)
+
+        return container
+    }
+
+    /// One-time migration that creates ReadingDay records from existing book dates.
+    @MainActor
+    private static func backfillReadingDays(in container: ModelContainer) {
+        let hasBackfilled = UserDefaults.standard.bool(forKey: "hasBackfilledReadingDays")
+        guard !hasBackfilled else { return }
+
+        let context = container.mainContext
+        let calendar = Calendar.current
+
+        let bookDescriptor = FetchDescriptor<Book>()
+        guard let books = try? context.fetch(bookDescriptor) else { return }
+
+        for book in books {
+            if let dateStarted = book.dateStarted {
+                let startOfDay = calendar.startOfDay(for: dateStarted)
+                insertReadingDayIfNeeded(date: startOfDay, bookKey: book.olWorkKey, in: context)
+            }
+            if let dateFinished = book.dateFinished {
+                let startOfDay = calendar.startOfDay(for: dateFinished)
+                insertReadingDayIfNeeded(date: startOfDay, bookKey: book.olWorkKey, in: context)
+            }
+        }
+
+        try? context.save()
+        UserDefaults.standard.set(true, forKey: "hasBackfilledReadingDays")
+    }
+
+    @MainActor
+    private static func insertReadingDayIfNeeded(date: Date, bookKey: String, in context: ModelContext) {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        let descriptor = FetchDescriptor<ReadingDay>(
+            predicate: #Predicate { $0.date >= startOfDay && $0.date < endOfDay }
+        )
+        guard (try? context.fetch(descriptor))?.isEmpty ?? true else { return }
+        context.insert(ReadingDay(date: startOfDay, bookKey: bookKey))
     }
 }

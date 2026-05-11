@@ -5,6 +5,7 @@ import Charts
 struct StatsView: View {
     @Query private var books: [Book]
     @Query private var goals: [ReadingGoal]
+    @Query private var readingDays: [ReadingDay]
 
     @AppStorage("includePrivateBooksInStats") private var includePrivateBooksInStats: Bool = false
 
@@ -153,7 +154,7 @@ struct StatsView: View {
     // MARK: - Badges
 
     private var badges: [Badge] {
-        let streak = StatsCalculator.currentStreak(from: statsBooks)
+        let streak = StatsCalculator.currentStreak(from: readingDays)
         let goalMet: Bool = {
             guard let goal = goalForSelectedYear else { return false }
             return readBooks.count >= goal.target
@@ -317,7 +318,7 @@ struct StatsView: View {
     // MARK: - Streak Header
 
     private var streakHeader: some View {
-        let streak = StatsCalculator.currentStreak(from: statsBooks)
+        let streak = StatsCalculator.currentStreak(from: readingDays)
         let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
         let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
 
@@ -552,7 +553,7 @@ struct StatsView: View {
     }
 
     private var streakCard: some View {
-        let streak = StatsCalculator.currentStreak(from: statsBooks)
+        let streak = StatsCalculator.currentStreak(from: readingDays)
         let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
         let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
 

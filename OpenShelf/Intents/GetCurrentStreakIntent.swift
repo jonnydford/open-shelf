@@ -9,11 +9,10 @@ struct GetCurrentStreakIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let container = try SharedModelContainer.makeContainer()
         let context = ModelContext(container)
-        let descriptor = FetchDescriptor<Book>()
-        let allBooks = (try? context.fetch(descriptor)) ?? []
-        let nonPrivate = allBooks.filter { !$0.isPrivate }
+        let descriptor = FetchDescriptor<ReadingDay>()
+        let readingDays = (try? context.fetch(descriptor)) ?? []
 
-        let streak = StatsCalculator.currentStreak(from: nonPrivate)
+        let streak = StatsCalculator.currentStreak(from: readingDays)
 
         if streak == 0 {
             return .result(dialog: "You don't have an active reading streak. Start reading to begin one!")
