@@ -13,7 +13,7 @@ enum WidgetSharedStore {
         return baseURL.appendingPathComponent("OpenShelf.store")
     }
 
-    private static let schema = Schema([Book.self, ReadEntry.self, UserTag.self, ReadingGoal.self, ReadingList.self, FollowedAuthor.self])
+    private static let schema = Schema([Book.self, ReadEntry.self, UserTag.self, ReadingGoal.self, ReadingList.self, FollowedAuthor.self, DismissedBook.self, ReadingDay.self])
 
     private static let container: ModelContainer? = {
         let configuration = ModelConfiguration(schema: schema, url: storeURL)
