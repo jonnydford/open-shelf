@@ -21,7 +21,7 @@ struct ContentView: View {
                 LibraryView()
             }
 
-            Tab("Search", systemImage: "magnifyingglass", value: "Search") {
+            Tab("Discover", systemImage: "sparkle.magnifyingglass", value: "Discover") {
                 SearchView(prefillQuery: $deepLinkSearchQuery)
             }
 
@@ -51,7 +51,7 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .searchOpenLibrary)) { notification in
             if let query = notification.userInfo?["query"] as? String, !query.isEmpty {
                 deepLinkSearchQuery = query
-                selectedTab = "Search"
+                selectedTab = "Discover"
             }
         }
     }
@@ -84,13 +84,13 @@ struct ContentView: View {
             return
         }
 
-        // Handle openshelf://search?q={query}
-        if url.host == "search" {
+        // Handle openshelf://discover or openshelf://search?q={query}
+        if url.host == "discover" || url.host == "search" {
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
             if let query = components?.queryItems?.first(where: { $0.name == "q" })?.value, !query.isEmpty {
                 deepLinkSearchQuery = query
-                selectedTab = "Search"
             }
+            selectedTab = "Discover"
             return
         }
 
@@ -168,7 +168,7 @@ struct ContentView: View {
 
         // Not in library — open search with the ISBN
         deepLinkSearchQuery = isbn
-        selectedTab = "Search"
+        selectedTab = "Discover"
     }
 
     @ViewBuilder
