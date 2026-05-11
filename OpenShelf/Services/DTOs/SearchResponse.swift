@@ -6,7 +6,7 @@ struct SearchResponse: Codable, Sendable {
     let docs: [SearchResult]
 }
 
-struct SearchResult: Codable, Sendable, Identifiable {
+struct SearchResult: Codable, Sendable, Identifiable, Hashable {
     let key: String
     let title: String
     let authorName: [String]?

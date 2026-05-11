@@ -17,6 +17,15 @@ struct BookDetailView: View {
     @State private var showFinishedRating = false
     @State private var finishedRating: Double?
 
+    // Collapsible section state (#114)
+    @State private var isDetailsExpanded = true
+    @State private var isSubjectsExpanded = false
+    @State private var isReadHistoryExpanded = false
+    @State private var isActionsExpanded = true
+
+    // Expandable subject tags state (#126)
+    @State private var showAllSubjects = false
+
     // DNF state
     @State private var dnfPage: String = ""
     @State private var dnfReason: String = ""
@@ -81,11 +90,10 @@ struct BookDetailView: View {
                 userSection
                 progressSection
                 synopsisSection
-                detailsSection
+                collapsibleDetailsSection
                 NotesEditor(book: book)
                     .padding(.horizontal)
-                ReadHistorySection(entries: book.reads)
-                    .padding(.horizontal)
+                collapsibleReadHistorySection
                 similarBooksSection
                 moreByAuthorSection
                 libraryAvailabilitySection
@@ -94,7 +102,7 @@ struct BookDetailView: View {
                 if !book.isPrivate {
                     socialSection
                 }
-                actionsSection
+                collapsibleActionsSection
             }
             .padding(.bottom, 32)
         }
@@ -349,6 +357,7 @@ struct BookDetailView: View {
             VStack(spacing: 8) {
                 if isAudiobook {
                     audiobookProgressDisplay
+                    readingPaceEstimate
                 } else if let currentPage = book.currentPage {
                     if let pageCount = book.pageCount, pageCount > 0 {
                         let progress = min(Double(currentPage) / Double(pageCount), 1.0)
@@ -367,6 +376,7 @@ struct BookDetailView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
+                    readingPaceEstimate
                 }
 
                 HStack(spacing: 12) {
@@ -448,6 +458,61 @@ struct BookDetailView: View {
                 Text("Listening")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: - Reading Pace Estimate (#121)
+
+    @ViewBuilder
+    private var readingPaceEstimate: some View {
+        if isAudiobook {
+            // Chapter-based pace for audiobooks
+            if let currentChapter = book.currentChapter,
+               let chapterCount = book.chapterCount, chapterCount > 0,
+               let dateStarted = book.dateStarted {
+                let daysSinceStarted = max(Calendar.current.dateComponents([.day], from: dateStarted, to: .now).day ?? 0, 0)
+                if daysSinceStarted >= 1, currentChapter > 0 {
+                    let chaptersPerDay = Double(currentChapter) / Double(daysSinceStarted)
+                    if chaptersPerDay > 0 {
+                        let chaptersLeft = chapterCount - currentChapter
+                        guard chaptersLeft > 0 else { return }
+                        let daysLeft = Int(ceil(Double(chaptersLeft) / chaptersPerDay))
+                        if daysLeft > 365 {
+                            Text("Take your time")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("At your pace, ~\(daysLeft) days left")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        } else {
+            // Page-based pace for books
+            if let currentPage = book.currentPage,
+               let pageCount = book.pageCount, pageCount > 0,
+               let dateStarted = book.dateStarted {
+                let daysSinceStarted = max(Calendar.current.dateComponents([.day], from: dateStarted, to: .now).day ?? 0, 0)
+                if daysSinceStarted >= 1, currentPage > 0 {
+                    let pagesPerDay = Double(currentPage) / Double(daysSinceStarted)
+                    if pagesPerDay > 0 {
+                        let pagesLeft = pageCount - currentPage
+                        guard pagesLeft > 0 else { return }
+                        let daysLeft = Int(ceil(Double(pagesLeft) / pagesPerDay))
+                        if daysLeft > 365 {
+                            Text("Take your time")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("At your pace, ~\(daysLeft) days left")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
             }
         }
     }
@@ -534,75 +599,93 @@ struct BookDetailView: View {
         }
     }
 
-    // MARK: - Details Section
+    // MARK: - Collapsible Details Section (#114)
 
-    private var detailsSection: some View {
+    private var collapsibleDetailsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Details")
-                .font(.headline)
+            DisclosureGroup(isExpanded: $isDetailsExpanded) {
+                VStack(alignment: .leading, spacing: 8) {
+                    detailsGrid
 
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], alignment: .leading, spacing: 8) {
-                if let pageCount = book.pageCount {
-                    HStack(spacing: 4) {
-                        detailItem(label: "Pages", value: "\(pageCount)")
-                        if book.format != .book {
-                            Text(book.format.rawValue)
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.purple.opacity(0.15))
-                                .foregroundStyle(.purple)
-                                .clipShape(Capsule())
+                    // Format picker
+                    HStack {
+                        Text("Format")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Picker("Format", selection: Binding(
+                            get: { book.format },
+                            set: { newValue in
+                                book.format = newValue
+                                try? modelContext.save()
+                            }
+                        )) {
+                            ForEach(BookFormat.allCases, id: \.self) { format in
+                                Text(format.rawValue).tag(format)
+                            }
                         }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
                 }
-                if let publisher = book.publisher {
-                    detailItem(label: "Publisher", value: publisher)
-                }
-                if let language = book.language {
-                    detailItem(label: "Language", value: language)
-                }
-                if let year = book.firstPublishYear {
-                    detailItem(label: "First Published", value: String(year))
-                }
+                .padding(.top, 8)
+            } label: {
+                Text("Details")
+                    .font(.headline)
             }
 
-            // Format picker
-            HStack {
-                Text("Format")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                Picker("Format", selection: Binding(
-                    get: { book.format },
-                    set: { newValue in
-                        book.format = newValue
-                        try? modelContext.save()
-                    }
-                )) {
-                    ForEach(BookFormat.allCases, id: \.self) { format in
-                        Text(format.rawValue).tag(format)
-                    }
-                }
-                .pickerStyle(.menu)
-                .labelsHidden()
-            }
-
-            // Series section
+            // Series section (always visible)
             seriesSection
 
+            // Collapsible subjects (#114 + #126)
             if !book.subjects.isEmpty {
-                subjectTags
+                DisclosureGroup(isExpanded: $isSubjectsExpanded) {
+                    subjectTags
+                        .padding(.top, 8)
+                } label: {
+                    Text("Subjects (\(book.subjects.count))")
+                        .font(.headline)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
     }
 
-    // MARK: - Series Section
+    // MARK: - Details Grid
+
+    private var detailsGrid: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], alignment: .leading, spacing: 8) {
+            if let pageCount = book.pageCount {
+                HStack(spacing: 4) {
+                    detailItem(label: "Pages", value: "\(pageCount)")
+                    if book.format != .book {
+                        Text(book.format.rawValue)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.purple.opacity(0.15))
+                            .foregroundStyle(.purple)
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+            if let publisher = book.publisher {
+                detailItem(label: "Publisher", value: publisher)
+            }
+            if let language = book.language {
+                detailItem(label: "Language", value: language)
+            }
+            if let year = book.firstPublishYear {
+                detailItem(label: "First Published", value: String(year))
+            }
+        }
+    }
+
+    // MARK: - Series Section (#125 — larger touch targets)
 
     @ViewBuilder
     private var seriesSection: some View {
@@ -626,12 +709,17 @@ struct BookDetailView: View {
 
                     Spacer()
 
-                    Button("Edit") {
+                    Button {
                         editingSeriesName = book.seriesName ?? ""
                         editingSeriesPosition = book.seriesPosition.map { String($0) } ?? ""
                         showSeriesEditor = true
+                    } label: {
+                        Image(systemName: "pencil.circle")
+                            .font(.title3)
                     }
-                    .font(.caption)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                    .accessibilityLabel("Edit series information")
 
                     Button(role: .destructive) {
                         book.seriesName = nil
@@ -639,10 +727,13 @@ struct BookDetailView: View {
                         try? modelContext.save()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.caption)
+                            .font(.title3)
                             .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                    .accessibilityLabel("Remove series information")
                 }
             }
         } else {
@@ -713,9 +804,17 @@ struct BookDetailView: View {
         }
     }
 
+    // MARK: - Subject Tags (#126 — expandable)
+
     private var subjectTags: some View {
-        FlowLayout(spacing: 6) {
-            ForEach(Array(book.subjects.prefix(10)), id: \.self) { subject in
+        let displayLimit = 8
+        let subjects = book.subjects
+        let shouldTruncate = subjects.count > displayLimit
+        let visibleSubjects = showAllSubjects ? subjects : Array(subjects.prefix(displayLimit))
+        let remainingCount = subjects.count - displayLimit
+
+        return FlowLayout(spacing: 6) {
+            ForEach(visibleSubjects, id: \.self) { subject in
                 Text(subject)
                     .font(.caption)
                     .padding(.horizontal, 10)
@@ -723,7 +822,59 @@ struct BookDetailView: View {
                     .background(.quaternary)
                     .clipShape(Capsule())
             }
+
+            if shouldTruncate {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        showAllSubjects.toggle()
+                    }
+                } label: {
+                    Text(showAllSubjects ? "Show less" : "+\(remainingCount) more")
+                        .font(.caption)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.secondary.opacity(0.15))
+                        .foregroundStyle(.secondary)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
         }
+    }
+
+    // MARK: - Collapsible Read History (#114)
+
+    @ViewBuilder
+    private var collapsibleReadHistorySection: some View {
+        if !book.reads.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                DisclosureGroup(isExpanded: $isReadHistoryExpanded) {
+                    ReadHistorySection(entries: book.reads, showHeader: false)
+                        .padding(.top, 8)
+                } label: {
+                    Text("Reading History")
+                        .font(.headline)
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    // MARK: - Collapsible Actions (#114)
+
+    private var collapsibleActionsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Divider()
+
+            DisclosureGroup(isExpanded: $isActionsExpanded) {
+                actionsContent
+                    .padding(.top, 8)
+            } label: {
+                Text("Actions")
+                    .font(.headline)
+            }
+        }
+        .padding(.horizontal)
     }
 
     // MARK: - Similar Books Section
@@ -819,7 +970,7 @@ struct BookDetailView: View {
         if let existingBook = allLibraryBooks.first(where: { $0.olWorkKey == result.key }) {
             BookDetailView(book: existingBook)
         } else {
-            BookDetailSheet(searchResult: result, onAdded: {})
+            SearchResultDetailView(searchResult: result)
         }
     }
 
@@ -1002,13 +1153,10 @@ struct BookDetailView: View {
         }
     }
 
-    // MARK: - Actions Section
+    // MARK: - Actions Content
 
-    private var actionsSection: some View {
+    private var actionsContent: some View {
         VStack(spacing: 12) {
-            Divider()
-                .padding(.horizontal)
-
             // Re-read / Try Again
             if book.shelf == .read {
                 Button {
@@ -1018,7 +1166,6 @@ struct BookDetailView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .padding(.horizontal)
             }
 
             if book.shelf == .dnf {
@@ -1029,7 +1176,6 @@ struct BookDetailView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .padding(.horizontal)
 
                 // Show DNF info
                 dnfInfoSection
@@ -1047,7 +1193,6 @@ struct BookDetailView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.orange)
-                .padding(.horizontal)
             }
 
             // Move to shelf
@@ -1058,7 +1203,6 @@ struct BookDetailView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
-            .padding(.horizontal)
             .confirmationDialog("Move to Shelf", isPresented: $showShelfPicker) {
                 ForEach(Shelf.allCases.filter { $0 != book.shelf }, id: \.self) { shelf in
                     Button(shelf.displayName) {
@@ -1079,7 +1223,6 @@ struct BookDetailView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
-            .padding(.horizontal)
 
             // Delete
             Button(role: .destructive) {
@@ -1089,7 +1232,6 @@ struct BookDetailView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
-            .padding(.horizontal)
         }
     }
 
@@ -1116,7 +1258,6 @@ struct BookDetailView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal)
         }
     }
 

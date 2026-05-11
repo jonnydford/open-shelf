@@ -3,6 +3,7 @@ import SwiftData
 
 struct ReadHistorySection: View {
     let entries: [ReadEntry]
+    var showHeader: Bool = true
 
     @Environment(\.modelContext) private var modelContext
     @State private var expandedEntryID: PersistentIdentifier?
@@ -18,9 +19,11 @@ struct ReadHistorySection: View {
     var body: some View {
         if !entries.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Read History")
-                    .font(.headline)
-                    .accessibilityAddTraits(.isHeader)
+                if showHeader {
+                    Text("Read History")
+                        .font(.headline)
+                        .accessibilityAddTraits(.isHeader)
+                }
 
                 ForEach(sortedEntries) { entry in
                     readEntryRow(entry)
