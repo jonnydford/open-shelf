@@ -362,6 +362,20 @@ struct StatsCalculator {
         return worst.map { ($0.0, $0.1) }
     }
 
+    // MARK: - Goal frequency label
+
+    static func goalFrequencyLabel(target: Int) -> String {
+        if target >= 12 {
+            let perMonth = target / 12
+            return "About \(perMonth) book\(perMonth == 1 ? "" : "s") per month"
+        } else if target == 1 {
+            return "About 1 book per year"
+        } else {
+            let everyNMonths = 12 / target
+            return "About 1 book every \(everyNMonths) months"
+        }
+    }
+
     // MARK: - Helpers
 
     private static func finishedInYear(_ book: Book, year: Int) -> Bool {

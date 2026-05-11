@@ -166,7 +166,7 @@ struct SetReadingGoalSheet: View {
                 }
 
                 Section {
-                    Text("That's about \(booksPerMonth) book\(booksPerMonth == 1 ? "" : "s") per month")
+                    Text("That's \(StatsCalculator.goalFrequencyLabel(target: target).lowercased())")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -188,10 +188,6 @@ struct SetReadingGoalSheet: View {
             }
         }
         .presentationDetents([.medium])
-    }
-
-    private var booksPerMonth: Int {
-        max(1, Int((Double(target) / 12.0).rounded(.up)))
     }
 
     private func save() {
