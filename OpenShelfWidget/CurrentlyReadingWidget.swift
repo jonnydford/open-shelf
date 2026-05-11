@@ -294,7 +294,7 @@ struct CurrentlyReadingWidgetView: View {
             if let title = entry.title {
                 Image(systemName: entry.isAudiobook ? "headphones" : "book.fill")
                     .font(.title3)
-                    .foregroundStyle(entry.isAudiobook ? .purple : .tint)
+                    .foregroundStyle(entry.isAudiobook ? Color.purple : Color.accentColor)
 
                 Text(title)
                     .font(.headline)

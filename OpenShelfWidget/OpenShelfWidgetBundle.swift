@@ -7,6 +7,7 @@ struct OpenShelfWidgetBundle: WidgetBundle {
         CurrentlyReadingWidget()
         CurrentlyReadingLargeWidget()
         ReadingGoalWidget()
+        ReadingStreakWidget()
         ReadingSessionLiveActivity()
     }
 }
