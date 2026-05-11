@@ -1007,7 +1007,7 @@ struct BookDetailView: View {
         guard service == .spydusCloud, !spydusCloudSlug.isEmpty else { return }
 
         // Check cache first
-        let cached = await LibraryAvailabilityChecker.shared.cachedStatus(for: isbn)
+        let cached = LibraryAvailabilityChecker.shared.cachedStatus(for: isbn)
         if cached != .unknown {
             availabilityStatus = cached
             return

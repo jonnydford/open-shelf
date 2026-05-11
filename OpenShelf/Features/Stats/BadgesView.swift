@@ -50,7 +50,7 @@ struct BadgesView: View {
                 BadgeCell(badge: badge, isNewlyViewed: newlyViewed.contains(badge.id), reduceMotion: reduceMotion)
                     .onAppear {
                         if badge.isUnlocked && !newlyViewed.contains(badge.id) {
-                            withAnimation(.spring(duration: 0.5, bounce: 0.4).delay(0.2)) {
+                            _ = withAnimation(.spring(duration: 0.5, bounce: 0.4).delay(0.2)) {
                                 newlyViewed.insert(badge.id)
                             }
                         }

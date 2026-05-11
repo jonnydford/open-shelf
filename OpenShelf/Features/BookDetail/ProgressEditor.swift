@@ -106,8 +106,7 @@ struct ProgressEditor: View {
 
     @ViewBuilder
     private var audiobookContent: some View {
-        if let chapterCount = book.chapterCount {
-            // Chapter mode
+        if book.chapterCount != nil {
             audiobookChapterProgressSection
             audiobookChapterInputSection
         } else {

@@ -27,8 +27,7 @@ struct SharedWithMeView: View {
                                     "\(list.books.count) "
                                     + "\(list.books.count == 1 ? "book" : "books")"
                                 )
-                                Text(list.lastUpdated, style: .relative)
-                                    + Text(" ago")
+                                Text("\(list.lastUpdated, style: .relative) ago")
                             }
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
