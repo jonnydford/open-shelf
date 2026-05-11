@@ -6,6 +6,8 @@ struct ManualEntryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    let prefillISBN: String?
+
     @State private var title = ""
     @State private var author = ""
     @State private var pageCountText = ""
@@ -22,6 +24,11 @@ struct ManualEntryView: View {
     @State private var durationHoursText = ""
     @State private var durationMinutesText = ""
     @State private var chapterCountText = ""
+
+    init(prefillISBN: String? = nil) {
+        self.prefillISBN = prefillISBN
+        _isbn = State(initialValue: prefillISBN ?? "")
+    }
 
     @ScaledMetric(relativeTo: .body) private var coverPreviewWidth: CGFloat = 60
     @ScaledMetric(relativeTo: .body) private var coverPreviewHeight: CGFloat = 90
