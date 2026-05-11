@@ -45,7 +45,7 @@ enum SharedModelContainer {
         }
     }
 
-    /// Creates a `ModelContainer` configured for the shared App Group store with CloudKit sync.
+    /// Creates a `ModelContainer` configured for the shared App Group store.
     @MainActor
     static func makeContainer() throws -> ModelContainer {
         // Migrate legacy store to the App Group container before opening.
@@ -64,7 +64,7 @@ enum SharedModelContainer {
         let configuration = ModelConfiguration(
             schema: schema,
             url: storeURL,
-            cloudKitDatabase: .automatic
+            cloudKitDatabase: .none
         )
         let container = try ModelContainer(
             for: schema,
