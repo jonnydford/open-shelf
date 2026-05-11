@@ -120,10 +120,10 @@ struct SettingsView: View {
     private func requestNotificationPermission() {
         let centre = UNUserNotificationCenter.current()
         centre.requestAuthorization(options: [.alert, .sound]) { granted, _ in
-            if granted {
-                scheduleStreakReminder()
-            } else {
-                Task { @MainActor in
+            Task { @MainActor in
+                if granted {
+                    scheduleStreakReminder()
+                } else {
                     streakReminderEnabled = false
                 }
             }
