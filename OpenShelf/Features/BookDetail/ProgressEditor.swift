@@ -347,10 +347,7 @@ struct ProgressEditor: View {
         } else {
             applyProgress(page)
             showSaveToast = true
-            Task {
-                try? await Task.sleep(for: .seconds(2.2))
-                await MainActor.run { dismiss() }
-            }
+            dismissAfterDelay()
         }
     }
 
@@ -373,15 +370,19 @@ struct ProgressEditor: View {
         } else {
             repository.updateChapterProgress(book, chapter: chapter)
             showSaveToast = true
-            Task {
-                try? await Task.sleep(for: .seconds(2.2))
-                await MainActor.run { dismiss() }
-            }
+            dismissAfterDelay()
         }
     }
 
     private func applyProgress(_ page: Int) {
         repository.updateProgress(book, page: page)
+    }
+
+    private func dismissAfterDelay() {
+        Task {
+            try? await Task.sleep(for: .seconds(2.2))
+            await MainActor.run { dismiss() }
+        }
     }
 
     private func finishBook(rating: Double?) {
@@ -415,9 +416,6 @@ struct ProgressEditor: View {
         try? modelContext.save()
         showRatingSheet = false
         showFinishCelebration = true
-        Task {
-            try? await Task.sleep(for: .seconds(2.2))
-            await MainActor.run { dismiss() }
-        }
+        dismissAfterDelay()
     }
 }

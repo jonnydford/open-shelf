@@ -6,6 +6,7 @@ struct CelebrationOverlay: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var particles: [CelebrationParticle] = []
     @State private var animating = false
+    @State private var dismissTask: Task<Void, Never>?
 
     var body: some View {
         if isPresented {
@@ -22,6 +23,7 @@ struct CelebrationOverlay: View {
             .allowsHitTesting(false)
             .sensoryFeedback(.success, trigger: isPresented)
             .onAppear {
+                AccessibilityNotification.Announcement("Book finished! Congratulations!").post()
                 guard !reduceMotion else {
                     dismiss()
                     return
@@ -30,10 +32,14 @@ struct CelebrationOverlay: View {
                 withAnimation(.easeOut(duration: 1.8)) {
                     animating = true
                 }
-                Task {
+                dismissTask = Task {
                     try? await Task.sleep(for: .seconds(2))
+                    guard !Task.isCancelled else { return }
                     await MainActor.run { dismiss() }
                 }
+            }
+            .onDisappear {
+                dismissTask?.cancel()
             }
         }
     }

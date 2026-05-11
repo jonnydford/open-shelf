@@ -5,8 +5,6 @@ struct BadgesView: View {
     let badges: [Badge]
 
     @State private var newlyViewed: Set<String> = []
-    @State private var showBadgeToast = false
-    @State private var badgeToastTitle = ""
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let columns = [
@@ -24,7 +22,6 @@ struct BadgesView: View {
             .padding()
         }
         .navigationTitle("Badges")
-        .toast(isPresented: $showBadgeToast, message: "Badge earned: \(badgeToastTitle)", icon: "medal.fill")
     }
 
     // MARK: - Summary
@@ -56,8 +53,6 @@ struct BadgesView: View {
                             withAnimation(.spring(duration: 0.5, bounce: 0.4).delay(0.2)) {
                                 newlyViewed.insert(badge.id)
                             }
-                            badgeToastTitle = badge.title
-                            showBadgeToast = true
                         }
                     }
             }

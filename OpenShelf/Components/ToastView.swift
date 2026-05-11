@@ -58,6 +58,7 @@ struct ToastModifier: ViewModifier {
             }
             .sensoryFeedback(.success, trigger: isPresented)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: isPresented)
+            .onDisappear { dismissTask?.cancel() }
     }
 }
 
