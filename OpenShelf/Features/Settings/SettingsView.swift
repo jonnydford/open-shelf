@@ -5,6 +5,7 @@ import UserNotifications
 struct SettingsView: View {
     @Query(sort: \ReadingGoal.year, order: .reverse) private var goals: [ReadingGoal]
     @Query private var books: [Book]
+    @Query private var readingDays: [ReadingDay]
     @Query(sort: \FollowedAuthor.dateFollowed, order: .reverse) private var followedAuthors: [FollowedAuthor]
     @Query(sort: \DismissedBook.dateDismissed, order: .reverse) private var dismissedBooks: [DismissedBook]
 
@@ -130,7 +131,7 @@ struct SettingsView: View {
     }
 
     private func scheduleStreakReminder() {
-        let streak = StatsCalculator.currentStreak(from: books)
+        let streak = StatsCalculator.currentStreak(from: readingDays)
         guard streak > 3 else { return }
 
         let centre = UNUserNotificationCenter.current()

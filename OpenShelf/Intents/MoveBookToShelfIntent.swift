@@ -52,6 +52,9 @@ struct MoveBookToShelfIntent: AppIntent {
             break
         }
 
+        if targetShelf == .reading || targetShelf == .read {
+            ReadingDay.record(bookKey: foundBook.olWorkKey, in: context)
+        }
         try? context.save()
         WidgetCenter.shared.reloadAllTimelines()
         SpotlightIndexer.indexBook(foundBook)

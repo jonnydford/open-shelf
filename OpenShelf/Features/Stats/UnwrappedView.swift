@@ -7,6 +7,7 @@ struct UnwrappedView: View {
 
     @Query private var allBooks: [Book]
     @Query private var goals: [ReadingGoal]
+    @Query private var readingDays: [ReadingDay]
 
     @AppStorage("includePrivateBooksInStats") private var includePrivateBooksInStats: Bool = false
 
@@ -22,6 +23,15 @@ struct UnwrappedView: View {
             return allBooks
         }
         return allBooks.filter { !$0.isPrivate }
+    }
+
+    private var statsReadingDays: [ReadingDay] {
+        if includePrivateBooksInStats { return readingDays }
+        let privateKeys = Set(allBooks.filter(\.isPrivate).map(\.olWorkKey))
+        return readingDays.filter { day in
+            guard let key = day.bookKey else { return true }
+            return !privateKeys.contains(key)
+        }
     }
 
     private var readBooks: [Book] {
@@ -66,7 +76,7 @@ struct UnwrappedView: View {
     }
 
     private var longestStreak: Int {
-        StatsCalculator.longestStreak(books: statsBooks, year: year)
+        StatsCalculator.longestStreak(readingDays: statsReadingDays, year: year)
     }
 
     private var goalForYear: ReadingGoal? {
@@ -164,7 +174,7 @@ struct UnwrappedView: View {
                 topBook: shareTopBook,
                 topGenre: shareTopGenre,
                 favouriteAuthor: StatsCalculator.favouriteAuthor(books: shareBooks),
-                longestStreak: StatsCalculator.longestStreak(books: allBooks.filter { !$0.isPrivate }, year: year),
+                longestStreak: StatsCalculator.longestStreak(readingDays: statsReadingDays, year: year),
                 goalTarget: goalForYear?.target,
                 goalMet: goalForYear.map { shareBooks.count >= $0.target } ?? false,
                 averageDays: StatsCalculator.averageDaysPerBook(shareBooks),

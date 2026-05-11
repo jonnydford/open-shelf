@@ -244,33 +244,24 @@ struct StatsCalculator {
 
     // MARK: - Reading streak
 
-    static func currentStreak(from books: [Book]) -> Int {
-        let reading = books.filter { $0.shelf == .reading }
-        guard !reading.isEmpty else { return 0 }
-
+    static func currentStreak(from readingDays: [ReadingDay]) -> Int {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
 
-        var allDates = Set<Date>()
-        for book in reading {
-            if let start = book.dateStarted {
-                var date = calendar.startOfDay(for: start)
-                while date <= today {
-                    allDates.insert(date)
-                    date = calendar.date(byAdding: .day, value: 1, to: date)!
-                }
-            }
+        let dates = Set(readingDays.map { calendar.startOfDay(for: $0.date) })
+
+        // Grace window: streak doesn't break if user hasn't read yet today
+        guard dates.contains(today) || dates.contains(yesterday) else {
+            return 0
         }
 
-        guard allDates.contains(today) else { return 0 }
-
         var streak = 0
-        var day = today
-        while allDates.contains(day) {
+        var day = dates.contains(today) ? today : yesterday
+        while dates.contains(day) {
             streak += 1
             day = calendar.date(byAdding: .day, value: -1, to: day)!
         }
-
         return streak
     }
 
@@ -293,54 +284,29 @@ struct StatsCalculator {
 
     // MARK: - Longest streak in a year
 
-    static func longestStreak(books: [Book], year: Int) -> Int {
+    static func longestStreak(readingDays: [ReadingDay], year: Int) -> Int {
         let calendar = Calendar.current
+        let dates = Set(readingDays.compactMap { day -> Date? in
+            let d = calendar.startOfDay(for: day.date)
+            return calendar.component(.year, from: d) == year ? d : nil
+        })
 
-        // Collect all "reading" days: for each currently-reading or read book,
-        // use dateStarted..dateFinished (or today if still reading).
-        let relevantBooks = books.filter { $0.shelf == .reading || $0.shelf == .read }
+        guard !dates.isEmpty else { return 0 }
 
-        var allDates = Set<Date>()
-        for book in relevantBooks {
-            guard let start = book.dateStarted else { continue }
-            let startDay = calendar.startOfDay(for: start)
-            let endDay: Date
-            if let finished = book.dateFinished {
-                endDay = calendar.startOfDay(for: finished)
-            } else {
-                endDay = calendar.startOfDay(for: .now)
-            }
-
-            var day = startDay
-            var iterations = 0
-            while day <= endDay {
-                iterations += 1
-                if iterations > 366 { break }
-                let dayYear = calendar.component(.year, from: day)
-                if dayYear == year {
-                    allDates.insert(day)
-                }
-                day = calendar.date(byAdding: .day, value: 1, to: day)!
-            }
-        }
-
-        guard !allDates.isEmpty else { return 0 }
-
-        let sorted = allDates.sorted()
-        var maxStreak = 1
+        let sorted = dates.sorted()
+        var longest = 1
         var current = 1
 
         for i in 1..<sorted.count {
             let expected = calendar.date(byAdding: .day, value: 1, to: sorted[i - 1])!
-            if sorted[i] == expected {
+            if calendar.isDate(sorted[i], inSameDayAs: expected) {
                 current += 1
-                maxStreak = max(maxStreak, current)
+                longest = max(longest, current)
             } else {
                 current = 1
             }
         }
-
-        return maxStreak
+        return longest
     }
 
     // MARK: - Estimated reading hours

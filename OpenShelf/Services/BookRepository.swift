@@ -20,6 +20,21 @@ final class BookRepository {
         self.coverCache = coverCache
     }
 
+    // MARK: - Reading Day Tracking
+
+    func recordReadingDay(for date: Date = .now, bookKey: String? = nil) {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        let descriptor = FetchDescriptor<ReadingDay>(
+            predicate: #Predicate { $0.date >= startOfDay && $0.date < endOfDay }
+        )
+        guard (try? modelContext.fetch(descriptor))?.isEmpty ?? true else { return }
+        modelContext.insert(ReadingDay(date: startOfDay, bookKey: bookKey))
+        try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     // MARK: - Local operations
 
     func addBook(from searchResult: SearchResult, detail: WorkDetail?, shelf: Shelf) {
@@ -45,6 +60,10 @@ final class BookRepository {
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
         SpotlightIndexer.indexBook(book)
+
+        if shelf == .reading || shelf == .read {
+            recordReadingDay(bookKey: book.olWorkKey)
+        }
 
         // Prefetch cover in background
         if let coverID = book.coverImageID {
@@ -92,6 +111,10 @@ final class BookRepository {
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
         SpotlightIndexer.indexBook(book)
+
+        if shelf == .reading || shelf == .read {
+            recordReadingDay(bookKey: book.olWorkKey)
+        }
     }
 
     func updateRating(_ book: Book, rating: Double?) {
@@ -110,6 +133,7 @@ final class BookRepository {
 
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
+        recordReadingDay(bookKey: book.olWorkKey)
     }
 
     func updateChapterProgress(_ book: Book, chapter: Int) {
@@ -123,6 +147,7 @@ final class BookRepository {
 
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
+        recordReadingDay(bookKey: book.olWorkKey)
     }
 
     func booksOnShelf(_ shelf: Shelf) -> [Book] {
@@ -365,10 +390,17 @@ final class BookRepository {
         let shelf = GoodreadsImporter.mapShelf(row.bookshelf)
         switch shelf {
         case .reading:
-            book.dateStarted = row.dateAdded ?? .now
+            let started = row.dateAdded ?? .now
+            book.dateStarted = started
+            recordReadingDay(for: started, bookKey: book.olWorkKey)
         case .read:
             book.dateStarted = row.dateAdded
-            book.dateFinished = row.dateRead ?? row.dateAdded
+            let finished = row.dateRead ?? row.dateAdded ?? .now
+            book.dateFinished = finished
+            if let started = row.dateAdded {
+                recordReadingDay(for: started, bookKey: book.olWorkKey)
+            }
+            recordReadingDay(for: finished, bookKey: book.olWorkKey)
         case .wantToRead, .dnf:
             break
         }

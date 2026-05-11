@@ -5,6 +5,7 @@ import Charts
 struct StatsView: View {
     @Query private var books: [Book]
     @Query private var goals: [ReadingGoal]
+    @Query private var readingDays: [ReadingDay]
 
     @AppStorage("includePrivateBooksInStats") private var includePrivateBooksInStats: Bool = false
 
@@ -20,6 +21,16 @@ struct StatsView: View {
             return books
         }
         return books.filter { !$0.isPrivate }
+    }
+
+    /// ReadingDays filtered to exclude activity from private books.
+    private var statsReadingDays: [ReadingDay] {
+        if includePrivateBooksInStats { return readingDays }
+        let privateKeys = Set(books.filter(\.isPrivate).map(\.olWorkKey))
+        return readingDays.filter { day in
+            guard let key = day.bookKey else { return true }
+            return !privateKeys.contains(key)
+        }
     }
 
     private var availableYears: [Int] {
@@ -153,7 +164,7 @@ struct StatsView: View {
     // MARK: - Badges
 
     private var badges: [Badge] {
-        let streak = StatsCalculator.currentStreak(from: statsBooks)
+        let streak = StatsCalculator.currentStreak(from: statsReadingDays)
         let goalMet: Bool = {
             guard let goal = goalForSelectedYear else { return false }
             return readBooks.count >= goal.target
@@ -317,7 +328,7 @@ struct StatsView: View {
     // MARK: - Streak Header
 
     private var streakHeader: some View {
-        let streak = StatsCalculator.currentStreak(from: statsBooks)
+        let streak = StatsCalculator.currentStreak(from: statsReadingDays)
         let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
         let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
 
@@ -552,7 +563,7 @@ struct StatsView: View {
     }
 
     private var streakCard: some View {
-        let streak = StatsCalculator.currentStreak(from: statsBooks)
+        let streak = StatsCalculator.currentStreak(from: statsReadingDays)
         let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
         let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
 
