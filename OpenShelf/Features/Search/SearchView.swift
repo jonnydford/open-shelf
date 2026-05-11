@@ -105,15 +105,20 @@ struct SearchView: View {
 
     private var initialState: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                DiscoverSection()
+            VStack(spacing: 24) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    Text("Find books by title, author, or ISBN.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
 
-                ContentUnavailableView(
-                    "Search Open Library",
-                    systemImage: "magnifyingglass",
-                    description: Text("Find books by title, author, or ISBN.")
-                )
+                DiscoverSection()
             }
+            .padding(.top, 8)
         }
     }
 
