@@ -66,8 +66,15 @@ struct ReadingStreakProvider: TimelineProvider {
             let context = try WidgetSharedStore.makeContext()
             let calendar = Calendar.current
 
+            let bookDescriptor = FetchDescriptor<Book>()
+            let allBooks = try context.fetch(bookDescriptor)
+
+            let privateKeys = Set(allBooks.filter(\.isPrivate).map(\.olWorkKey))
             let dayDescriptor = FetchDescriptor<ReadingDay>()
-            let allDays = try context.fetch(dayDescriptor)
+            let allDays = try context.fetch(dayDescriptor).filter { day in
+                guard let key = day.bookKey else { return true }
+                return !privateKeys.contains(key)
+            }
 
             let today = calendar.startOfDay(for: .now)
             let readToday = allDays.contains { calendar.isDate($0.date, inSameDayAs: today) }
@@ -78,9 +85,6 @@ struct ReadingStreakProvider: TimelineProvider {
                 let day = calendar.date(byAdding: .day, value: -offset, to: today)!
                 return allDays.contains { calendar.isDate($0.date, inSameDayAs: day) }
             }
-
-            let bookDescriptor = FetchDescriptor<Book>()
-            let allBooks = try context.fetch(bookDescriptor)
             let reading = allBooks
                 .filter { $0.shelf == .reading && !$0.isPrivate }
                 .sorted { ($0.dateStarted ?? .distantPast) > ($1.dateStarted ?? .distantPast) }
@@ -127,6 +131,7 @@ struct ReadingStreakWidget: Widget {
         StaticConfiguration(kind: kind, provider: ReadingStreakProvider()) { entry in
             ReadingStreakWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
+                .widgetURL(URL(string: "openshelf://stats"))
         }
         .configurationDisplayName("Reading Streak")
         .description("Track your daily reading streak and mark books as read.")
@@ -162,7 +167,7 @@ struct ReadingStreakWidgetView: View {
 
     private var streakColor: Color {
         switch entry.streak {
-        case 100...: .yellow
+        case 100...: .orange
         case 30..<100: .purple
         case 7..<30: .blue
         default: .green
@@ -224,7 +229,11 @@ struct ReadingStreakWidgetView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(entry.streak) day reading streak\(entry.readToday ? ", read today" : "")")
 
-            if entry.currentlyReading.isEmpty && !entry.readToday {
+            if !entry.currentlyReading.isEmpty {
+                ForEach(entry.currentlyReading) { book in
+                    bookRow(book)
+                }
+            } else if !entry.readToday {
                 Spacer(minLength: 0)
                 Button(intent: MarkReadTodayIntent()) {
                     Label("I read today", systemImage: "book.fill")
@@ -234,10 +243,12 @@ struct ReadingStreakWidgetView: View {
                         .background(streakColor.opacity(0.2), in: RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(.plain)
-            } else if !entry.currentlyReading.isEmpty {
-                ForEach(entry.currentlyReading) { book in
-                    bookRow(book)
-                }
+            } else {
+                Spacer(minLength: 0)
+                Label("Keep it up!", systemImage: "checkmark.circle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.green)
+                    .frame(maxWidth: .infinity)
             }
 
             Spacer(minLength: 0)
