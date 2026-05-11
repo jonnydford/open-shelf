@@ -10,10 +10,15 @@ struct CuratedList: Codable, Identifiable {
     let bookKeys: [String]
 }
 
-// MARK: - Discover Section (horizontal scroll of curated lists)
+// MARK: - Discover Section (vertical grid of curated lists)
 
 struct DiscoverSection: View {
     @State private var lists: [CuratedList] = []
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+    ]
 
     var body: some View {
         if !lists.isEmpty {
@@ -22,21 +27,18 @@ struct DiscoverSection: View {
                     .font(.headline)
                     .padding(.horizontal)
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(lists) { list in
-                            NavigationLink {
-                                CuratedListDetailView(list: list)
-                            } label: {
-                                curatedListCard(list)
-                            }
-                            .buttonStyle(.plain)
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(lists) { list in
+                        NavigationLink {
+                            CuratedListDetailView(list: list)
+                        } label: {
+                            curatedListCard(list)
                         }
+                        .buttonStyle(.plain)
                     }
-                    .padding(.horizontal)
                 }
+                .padding(.horizontal)
             }
-            .padding(.vertical, 8)
         }
     }
 
@@ -46,19 +48,24 @@ struct DiscoverSection: View {
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
 
             Text(list.description)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(2)
+                .lineLimit(3)
 
             Text("\(list.bookKeys.count) \(list.bookKeys.count == 1 ? "book" : "books")")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
-        .frame(width: 160, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minHeight: 100)
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
+        .accessibilityElement(children: .combine)
     }
 
     init() {
