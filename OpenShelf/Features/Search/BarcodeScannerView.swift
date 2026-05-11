@@ -62,7 +62,7 @@ struct BarcodeScannerView: View {
                 }
             }
             .sheet(isPresented: $showManualEntry) {
-                ManualEntryView()
+                ManualEntryView(prefillISBN: scannedISBN)
             }
         }
     }
