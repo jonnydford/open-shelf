@@ -54,6 +54,8 @@ struct SearchResultDetailView: View {
                     subjectsSection
                 }
 
+                BuyLinksSection(isbn: searchResult.primaryISBN13 ?? searchResult.primaryISBN10)
+
                 Divider()
                     .padding(.horizontal)
 

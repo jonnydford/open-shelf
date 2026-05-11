@@ -35,6 +35,10 @@ struct BookDetailSheet: View {
                         subjectsSection
                     }
 
+                    if !alreadyInLibrary {
+                        BuyLinksSection(isbn: searchResult.primaryISBN13 ?? searchResult.primaryISBN10)
+                    }
+
                     Divider()
                         .padding(.horizontal)
 
