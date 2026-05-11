@@ -393,12 +393,32 @@ struct StatsView: View {
         .accessibilityLabel("Reading streak: \(streak) days. Best: \(best) days.")
     }
 
+    private static let heatmapDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
     private var streakHeatmap: some View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
         let dates = Set(statsReadingDays.map { calendar.startOfDay(for: $0.date) })
+        let dayLabels = calendar.veryShortWeekdaySymbols
 
         return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+                ForEach(0..<7, id: \.self) { dayIndex in
+                    let daysAgo = 6 - dayIndex
+                    let day = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
+                    let weekday = calendar.component(.weekday, from: day)
+                    Text(dayLabels[weekday - 1])
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 14)
+                }
+                Spacer()
+            }
+
             ForEach(0..<2, id: \.self) { week in
                 HStack(spacing: 4) {
                     ForEach(0..<7, id: \.self) { dayIndex in
@@ -409,7 +429,7 @@ struct StatsView: View {
                         Circle()
                             .fill(didRead ? Color.orange : Color.primary.opacity(0.1))
                             .frame(width: 14, height: 14)
-                            .accessibilityLabel(accessibilityLabelForDay(day, didRead: didRead))
+                            .accessibilityLabel("\(Self.heatmapDateFormatter.string(from: day)): \(didRead ? "read" : "did not read")")
                     }
                     Spacer()
                 }
@@ -417,27 +437,13 @@ struct StatsView: View {
         }
     }
 
-    private func accessibilityLabelForDay(_ date: Date, didRead: Bool) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return "\(formatter.string(from: date)): \(didRead ? "read" : "did not read")"
-    }
-
     private func markReadToday() {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: .now)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-        let descriptor = FetchDescriptor<ReadingDay>(
-            predicate: #Predicate { $0.date >= startOfDay && $0.date < endOfDay }
-        )
-        guard (try? modelContext.fetch(descriptor))?.isEmpty ?? true else {
+        withAnimation {
+            ReadingDay.record(in: modelContext)
+            try? modelContext.save()
             didMarkReadToday = true
-            return
+            WidgetCenter.shared.reloadAllTimelines()
         }
-        modelContext.insert(ReadingDay(date: startOfDay))
-        try? modelContext.save()
-        didMarkReadToday = true
-        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: - Badges Section

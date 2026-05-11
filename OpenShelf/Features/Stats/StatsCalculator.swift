@@ -245,24 +245,7 @@ struct StatsCalculator {
     // MARK: - Reading streak
 
     static func currentStreak(from readingDays: [ReadingDay]) -> Int {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now)
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-
-        let dates = Set(readingDays.map { calendar.startOfDay(for: $0.date) })
-
-        // Grace window: streak doesn't break if user hasn't read yet today
-        guard dates.contains(today) || dates.contains(yesterday) else {
-            return 0
-        }
-
-        var streak = 0
-        var day = dates.contains(today) ? today : yesterday
-        while dates.contains(day) {
-            streak += 1
-            day = calendar.date(byAdding: .day, value: -1, to: day)!
-        }
-        return streak
+        ReadingDay.streak(from: readingDays.map(\.date))
     }
 
     // MARK: - Goal pace

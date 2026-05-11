@@ -110,7 +110,7 @@ struct ReadingGoalProvider: TimelineProvider {
                 guard let key = day.bookKey else { return true }
                 return !privateKeys.contains(key)
             } ?? []
-            let streak = Self.calculateStreak(from: allDays)
+            let streak = ReadingDay.streak(from: allDays.map(\.date))
 
             return ReadingGoalEntry(
                 date: .now,
@@ -124,20 +124,6 @@ struct ReadingGoalProvider: TimelineProvider {
         }
     }
 
-    private static func calculateStreak(from readingDays: [ReadingDay]) -> Int {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now)
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-        let dates = Set(readingDays.map { calendar.startOfDay(for: $0.date) })
-        guard dates.contains(today) || dates.contains(yesterday) else { return 0 }
-        var streak = 0
-        var day = dates.contains(today) ? today : yesterday
-        while dates.contains(day) {
-            streak += 1
-            day = calendar.date(byAdding: .day, value: -1, to: day)!
-        }
-        return streak
-    }
 }
 
 // MARK: - Widget Definition
@@ -196,18 +182,19 @@ struct ReadingGoalWidgetView: View {
             .accessibilityLabel("\(entry.booksRead) of \(entry.target) books read")
             .accessibilityValue(paceDescription)
 
+            Text("books")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
             if entry.streak > 0 {
                 HStack(spacing: 2) {
                     Image(systemName: "flame.fill")
                         .font(.caption2)
                         .foregroundStyle(.orange)
-                    Text("\(entry.streak)")
-                        .font(.caption2.bold())
+                    Text("\(entry.streak) day streak")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
-            } else {
-                Text("books")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
             }
         }
     }
