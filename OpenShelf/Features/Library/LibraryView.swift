@@ -732,13 +732,11 @@ struct LibraryView: View {
                 Label("Search Open Library", systemImage: "magnifyingglass")
             }
 
-            #if !targetEnvironment(simulator)
             Button {
                 showBarcodeScanner = true
             } label: {
                 Label("Scan Barcode", systemImage: "barcode.viewfinder")
             }
-            #endif
 
             Button {
                 showManualEntry = true
