@@ -1,18 +1,21 @@
 import SwiftUI
+import SwiftData
 
 struct SearchView: View {
     @Binding var prefillQuery: String?
 
     @Environment(BookRepository.self) private var repository
     @AppStorage("searchHistory") private var searchHistoryData: String = "[]"
+    @Environment(\.modelContext) private var modelContext
     @State private var searchText = ""
     @State private var results: [SearchResult] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
     @State private var errorMessage: String?
     @State private var hasSearched = false
-    @State private var selectedResult: SearchResult?
     @State private var showManualEntry = false
+
+    @Query private var allLibraryBooks: [Book]
 
     private var searchHistory: [String] {
         (try? JSONDecoder().decode([String].self, from: Data(searchHistoryData.utf8))) ?? []
@@ -62,6 +65,13 @@ struct SearchView: View {
             }
             .navigationTitle("Search")
             .searchable(text: $searchText, prompt: "Title, author, or ISBN")
+            .navigationDestination(for: SearchResult.self) { result in
+                if let existingBook = allLibraryBooks.first(where: { $0.olWorkKey == result.key }) {
+                    BookDetailView(book: existingBook)
+                } else {
+                    SearchResultDetailView(searchResult: result)
+                }
+            }
             .onChange(of: searchText) {
                 searchTask?.cancel()
 
@@ -77,11 +87,6 @@ struct SearchView: View {
                     try? await Task.sleep(for: .milliseconds(300))
                     guard !Task.isCancelled else { return }
                     await performSearch()
-                }
-            }
-            .sheet(item: $selectedResult) { result in
-                BookDetailSheet(searchResult: result) {
-                    // Book was added -- could show confirmation
                 }
             }
             .sheet(isPresented: $showManualEntry) {
@@ -148,12 +153,9 @@ struct SearchView: View {
     private var resultsList: some View {
         List {
             ForEach(results) { result in
-                Button {
-                    selectedResult = result
-                } label: {
+                NavigationLink(value: result) {
                     searchResultRow(result)
                 }
-                .buttonStyle(.plain)
                 .accessibilityHint("Double tap to view book details")
             }
 

@@ -106,18 +106,29 @@ struct BookRow: View {
         return parts.joined(separator: ", ")
     }
 
-    // MARK: - Audiobook Progress Label
+    // MARK: - Audiobook Progress (#120)
 
+    @ViewBuilder
     private var audiobookProgressLabel: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "headphones")
-                .font(.caption2)
-                .foregroundStyle(.purple)
-            if let currentChapter = book.currentChapter, let chapterCount = book.chapterCount, chapterCount > 0 {
-                Text("Chapter \(currentChapter) of \(chapterCount)")
+        if let currentChapter = book.currentChapter, let chapterCount = book.chapterCount, chapterCount > 0 {
+            let progress = min(Double(currentChapter) / Double(chapterCount), 1.0)
+            VStack(alignment: .leading, spacing: 2) {
+                ProgressView(value: progress)
+                    .tint(.purple)
+                HStack(spacing: 4) {
+                    Image(systemName: "headphones")
+                        .font(.caption2)
+                        .foregroundStyle(.purple)
+                    Text("Ch. \(currentChapter)/\(chapterCount)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        } else {
+            HStack(spacing: 4) {
+                Image(systemName: "headphones")
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
-            } else {
+                    .foregroundStyle(.purple)
                 Text("Listening")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
