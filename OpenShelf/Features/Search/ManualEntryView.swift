@@ -18,6 +18,8 @@ struct ManualEntryView: View {
     @State private var coverImageData: Data?
     @State private var coverImage: UIImage?
     @State private var isSaving = false
+    @State private var showCamera = false
+    @State private var isFetchingCover = false
     @State private var validationError: String?
     @State private var selectedFormat: BookFormat = .book
     @State private var narrator = ""
@@ -151,38 +153,70 @@ struct ManualEntryView: View {
 
     private var coverSection: some View {
         Section("Cover Image") {
-            HStack {
-                if let coverImage {
-                    Image(uiImage: coverImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: coverPreviewWidth, height: coverPreviewHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
-                }
+            if let coverImage {
+                Image(uiImage: coverImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: coverPreviewWidth, height: coverPreviewHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+            }
 
-                let buttonLabel = hasCoverImage ? "Change Photo" : "Choose Photo"
-                PhotosPicker(
-                    selection: $selectedPhotoItem,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
-                    Label(buttonLabel, systemImage: "photo")
-                }
+            PhotosPicker(
+                selection: $selectedPhotoItem,
+                matching: .images,
+                photoLibrary: .shared()
+            ) {
+                Label("Choose from Library", systemImage: "photo")
+            }
 
-                if hasCoverImage {
-                    Button("Remove", role: .destructive) {
-                        selectedPhotoItem = nil
-                        coverImageData = nil
-                        coverImage = nil
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button {
+                    showCamera = true
+                } label: {
+                    Label("Take Photo", systemImage: "camera")
+                }
+            }
+
+            if !isbn.trimmingCharacters(in: .whitespaces).isEmpty {
+                Button {
+                    Task {
+                        await fetchCoverByISBN()
                     }
-                    .font(.subheadline)
+                } label: {
+                    if isFetchingCover {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text("Searching...")
+                        }
+                    } else {
+                        Label("Search by ISBN", systemImage: "magnifyingglass")
+                    }
+                }
+                .disabled(isFetchingCover)
+            }
+
+            if hasCoverImage {
+                Button("Remove", role: .destructive) {
+                    selectedPhotoItem = nil
+                    coverImageData = nil
+                    coverImage = nil
                 }
             }
-            .onChange(of: selectedPhotoItem) { _, newItem in
-                Task {
-                    await loadPhoto(from: newItem)
+        }
+        .onChange(of: selectedPhotoItem) { _, newItem in
+            Task {
+                await loadPhoto(from: newItem)
+            }
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraCaptureView { image in
+                if let data = image.jpegData(compressionQuality: 0.85) {
+                    coverImageData = data
+                    coverImage = image
                 }
             }
+            .ignoresSafeArea()
         }
     }
 
@@ -211,6 +245,30 @@ struct ManualEntryView: View {
             }
         } catch {
             // Photo load failed; ignore silently
+        }
+    }
+
+    private func fetchCoverByISBN() async {
+        let trimmedISBN = isbn.trimmingCharacters(in: .whitespaces)
+        guard !trimmedISBN.isEmpty else { return }
+
+        isFetchingCover = true
+        defer { isFetchingCover = false }
+
+        let urlString = "https://covers.openlibrary.org/b/isbn/\(trimmedISBN)-L.jpg"
+        guard let url = URL(string: urlString) else { return }
+
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200,
+                  data.count > 1000, // OL returns a tiny 1-pixel placeholder for missing covers
+                  let image = UIImage(data: data) else { return }
+
+            coverImageData = data
+            coverImage = image
+        } catch {
+            // Non-critical — user can still pick from library or camera
         }
     }
 
