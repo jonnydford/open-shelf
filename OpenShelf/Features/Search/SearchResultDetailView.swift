@@ -245,6 +245,7 @@ struct SearchResultDetailView: View {
 
     private func addBookToLibrary(rating: Double?) {
         isAdding = true
+        defer { isAdding = false }
 
         repository.addBook(from: searchResult, detail: workDetail, shelf: selectedShelf)
 
@@ -263,7 +264,16 @@ struct SearchResultDetailView: View {
             predicate: #Predicate { $0.olWorkKey == key }
         )
         if let book = (try? modelContext.fetch(descriptor))?.first {
-            repository.updateShelf(book, to: selectedShelf)
+            if selectedShelf == .read {
+                repository.updateShelf(book, to: .read)
+                let entry = ReadEntry(
+                    book: book,
+                    startDate: nil,
+                    finishDate: .now,
+                    rating: rating
+                )
+                modelContext.insert(entry)
+            }
             if let rating {
                 repository.updateRating(book, rating: rating)
             }

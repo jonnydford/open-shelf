@@ -18,10 +18,10 @@ struct BookDetailView: View {
     @State private var finishedRating: Double?
 
     // Collapsible section state (#114)
-    @State private var isDetailsExpanded = false
+    @State private var isDetailsExpanded = true
     @State private var isSubjectsExpanded = false
     @State private var isReadHistoryExpanded = false
-    @State private var isActionsExpanded = false
+    @State private var isActionsExpanded = true
 
     // Expandable subject tags state (#126)
     @State private var showAllSubjects = false
@@ -476,6 +476,7 @@ struct BookDetailView: View {
                     let chaptersPerDay = Double(currentChapter) / Double(daysSinceStarted)
                     if chaptersPerDay > 0 {
                         let chaptersLeft = chapterCount - currentChapter
+                        guard chaptersLeft > 0 else { return }
                         let daysLeft = Int(ceil(Double(chaptersLeft) / chaptersPerDay))
                         if daysLeft > 365 {
                             Text("Take your time")
@@ -499,6 +500,7 @@ struct BookDetailView: View {
                     let pagesPerDay = Double(currentPage) / Double(daysSinceStarted)
                     if pagesPerDay > 0 {
                         let pagesLeft = pageCount - currentPage
+                        guard pagesLeft > 0 else { return }
                         let daysLeft = Int(ceil(Double(pagesLeft) / pagesPerDay))
                         if daysLeft > 365 {
                             Text("Take your time")
