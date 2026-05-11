@@ -166,8 +166,7 @@ struct OnboardingView: View {
                     .accessibilityLabel("Reading goal target")
                     .accessibilityValue("\(goalTarget) books")
 
-                let booksPerMonth = max(1, Int((Double(goalTarget) / 12.0).rounded(.up)))
-                Text("About \(booksPerMonth) book\(booksPerMonth == 1 ? "" : "s") per month")
+                Text(StatsCalculator.goalFrequencyLabel(target: goalTarget))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

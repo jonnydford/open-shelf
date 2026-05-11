@@ -362,6 +362,30 @@ struct StatsCalculator {
         return worst.map { ($0.0, $0.1) }
     }
 
+    // MARK: - Goal frequency label
+
+    static func goalFrequencyLabel(target: Int) -> String {
+        guard target > 0 else { return "" }
+
+        switch target {
+        case 1:
+            return "1 book per year"
+        case 2:
+            return "About 1 book every 6 months"
+        case 3:
+            return "About 1 book every 4 months"
+        case 4:
+            return "About 1 book every 3 months"
+        case 5...6:
+            return "About 1 book every 2 months"
+        case 7...11:
+            return "About 1 book per month"
+        default:
+            let perMonth = Int((Double(target) / 12.0).rounded())
+            return "About \(perMonth) book\(perMonth == 1 ? "" : "s") per month"
+        }
+    }
+
     // MARK: - Helpers
 
     private static func finishedInYear(_ book: Book, year: Int) -> Bool {
