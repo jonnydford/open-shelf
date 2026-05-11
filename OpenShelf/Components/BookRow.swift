@@ -37,17 +37,19 @@ struct BookRow: View {
                         .offset(x: 2, y: 2)
                 }
 
-                if showLockIcon {
+                if book.isPrivate {
                     Image(systemName: "lock.fill")
-                        .font(.caption2)
+                        .font(.caption2.weight(.semibold))
                         .foregroundStyle(.white)
-                        .padding(3)
+                        .padding(4)
                         .background(Color.black.opacity(0.6))
                         .clipShape(Circle())
-                        .offset(x: 2, y: 2)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .offset(x: -2, y: -2)
+                        .accessibilityHidden(true)
                 }
             }
-            .accessibilityLabel("Book cover for \(book.title)\(showLockIcon ? ", private" : "")")
+            .accessibilityLabel("Book cover for \(book.title)\(book.isPrivate ? ", private" : "")")
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)

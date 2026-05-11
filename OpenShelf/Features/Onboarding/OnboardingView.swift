@@ -10,20 +10,45 @@ struct OnboardingView: View {
 
     private let currentYear = Calendar.current.component(.year, from: .now)
 
+    private var totalSteps: Int { 3 }
+
     var body: some View {
-        TabView(selection: $currentPage) {
-            welcomePage
-                .tag(0)
+        VStack(spacing: 0) {
+            // Step indicator
+            HStack {
+                Text("Step \(currentPage + 1) of \(totalSteps)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Step \(currentPage + 1) of \(totalSteps)")
 
-            getStartedPage
-                .tag(1)
+                Spacer()
 
-            readingGoalPage
-                .tag(2)
+                if currentPage < totalSteps - 1 {
+                    Button("Skip") {
+                        completeOnboarding()
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Skip onboarding")
+                }
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+
+            TabView(selection: $currentPage) {
+                welcomePage
+                    .tag(0)
+
+                getStartedPage
+                    .tag(1)
+
+                readingGoalPage
+                    .tag(2)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .always))
+            .indexViewStyle(.page(backgroundDisplayMode: .always))
         }
-        .tabViewStyle(.page(indexDisplayMode: .always))
-        .indexViewStyle(.page(backgroundDisplayMode: .always))
-        .accessibilityValue("Step \(currentPage + 1) of 3")
+        .accessibilityValue("Step \(currentPage + 1) of \(totalSteps)")
         .interactiveDismissDisabled()
     }
 
@@ -53,7 +78,7 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
-            nextButton(label: "Get Started")
+            nextButton(label: "Next")
                 .padding(.bottom, 32)
         }
         .padding(.horizontal)
@@ -163,7 +188,7 @@ struct OnboardingView: View {
             Button {
                 saveGoalAndComplete()
             } label: {
-                Text("Set Goal & Start Reading")
+                Text("Get Started")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()

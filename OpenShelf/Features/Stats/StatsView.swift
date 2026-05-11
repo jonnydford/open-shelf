@@ -64,12 +64,16 @@ struct StatsView: View {
 
     // MARK: - Empty State
 
+    private var booksNeeded: Int {
+        max(0, 3 - readBooks.count)
+    }
+
     private var emptyState: some View {
         VStack(spacing: 24) {
             ContentUnavailableView(
-                "Not Enough Data",
+                "You're getting started!",
                 systemImage: "chart.bar",
-                description: Text("Read a few more books to unlock your stats.")
+                description: Text("Read \(booksNeeded) more book\(booksNeeded == 1 ? "" : "s") to unlock your full stats.")
             )
 
             VStack(alignment: .leading, spacing: 12) {

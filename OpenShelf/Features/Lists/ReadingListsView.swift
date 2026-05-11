@@ -45,9 +45,9 @@ struct ReadingListsView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("No Reading Lists", systemImage: "list.bullet.rectangle")
+            Label("Organise your reads into lists", systemImage: "list.bullet.rectangle")
         } description: {
-            Text("Create a reading list to organise and share your favourite books.")
+            Text("Group books by theme, mood, or however you like.")
         } actions: {
             Button("Create a List") {
                 newListName = ""
