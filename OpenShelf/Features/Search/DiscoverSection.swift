@@ -117,9 +117,9 @@ struct CuratedListDetailView: View {
                         .padding(.top, 40)
                 } else if visibleBooks.isEmpty && !fetchedBooks.isEmpty {
                     ContentUnavailableView(
-                        "All books dismissed",
-                        systemImage: "hand.thumbsdown",
-                        description: Text("You've dismissed all books in this list. Undo in Settings.")
+                        "You've seen everything here",
+                        systemImage: "sparkles",
+                        description: Text("Check back later for new picks.")
                     )
                 } else if visibleBooks.isEmpty {
                     ContentUnavailableView(

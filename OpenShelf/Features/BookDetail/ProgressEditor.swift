@@ -14,6 +14,8 @@ struct ProgressEditor: View {
     @State private var finishRating: Double?
     @State private var validationError: String?
     @State private var useSlider = false
+    @State private var showSaveToast = false
+    @State private var showFinishCelebration = false
 
     private var isAudiobook: Bool {
         book.format == .audiobook
@@ -94,6 +96,10 @@ struct ProgressEditor: View {
             }
         }
         .presentationDetents([.medium])
+        .toast(isPresented: $showSaveToast, message: "Progress saved")
+        .overlay {
+            CelebrationOverlay(isPresented: $showFinishCelebration)
+        }
     }
 
     // MARK: - Audiobook Content
@@ -340,7 +346,11 @@ struct ProgressEditor: View {
             showFinishedAlert = true
         } else {
             applyProgress(page)
-            dismiss()
+            showSaveToast = true
+            Task {
+                try? await Task.sleep(for: .seconds(2.2))
+                await MainActor.run { dismiss() }
+            }
         }
     }
 
@@ -362,7 +372,11 @@ struct ProgressEditor: View {
             showFinishedAlert = true
         } else {
             repository.updateChapterProgress(book, chapter: chapter)
-            dismiss()
+            showSaveToast = true
+            Task {
+                try? await Task.sleep(for: .seconds(2.2))
+                await MainActor.run { dismiss() }
+            }
         }
     }
 
@@ -400,6 +414,10 @@ struct ProgressEditor: View {
 
         try? modelContext.save()
         showRatingSheet = false
-        dismiss()
+        showFinishCelebration = true
+        Task {
+            try? await Task.sleep(for: .seconds(2.2))
+            await MainActor.run { dismiss() }
+        }
     }
 }

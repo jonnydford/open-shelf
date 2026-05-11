@@ -101,6 +101,7 @@
 		AC4F3A65B8D5200BCB797CB3 /* ReadingSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24CBCE119209367A6ED5FB8D /* ReadingSessionAttributes.swift */; };
 		B46981818F9DF11DB46D6234 /* DataExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA234661C3F79FF2494C0E2B /* DataExporter.swift */; };
 		B5C171F6D9B5F167AF3E87C6 /* BookshopService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2EA21E27E353DE834CB365 /* BookshopService.swift */; };
+		B61A3AB8A6766F207E6CC1FD /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F480A90650ED1C8A8988D8AD /* ToastView.swift */; };
 		B711B3E75C2103B878F43C56 /* UKLibraryAuthority.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A1CFFBF441235165616793 /* UKLibraryAuthority.swift */; };
 		B851A27195BD02AF5AF572F8 /* LibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF31F27F6E5F415554A08876 /* LibraryService.swift */; };
 		BA0B7C384812CEE135E632FE /* FollowedAuthor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F85354E43C14ABD1924FE5 /* FollowedAuthor.swift */; };
@@ -123,6 +124,7 @@
 		D6CE7380E89644F7869EB91D /* ReadingGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C7214053DB7955825CEEB1 /* ReadingGoal.swift */; };
 		D805F8045953C7AC94ABCA3F /* DismissedBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC475E3B4469E69A5A236E0 /* DismissedBook.swift */; };
 		D9564DA5D007B6E367F47EAF /* GoodreadsImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 348CEEAC79F0484A486F4DEC /* GoodreadsImporter.swift */; };
+		DCD9629DE40369F682E1EE15 /* CelebrationOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7E66D831AE455D205850AD /* CelebrationOverlay.swift */; };
 		DD53B8D16895B328C2F8736C /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8BCDEEF043907314DEE80D /* DesignTokens.swift */; };
 		DDF1CF53839A0759A58B7383 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4B3BCE625C262C82CFE270 /* SearchView.swift */; };
 		E0DBC159B2D21758DC0BE880 /* ReadHistorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597E0B084FEBFA5D5DED451D /* ReadHistorySection.swift */; };
@@ -244,6 +246,7 @@
 		C20D5A63D8694144517EF4F1 /* ShareFormatPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareFormatPicker.swift; sourceTree = "<group>"; };
 		CB8CADEF055C9A6DBBB8B046 /* ManualEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualEntryView.swift; sourceTree = "<group>"; };
 		CC439435446D019B8395BD0B /* ShareCardSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardSheet.swift; sourceTree = "<group>"; };
+		CC7E66D831AE455D205850AD /* CelebrationOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CelebrationOverlay.swift; sourceTree = "<group>"; };
 		CD546B4D4B18C9C159C3B933 /* ShareExtensionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareExtensionView.swift; sourceTree = "<group>"; };
 		D85962E7C8FDF59A5EA1AFFA /* OpenShelfWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = OpenShelfWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE039A8047E88C98BF02DBCF /* RateBookIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateBookIntent.swift; sourceTree = "<group>"; };
@@ -257,6 +260,7 @@
 		F0E3088FDE041E6C3EDAD50B /* SearchResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResponse.swift; sourceTree = "<group>"; };
 		F22FFBD2BA08F3BB6171F226 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		F2ECA3F7017D39DD1FD73D2E /* ProgressEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressEditor.swift; sourceTree = "<group>"; };
+		F480A90650ED1C8A8988D8AD /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
 		F6B7B8F9810AF35043F86476 /* OpenShelfShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenShelfShortcuts.swift; sourceTree = "<group>"; };
 		F7F85354E43C14ABD1924FE5 /* FollowedAuthor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowedAuthor.swift; sourceTree = "<group>"; };
 		FA234661C3F79FF2494C0E2B /* DataExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExporter.swift; sourceTree = "<group>"; };
@@ -526,10 +530,12 @@
 			isa = PBXGroup;
 			children = (
 				3D19B3F742EE2092D2F17C5D /* BookRow.swift */,
+				CC7E66D831AE455D205850AD /* CelebrationOverlay.swift */,
 				DEE810B2DB084355FF0A33AA /* CoverImage.swift */,
 				3E8BCDEEF043907314DEE80D /* DesignTokens.swift */,
 				2A233D905ADA5558E1773613 /* RatingPicker.swift */,
 				C20D5A63D8694144517EF4F1 /* ShareFormatPicker.swift */,
+				F480A90650ED1C8A8988D8AD /* ToastView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -726,6 +732,7 @@
 				5620E5A728DC4CBD299AC153 /* BookURLParser.swift in Sources */,
 				55B5D1E486ABAB4B0DC1FD4A /* BooksPerMonthChart.swift in Sources */,
 				3F39E279C30A7EB80EB2C9BF /* BookshopService.swift in Sources */,
+				DCD9629DE40369F682E1EE15 /* CelebrationOverlay.swift in Sources */,
 				88F96125729426C115A9FBBC /* CloudSharingService.swift in Sources */,
 				474B9FAD1D443EDE8B24E09F /* CloudSharingSheet.swift in Sources */,
 				F4298F7BB87142F30A0FD3B5 /* ContentView.swift in Sources */,
@@ -785,6 +792,7 @@
 				57371A2C4A4E5CB0C1D4590F /* StatsView.swift in Sources */,
 				82D169C3D879B960A58F06E4 /* TipJarSection.swift in Sources */,
 				178DA83BFD9DBDC11B19ECCB /* TipJarStore.swift in Sources */,
+				B61A3AB8A6766F207E6CC1FD /* ToastView.swift in Sources */,
 				1650F45E05DA49E2BAB281B9 /* UKLibraryAuthority.swift in Sources */,
 				0179DA1D11BC5389C64E0B8D /* UnwrappedShareSheet.swift in Sources */,
 				000BA8B7B1CC37795FA3339F /* UnwrappedView.swift in Sources */,
