@@ -245,24 +245,7 @@ struct StatsCalculator {
     // MARK: - Reading streak
 
     static func currentStreak(from readingDays: [ReadingDay]) -> Int {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now)
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-
-        let dates = Set(readingDays.map { calendar.startOfDay(for: $0.date) })
-
-        // Grace window: streak doesn't break if user hasn't read yet today
-        guard dates.contains(today) || dates.contains(yesterday) else {
-            return 0
-        }
-
-        var streak = 0
-        var day = dates.contains(today) ? today : yesterday
-        while dates.contains(day) {
-            streak += 1
-            day = calendar.date(byAdding: .day, value: -1, to: day)!
-        }
-        return streak
+        ReadingDay.streak(from: readingDays.map(\.date))
     }
 
     // MARK: - Goal pace
@@ -291,6 +274,29 @@ struct StatsCalculator {
             return calendar.component(.year, from: d) == year ? d : nil
         })
 
+        guard !dates.isEmpty else { return 0 }
+
+        let sorted = dates.sorted()
+        var longest = 1
+        var current = 1
+
+        for i in 1..<sorted.count {
+            let expected = calendar.date(byAdding: .day, value: 1, to: sorted[i - 1])!
+            if calendar.isDate(sorted[i], inSameDayAs: expected) {
+                current += 1
+                longest = max(longest, current)
+            } else {
+                current = 1
+            }
+        }
+        return longest
+    }
+
+    // MARK: - Best streak (all-time)
+
+    static func bestStreak(from readingDays: [ReadingDay]) -> Int {
+        let calendar = Calendar.current
+        let dates = Set(readingDays.map { calendar.startOfDay(for: $0.date) })
         guard !dates.isEmpty else { return 0 }
 
         let sorted = dates.sorted()

@@ -18,6 +18,7 @@ struct CurrentlyReadingEntry: TimelineEntry {
     let isAudiobook: Bool
     let currentChapter: Int?
     let chapterCount: Int?
+    var streak: Int = 0
 
     var progress: Double {
         if isAudiobook {
@@ -77,6 +78,7 @@ struct LargeWidgetData {
     let books: [CurrentlyReadingEntry]
     let booksReadThisYear: Int
     let goalProgress: (read: Int, target: Int)?
+    let streak: Int
 }
 
 // MARK: - Timeline Provider
@@ -114,6 +116,14 @@ struct CurrentlyReadingProvider: AppIntentTimelineProvider {
 
             guard let book else { return .empty }
 
+            let privateKeys = Set(allBooks.filter(\.isPrivate).map(\.olWorkKey))
+            let dayDescriptor = FetchDescriptor<ReadingDay>()
+            let allDays = (try? context.fetch(dayDescriptor))?.filter { day in
+                guard let key = day.bookKey else { return true }
+                return !privateKeys.contains(key)
+            } ?? []
+            let streak = ReadingDay.streak(from: allDays.map(\.date))
+
             return CurrentlyReadingEntry(
                 date: .now,
                 title: book.title,
@@ -125,7 +135,8 @@ struct CurrentlyReadingProvider: AppIntentTimelineProvider {
                 olWorkKey: book.olWorkKey,
                 isAudiobook: book.format == .audiobook,
                 currentChapter: book.currentChapter,
-                chapterCount: book.chapterCount
+                chapterCount: book.chapterCount,
+                streak: streak
             )
         } catch {
             return .empty
@@ -145,7 +156,8 @@ struct LargeWidgetProvider: TimelineProvider {
         LargeEntry(date: .now, data: LargeWidgetData(
             books: [.placeholder],
             booksReadThisYear: 23,
-            goalProgress: (read: 23, target: 40)
+            goalProgress: (read: 23, target: 40),
+            streak: 12
         ))
     }
 
@@ -196,16 +208,25 @@ struct LargeWidgetProvider: TimelineProvider {
             let goal = (try? context.fetch(goalDescriptor))?.first
             let goalProgress = goal.map { (read: booksReadThisYear, target: $0.target) }
 
+            let privateKeys = Set(allBooks.filter(\.isPrivate).map(\.olWorkKey))
+            let dayDescriptor = FetchDescriptor<ReadingDay>()
+            let allDays = (try? context.fetch(dayDescriptor))?.filter { day in
+                guard let key = day.bookKey else { return true }
+                return !privateKeys.contains(key)
+            } ?? []
+            let streak = ReadingDay.streak(from: allDays.map(\.date))
+
             let data = LargeWidgetData(
                 books: Array(readingBooks),
                 booksReadThisYear: booksReadThisYear,
-                goalProgress: goalProgress
+                goalProgress: goalProgress,
+                streak: streak
             )
 
             return LargeEntry(date: .now, data: data)
         } catch {
             return LargeEntry(date: .now, data: LargeWidgetData(
-                books: [], booksReadThisYear: 0, goalProgress: nil
+                books: [], booksReadThisYear: 0, goalProgress: nil, streak: 0
             ))
         }
     }
@@ -470,6 +491,17 @@ struct CurrentlyReadingWidgetView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .overlay(alignment: .topTrailing) {
+            if entry.streak > 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: "flame.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                    Text("\(entry.streak)")
+                        .font(.caption2.bold())
+                }
+            }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(mediumViewAccessibilityLabel)
     }
@@ -597,6 +629,15 @@ struct LargeWidgetView: View {
                         value: "\(goal.read)/\(goal.target)",
                         label: "goal",
                         color: goal.read >= goal.target ? .green : .blue
+                    )
+                }
+
+                if entry.data.streak > 0 {
+                    statPill(
+                        icon: "flame.fill",
+                        value: "\(entry.data.streak)",
+                        label: "day streak",
+                        color: .orange
                     )
                 }
 

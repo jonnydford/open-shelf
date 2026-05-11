@@ -9,6 +9,7 @@ struct ReadingGoalEntry: TimelineEntry {
     let booksRead: Int
     let target: Int
     let year: Int
+    let streak: Int
 
     var progress: Double {
         guard target > 0 else { return 0 }
@@ -47,7 +48,8 @@ struct ReadingGoalEntry: TimelineEntry {
             date: .now,
             booksRead: 23,
             target: 40,
-            year: Calendar.current.component(.year, from: .now)
+            year: Calendar.current.component(.year, from: .now),
+            streak: 12
         )
     }
 
@@ -56,7 +58,8 @@ struct ReadingGoalEntry: TimelineEntry {
             date: .now,
             booksRead: 0,
             target: 0,
-            year: Calendar.current.component(.year, from: .now)
+            year: Calendar.current.component(.year, from: .now),
+            streak: 0
         )
     }
 }
@@ -101,16 +104,26 @@ struct ReadingGoalProvider: TimelineProvider {
                 return Calendar.current.component(.year, from: date) == currentYear
             }.count
 
+            let privateKeys = Set(allBooks.filter(\.isPrivate).map(\.olWorkKey))
+            let dayDescriptor = FetchDescriptor<ReadingDay>()
+            let allDays = (try? context.fetch(dayDescriptor))?.filter { day in
+                guard let key = day.bookKey else { return true }
+                return !privateKeys.contains(key)
+            } ?? []
+            let streak = ReadingDay.streak(from: allDays.map(\.date))
+
             return ReadingGoalEntry(
                 date: .now,
                 booksRead: booksRead,
                 target: goal.target,
-                year: currentYear
+                year: currentYear,
+                streak: streak
             )
         } catch {
             return .empty
         }
     }
+
 }
 
 // MARK: - Widget Definition
@@ -172,6 +185,17 @@ struct ReadingGoalWidgetView: View {
             Text("books")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+
+            if entry.streak > 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: "flame.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                    Text("\(entry.streak) day streak")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
     }
 

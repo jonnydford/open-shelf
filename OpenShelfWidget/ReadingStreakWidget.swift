@@ -79,7 +79,7 @@ struct ReadingStreakProvider: TimelineProvider {
             let today = calendar.startOfDay(for: .now)
             let readToday = allDays.contains { calendar.isDate($0.date, inSameDayAs: today) }
 
-            let streak = calculateStreak(from: allDays, calendar: calendar, today: today)
+            let streak = ReadingDay.streak(from: allDays.map(\.date))
 
             let last7Days: [Bool] = (0..<7).reversed().map { offset in
                 let day = calendar.date(byAdding: .day, value: -offset, to: today)!
@@ -108,18 +108,6 @@ struct ReadingStreakProvider: TimelineProvider {
         }
     }
 
-    private func calculateStreak(from readingDays: [ReadingDay], calendar: Calendar, today: Date) -> Int {
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-        let dates = Set(readingDays.map { calendar.startOfDay(for: $0.date) })
-        guard dates.contains(today) || dates.contains(yesterday) else { return 0 }
-        var streak = 0
-        var day = dates.contains(today) ? today : yesterday
-        while dates.contains(day) {
-            streak += 1
-            day = calendar.date(byAdding: .day, value: -1, to: day)!
-        }
-        return streak
-    }
 }
 
 // MARK: - Widget Definition

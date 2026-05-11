@@ -1,15 +1,18 @@
 import SwiftUI
 import SwiftData
 import Charts
+import WidgetKit
 
 struct StatsView: View {
     @Query private var books: [Book]
     @Query private var goals: [ReadingGoal]
     @Query private var readingDays: [ReadingDay]
+    @Environment(\.modelContext) private var modelContext
 
     @AppStorage("includePrivateBooksInStats") private var includePrivateBooksInStats: Bool = false
 
     @State private var filter: YearFilter = .year(Calendar.current.component(.year, from: .now))
+    @State private var didMarkReadToday = false
 
     private var currentYear: Int {
         Calendar.current.component(.year, from: .now)
@@ -325,33 +328,122 @@ struct StatsView: View {
         }
     }
 
-    // MARK: - Streak Header
+    // MARK: - Streak Section
+
+    private var readToday: Bool {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        return statsReadingDays.contains { calendar.isDate($0.date, inSameDayAs: today) }
+    }
 
     private var streakHeader: some View {
         let streak = StatsCalculator.currentStreak(from: statsReadingDays)
-        let flameIcon: String = streak >= 30 ? "flame.fill" : "flame"
-        let flameSize: Font = streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3)
+        let best = StatsCalculator.bestStreak(from: statsReadingDays)
 
-        return HStack(spacing: 12) {
-            Image(systemName: flameIcon)
-                .font(flameSize)
-                .foregroundStyle(.orange)
-                .symbolEffect(.bounce, value: streak)
+        return VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: streak > 0 ? "flame.fill" : "flame")
+                    .font(streak >= 30 ? .title : (streak >= 7 ? .title2 : .title3))
+                    .foregroundStyle(.orange)
+                    .symbolEffect(.bounce, value: streak)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(streak) day streak")
-                    .font(.headline)
-                Text(streak == 0 ? "Start reading to build a streak" : "Keep it going!")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(streak) day streak")
+                        .font(.headline)
+                    if best > streak {
+                        Text("Best: \(best) days")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else if streak > 0 {
+                        Text("Personal best!")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    } else {
+                        Text("Start reading to build a streak")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if readToday || didMarkReadToday {
+                    Label("Read today", systemImage: "checkmark.circle.fill")
+                        .font(.caption.bold())
+                        .foregroundStyle(.green)
+                } else {
+                    Button {
+                        markReadToday()
+                    } label: {
+                        Text("I read today")
+                            .font(.caption.bold())
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(.orange.opacity(0.2), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
-            Spacer()
+            streakHeatmap
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Reading streak: \(streak) days")
+        .accessibilityLabel("Reading streak: \(streak) days. Best: \(best) days.")
+    }
+
+    private static let heatmapDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
+    private var streakHeatmap: some View {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let dates = Set(statsReadingDays.map { calendar.startOfDay(for: $0.date) })
+        let dayLabels = calendar.veryShortWeekdaySymbols
+
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+                ForEach(0..<7, id: \.self) { dayIndex in
+                    let daysAgo = 6 - dayIndex
+                    let day = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
+                    let weekday = calendar.component(.weekday, from: day)
+                    Text(dayLabels[weekday - 1])
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 14)
+                }
+                Spacer()
+            }
+
+            ForEach(0..<2, id: \.self) { week in
+                HStack(spacing: 4) {
+                    ForEach(0..<7, id: \.self) { dayIndex in
+                        let daysAgo = (1 - week) * 7 + (6 - dayIndex)
+                        let day = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
+                        let didRead = dates.contains(day)
+
+                        Circle()
+                            .fill(didRead ? Color.orange : Color.primary.opacity(0.1))
+                            .frame(width: 14, height: 14)
+                            .accessibilityLabel("\(Self.heatmapDateFormatter.string(from: day)): \(didRead ? "read" : "did not read")")
+                    }
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    private func markReadToday() {
+        withAnimation {
+            ReadingDay.record(in: modelContext)
+            try? modelContext.save()
+            didMarkReadToday = true
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 
     // MARK: - Badges Section
