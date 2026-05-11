@@ -500,7 +500,7 @@ struct LibraryView: View {
                     BookDetailView(book: book)
                 } label: {
                     HStack {
-                        BookRow(book: book, showLockIcon: showPrivateBooks && book.isPrivate)
+                        BookRow(book: book)
                         if book.queuePosition == 0 {
                             Spacer()
                             Text("Reading Next")
@@ -609,7 +609,7 @@ struct LibraryView: View {
         NavigationLink {
             BookDetailView(book: book)
         } label: {
-            BookRow(book: book, showLockIcon: showPrivateBooks && book.isPrivate)
+            BookRow(book: book)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {

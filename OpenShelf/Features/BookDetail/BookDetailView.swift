@@ -467,16 +467,14 @@ struct BookDetailView: View {
     @ViewBuilder
     private var readingPaceEstimate: some View {
         if isAudiobook {
-            // Chapter-based pace for audiobooks
             if let currentChapter = book.currentChapter,
                let chapterCount = book.chapterCount, chapterCount > 0,
                let dateStarted = book.dateStarted {
                 let daysSinceStarted = max(Calendar.current.dateComponents([.day], from: dateStarted, to: .now).day ?? 0, 0)
                 if daysSinceStarted >= 1, currentChapter > 0 {
                     let chaptersPerDay = Double(currentChapter) / Double(daysSinceStarted)
-                    if chaptersPerDay > 0 {
-                        let chaptersLeft = chapterCount - currentChapter
-                        guard chaptersLeft > 0 else { return }
+                    let chaptersLeft = chapterCount - currentChapter
+                    if chaptersPerDay > 0, chaptersLeft > 0 {
                         let daysLeft = Int(ceil(Double(chaptersLeft) / chaptersPerDay))
                         if daysLeft > 365 {
                             Text("Take your time")
@@ -491,16 +489,14 @@ struct BookDetailView: View {
                 }
             }
         } else {
-            // Page-based pace for books
             if let currentPage = book.currentPage,
                let pageCount = book.pageCount, pageCount > 0,
                let dateStarted = book.dateStarted {
                 let daysSinceStarted = max(Calendar.current.dateComponents([.day], from: dateStarted, to: .now).day ?? 0, 0)
                 if daysSinceStarted >= 1, currentPage > 0 {
                     let pagesPerDay = Double(currentPage) / Double(daysSinceStarted)
-                    if pagesPerDay > 0 {
-                        let pagesLeft = pageCount - currentPage
-                        guard pagesLeft > 0 else { return }
+                    let pagesLeft = pageCount - currentPage
+                    if pagesPerDay > 0, pagesLeft > 0 {
                         let daysLeft = Int(ceil(Double(pagesLeft) / pagesPerDay))
                         if daysLeft > 365 {
                             Text("Take your time")

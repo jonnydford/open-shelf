@@ -2,7 +2,6 @@ import SwiftUI
 
 struct BookRow: View {
     let book: Book
-    var showLockIcon: Bool = false
 
     @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 60
     @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 90
