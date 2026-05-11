@@ -2,6 +2,10 @@ import SwiftUI
 import SwiftData
 import LocalAuthentication
 
+extension Notification.Name {
+    static let searchOpenLibrary = Notification.Name("searchOpenLibrary")
+}
+
 // MARK: - Sort Option
 
 enum LibrarySortOption: String, CaseIterable {
@@ -18,15 +22,17 @@ enum LibrarySortOption: String, CaseIterable {
 enum ShelfFilter: Hashable, CaseIterable {
     case all
     case shelf(Shelf)
+    case favourites
 
     static var allCases: [ShelfFilter] {
-        [.all] + Shelf.allCases.map { .shelf($0) }
+        [.all] + Shelf.allCases.map { .shelf($0) } + [.favourites]
     }
 
     var displayName: String {
         switch self {
         case .all: "All"
         case .shelf(let shelf): shelf.displayName
+        case .favourites: "Favourites"
         }
     }
 
@@ -37,6 +43,7 @@ enum ShelfFilter: Hashable, CaseIterable {
         case .shelf(.reading): "Reading"
         case .shelf(.read): "Read"
         case .shelf(.dnf): "DNF"
+        case .favourites: "Favourites"
         }
     }
 }
@@ -85,6 +92,8 @@ struct LibraryView: View {
             break
         case .shelf(let shelf):
             books = books.filter { $0.shelf == shelf }
+        case .favourites:
+            books = books.filter { $0.isFavourite }
         }
 
         // Filter by format
@@ -144,6 +153,7 @@ struct LibraryView: View {
                 WorldBookDayBanner(books: allBooks)
                 newBookBanner
                 shelfPicker
+                sortAndFilterBar
 
                 Group {
                     if filteredBooks.isEmpty {
@@ -243,6 +253,14 @@ struct LibraryView: View {
 
     // MARK: - Shelf Picker
 
+    private var favouritesCount: Int {
+        var books = allBooks
+        if !showPrivateBooks {
+            books = books.filter { !$0.isPrivate }
+        }
+        return books.filter { $0.isFavourite }.count
+    }
+
     private var shelfPicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
@@ -256,23 +274,33 @@ struct LibraryView: View {
                             }
                         }
                     } label: {
-                        Text(filter.shortName)
-                            .font(.subheadline)
-                            .fontWeight(selectedFilter == filter ? .semibold : .regular)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(
-                                selectedFilter == filter ? Color.accentColor : Color.clear
-                            )
-                            .foregroundStyle(selectedFilter == filter ? .white : .primary)
-                            .clipShape(Capsule())
-                            .overlay(
-                                Capsule()
-                                    .strokeBorder(
-                                        selectedFilter == filter ? Color.clear : Color.secondary.opacity(0.3),
-                                        lineWidth: 1
-                                    )
-                            )
+                        HStack(spacing: 4) {
+                            if filter == .favourites {
+                                Image(systemName: "heart.fill")
+                                    .font(.caption)
+                            }
+                            if filter == .favourites {
+                                Text("\(filter.shortName) (\(favouritesCount))")
+                            } else {
+                                Text(filter.shortName)
+                            }
+                        }
+                        .font(.subheadline)
+                        .fontWeight(selectedFilter == filter ? .semibold : .regular)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            selectedFilter == filter ? Color.accentColor : Color.clear
+                        )
+                        .foregroundStyle(selectedFilter == filter ? .white : .primary)
+                        .clipShape(Capsule())
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(
+                                    selectedFilter == filter ? Color.clear : Color.secondary.opacity(0.3),
+                                    lineWidth: 1
+                                )
+                        )
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Filter: \(filter.displayName)")
@@ -286,23 +314,109 @@ struct LibraryView: View {
         .accessibilityLabel("Shelf filter")
     }
 
+    // MARK: - Sort & Filter Bar
+
+    private var sortDisplayLabel: String {
+        switch sortOption {
+        case .dateAdded: "Date Added \u{2193}"
+        case .titleAZ: "Title A\u{2013}Z"
+        case .authorAZ: "Author A\u{2013}Z"
+        case .rating: "Rating \u{2193}"
+        case .dateFinished: "Date Finished \u{2193}"
+        case .series: "Series"
+        }
+    }
+
+    private var sortAndFilterBar: some View {
+        HStack(spacing: 8) {
+            Menu {
+                Section("Sort By") {
+                    ForEach(LibrarySortOption.allCases, id: \.self) { option in
+                        Button {
+                            sortOption = option
+                        } label: {
+                            if sortOption == option {
+                                Label(option.rawValue, systemImage: "checkmark")
+                            } else {
+                                Text(option.rawValue)
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Text("Sorted by: \(sortDisplayLabel)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Sort order: \(sortDisplayLabel). Tap to change.")
+
+            if let format = formatFilter {
+                Button {
+                    formatFilter = nil
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                        Text(format.rawValue)
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.accentColor.opacity(0.12))
+                    .foregroundStyle(Color.accentColor)
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Format filter: \(format.rawValue). Tap to clear.")
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 4)
+    }
+
     // MARK: - Empty State
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label(emptyStateTitle, systemImage: emptyStateIcon)
-        } description: {
-            Text(emptyStateMessage)
-        } actions: {
-            if !localSearchText.isEmpty {
-                Button("Clear Search") {
-                    localSearchText = ""
+        VStack(spacing: 16) {
+            ContentUnavailableView {
+                Label(emptyStateTitle, systemImage: emptyStateIcon)
+            } description: {
+                Text(emptyStateMessage)
+            } actions: {
+                if !localSearchText.isEmpty {
+                    Button("Clear Search") {
+                        localSearchText = ""
+                    }
+                } else if selectedFilter != .favourites {
+                    NavigationLink {
+                        SearchView()
+                    } label: {
+                        Text("Add your first book")
+                    }
                 }
-            } else {
-                NavigationLink {
-                    SearchView()
-                } label: {
-                    Text("Add your first book")
+            }
+
+            if !localSearchText.isEmpty {
+                VStack(spacing: 8) {
+                    Text("Not in your library")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+
+                    Button {
+                        NotificationCenter.default.post(
+                            name: .searchOpenLibrary,
+                            object: nil,
+                            userInfo: ["query": localSearchText]
+                        )
+                    } label: {
+                        Label("Search Open Library?", systemImage: "magnifyingglass")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
                 }
             }
         }
@@ -319,6 +433,7 @@ struct LibraryView: View {
         case .shelf(.reading): return "Not Reading Anything"
         case .shelf(.read): return "No Books Finished"
         case .shelf(.dnf): return "No Abandoned Books"
+        case .favourites: return "No Favourites Yet"
         }
     }
 
@@ -329,6 +444,7 @@ struct LibraryView: View {
         case .shelf(.reading): "book.fill"
         case .shelf(.read): "checkmark.circle"
         case .shelf(.dnf): "xmark.circle"
+        case .favourites: "heart"
         }
     }
 
@@ -342,6 +458,7 @@ struct LibraryView: View {
         case .shelf(.reading): return "Books you are currently reading will appear here."
         case .shelf(.read): return "Books you have finished will appear here."
         case .shelf(.dnf): return "Books you did not finish will appear here."
+        case .favourites: return "No favourites yet. Long-press a book to add one."
         }
     }
 

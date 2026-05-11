@@ -48,6 +48,12 @@ struct ContentView: View {
         .sheet(isPresented: $showDeepLinkBook) {
             deepLinkSheet
         }
+        .onReceive(NotificationCenter.default.publisher(for: .searchOpenLibrary)) { notification in
+            if let query = notification.userInfo?["query"] as? String, !query.isEmpty {
+                deepLinkSearchQuery = query
+                selectedTab = "Search"
+            }
+        }
     }
 
     // MARK: - Spotlight Handling
