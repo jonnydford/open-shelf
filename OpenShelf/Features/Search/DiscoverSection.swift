@@ -167,7 +167,10 @@ struct DiscoverSection: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(prompt.tintColor.opacity(0.1), in: RoundedRectangle(cornerRadius: CornerRadius.medium))
             .padding(.horizontal)
-            .accessibilityElement(children: .combine)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Reading suggestion: \(prompt.message)")
+            .transition(.opacity)
+            .animation(.easeInOut, value: prompt.message)
         }
     }
 

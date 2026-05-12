@@ -5,7 +5,7 @@ import SwiftUI
 
 // MARK: - Reading Prompt
 
-struct ReadingPrompt: Equatable {
+struct ReadingPrompt: Equatable, Sendable {
     let message: String
     let systemImage: String
     let tintColor: Color
@@ -20,6 +20,7 @@ final class ReadingPromptService {
 
     private let locationManager = CLLocationManager()
     private var cachedCategory: (category: WeatherCategory, date: Date)?
+    private var lastContext: (weather: WeatherCategory?, timeSlot: TimeSlot)?
     private var promptData: ReadingPromptData?
     private static let cacheExpiry: TimeInterval = 30 * 60
 
@@ -54,13 +55,25 @@ final class ReadingPromptService {
         }
 
         do {
+            var attempts = 0
             for try await update in CLLocationUpdate.liveUpdates(.default) {
-                guard let location = update.location else { continue }
+                if Task.isCancelled { return nil }
+                guard let location = update.location else {
+                    attempts += 1
+                    if attempts >= 5 { return nil }
+                    continue
+                }
                 let weather = try await WeatherService.shared.weather(for: location)
                 let hour = Calendar.current.component(.hour, from: .now)
                 return WeatherCategory(from: weather.currentWeather, hour: hour)
             }
-        } catch {}
+        } catch is CancellationError {
+            return nil
+        } catch {
+            #if DEBUG
+            print("ReadingPromptService: weather fetch failed: \(error)")
+            #endif
+        }
         return nil
     }
 
@@ -71,6 +84,15 @@ final class ReadingPromptService {
 
         let hour = Calendar.current.component(.hour, from: .now)
         let timeSlot = TimeSlot(hour: hour)
+
+        let currentContext: (weather: WeatherCategory?, timeSlot: TimeSlot) = (weatherCategory, timeSlot)
+        if let last = lastContext,
+           last.weather == currentContext.weather,
+           last.timeSlot == currentContext.timeSlot,
+           currentPrompt != nil {
+            return
+        }
+        lastContext = currentContext
 
         var candidates: [String]
 
@@ -85,7 +107,9 @@ final class ReadingPromptService {
             if let messages = data.time[timeSlot.rawValue] {
                 candidates.append(contentsOf: messages)
             }
-            candidates.append(contentsOf: data.fallback)
+            if candidates.isEmpty {
+                candidates = data.fallback
+            }
         }
 
         guard let message = candidates.randomElement() else { return }
@@ -110,9 +134,13 @@ final class ReadingPromptService {
     // MARK: - Data Loading
 
     private func loadPromptData() {
-        guard let url = Bundle.main.url(forResource: "ReadingPrompts", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
+        guard let url = Bundle.main.url(forResource: "ReadingPrompts", withExtension: "json") else {
+            assertionFailure("ReadingPrompts.json missing from bundle")
+            return
+        }
+        guard let data = try? Data(contentsOf: url),
               let decoded = try? JSONDecoder().decode(ReadingPromptData.self, from: data) else {
+            assertionFailure("ReadingPrompts.json failed to decode")
             return
         }
         promptData = decoded
@@ -129,7 +157,7 @@ private struct ReadingPromptData: Codable {
 
 // MARK: - Weather Category
 
-private enum WeatherCategory: String {
+private enum WeatherCategory: String, Equatable {
     case rain
     case snowOrCold
     case sunny
@@ -197,7 +225,7 @@ private enum WeatherCategory: String {
 
 // MARK: - Time Slot
 
-private enum TimeSlot: String {
+private enum TimeSlot: String, Equatable {
     case morning
     case afternoon
     case evening
