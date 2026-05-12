@@ -128,7 +128,6 @@ struct DiscoverSection: View {
             }
         }
         .task {
-            await readingPromptService.refresh()
             let libKeys = libraryKeys
             let disKeys = dismissedKeySet
             let genreCounts = libraryGenreCounts
@@ -171,6 +170,7 @@ struct DiscoverSection: View {
             .accessibilityLabel("Reading suggestion: \(prompt.message)")
             .transition(.opacity)
             .animation(.easeInOut, value: prompt.message)
+            .task { await readingPromptService.refresh() }
         }
     }
 
