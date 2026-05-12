@@ -1,0 +1,135 @@
+{
+  "weather": {
+    "rain": [
+      "Rain on the windows, kettle on — perfect reading weather.",
+      "The weather's doing you a favour. Stay in, stay reading.",
+      "Somewhere, a Brontë sister is smiling at this weather.",
+      "Rain like this is why books were invented.",
+      "The patter of rain is nature's reading playlist.",
+      "Don't fight the rain. Surrender to a good book.",
+      "Umbrellas are for people without books.",
+      "It's hammering down. Your bookmark has been waiting for this.",
+      "Rainy days were made for plot twists and hot chocolate.",
+      "The rain says stay. Your book says yes."
+    ],
+    "snowOrCold": [
+      "The world's gone quiet under snow. Your book is waiting.",
+      "Curl up by the fire with a good book. You've earned it.",
+      "It's Narnia weather. Wrap up and read.",
+      "Cold enough to justify staying under a blanket with a book all day.",
+      "Even the White Witch would stay in and read today.",
+      "The cold never bothered readers anyway.",
+      "Frosty windows, warm pages. Perfect balance.",
+      "Too cold to be a protagonist today. Be a reader instead.",
+      "Hot drink. Thick socks. Good book. That's the law.",
+      "Mr Tumnus would absolutely approve of staying in today."
+    ],
+    "sunny": [
+      "Find a shady spot, crack open a book, and ignore the world.",
+      "Too hot to do anything useful. Might as well read.",
+      "Sunlight, a gentle breeze, and a book. Living the dream.",
+      "The sun's out. Find a tree. Read under it. Simple.",
+      "Today's forecast: sunny with a chance of finishing your book.",
+      "Gatsby would throw a party. You can just read about it.",
+      "Take your book outside. It deserves some fresh air too.",
+      "Sunshine and a good book — the original screen time.",
+      "The garden's calling. Bring a book as your plus one.",
+      "Perfect weather for reading al fresco. Your book deserves a tan."
+    ],
+    "overcast": [
+      "Grey skies, warm drink, good book. The holy trinity.",
+      "Overcast skies are just the world dimming the lights for you.",
+      "The sky can't decide what to do. You can — read.",
+      "Moody skies, moody novel. Match made in heaven.",
+      "Not sunny enough to go out. Not rainy enough for guilt. Just read.",
+      "The clouds are thinking. You should be reading.",
+      "A perfectly unremarkable sky. Ideal for a remarkable book."
+    ],
+    "windy": [
+      "Let the wind howl. You're not going anywhere.",
+      "Too windy for a walk. Not too windy for a book.",
+      "The wind's turning pages out there. You should turn some in here.",
+      "Wuthering Heights weather. Heathcliff would brood. You should read.",
+      "Even Mary Poppins would stay indoors today."
+    ],
+    "clearEvening": [
+      "Golden hour and a good book — what more do you need?",
+      "The evening light is doing that thing. Read by it.",
+      "Sunset chapters hit different.",
+      "The day's winding down. Let a book carry you the rest of the way.",
+      "Stars are coming out. So should your bookmark."
+    ]
+  },
+  "time": {
+    "morning": [
+      "You're up early. Reward yourself with a few pages.",
+      "Morning pages aren't just for writers.",
+      "A chapter with your coffee. Start the day right.",
+      "The early reader catches the plot twist.",
+      "Your book missed you overnight. Say good morning.",
+      "Before the world gets loud, steal a quiet chapter.",
+      "Mornings are for coffee and contemplating your TBR pile.",
+      "The world can wait. Your book can't."
+    ],
+    "afternoon": [
+      "Afternoon slump? A book is better than doom-scrolling.",
+      "The post-lunch chapter is an underrated pleasure.",
+      "Your afternoon has a book-shaped hole in it.",
+      "Productivity is overrated. Read something.",
+      "The afternoon is dragging. Your book doesn't have to."
+    ],
+    "evening": [
+      "Feet up, book out. You've done enough today.",
+      "The evening commute is brought to you by chapter seven.",
+      "Dinner can wait five more pages. Probably.",
+      "Wind down with a book. Screens can't compete.",
+      "The evening belongs to fiction. Claim it.",
+      "You've been everyone else's all day. Be a reader now.",
+      "Somewhere a character is having a worse evening than you. Check on them."
+    ],
+    "lateNight": [
+      "One more chapter. We won't tell anyone.",
+      "The 'just one more chapter' lie. The best lie there is.",
+      "Night owl or dedicated reader? Why not both.",
+      "The house is quiet. The book is loud. Keep going.",
+      "Late-night reading: where all the best plot twists live.",
+      "Burning the midnight oil? At least burn it on a good book."
+    ],
+    "veryLate": [
+      "Even sleeping beauty needs her sleep. Bookmark it.",
+      "It's past midnight — even Gandalf sleeps sometimes.",
+      "Put the book down. The characters will still be there tomorrow.",
+      "Hermione would tell you to go to bed. Listen to Hermione.",
+      "Your pillow is jealous of your book right now.",
+      "The chapter will still be there at sunrise. Your energy won't.",
+      "Bilbo went on an adventure. You should go to sleep.",
+      "Even Sherlock rests between cases. Close the book.",
+      "Tomorrow-you will thank tonight-you for sleeping.",
+      "The bookmark exists for a reason. Use it. Sleep.",
+      "Frodo didn't walk to Mordor in one night. Pace yourself.",
+      "Your book loves you, but your bed needs you more right now.",
+      "It's a school night in the multiverse. Go to sleep.",
+      "Elizabeth Bennet would not approve of these hours.",
+      "The library is closed. And by library, we mean your eyes."
+    ]
+  },
+  "fallback": [
+    "A book a day keeps the existential dread away.",
+    "Your TBR pile isn't going to read itself.",
+    "Somewhere, a fictional character needs you to turn the page.",
+    "Reading: the original immersive experience.",
+    "Be the main character. Read about one first.",
+    "A room without books is like a body without a soul. — Cicero, probably.",
+    "You're one book away from a new favourite.",
+    "Plot twist: you have time to read right now.",
+    "Between every two books there is a door waiting to be opened.",
+    "The best time to start a book was yesterday. The second best time is now.",
+    "Your future self will thank you for reading today.",
+    "Every book you've ever loved was once a stranger. Meet another.",
+    "Reading is just staring at dead trees and hallucinating. Enjoy.",
+    "Books: cheaper than therapy, nearly as effective.",
+    "You have more unread books than unread emails. Priorities.",
+    "Readers are just professional daydreamers.",
+    "Life's too short for bad books. But also too short not to read."
+  ]
+}
