@@ -120,7 +120,7 @@ struct SocialSettingsSection: View {
                 }
 
                 let count = sharingService.publicShelfFollowerCount
-                HStack {
+                if count > 0 {
                     Label(
                         count == 1 ? "1 follower" : "\(count) followers",
                         systemImage: "person.2"
