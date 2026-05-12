@@ -262,6 +262,45 @@ actor OpenLibraryClient {
         return URL(string: "https://en.wikipedia.org/wiki/\(encoded)")
     }
 
+    // MARK: - Apple Books Lookup
+
+    func fetchAppleBooksLink(isbn: String) async throws -> ITunesEbook? {
+        guard var components = URLComponents(string: "https://itunes.apple.com/lookup") else {
+            return nil
+        }
+
+        components.queryItems = [
+            URLQueryItem(name: "isbn", value: isbn),
+            URLQueryItem(name: "entity", value: "ebook"),
+            URLQueryItem(name: "country", value: "GB"),
+        ]
+
+        guard let url = components.url else { return nil }
+
+        let data: Data
+        let response: URLResponse
+
+        do {
+            (data, response) = try await session.data(from: url)
+        } catch {
+            Self.logger.error("Apple Books lookup failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            return nil
+        }
+
+        do {
+            let result = try decoder.decode(ITunesLookupResponse.self, from: data)
+            return result.resultCount > 0 ? result.results.first : nil
+        } catch {
+            Self.logger.error("Apple Books decoding failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
     // MARK: - Cover URL
 
     func coverURL(id: Int, size: CoverSize) -> URL {

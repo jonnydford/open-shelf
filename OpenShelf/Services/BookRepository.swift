@@ -606,6 +606,12 @@ final class BookRepository {
         return url
     }
 
+    // MARK: - Apple Books
+
+    nonisolated func fetchAppleBooksLink(isbn: String) async throws -> ITunesEbook? {
+        try await apiClient.fetchAppleBooksLink(isbn: isbn)
+    }
+
     // MARK: - Cover cache access
 
     nonisolated var imageCache: CoverImageCache {
