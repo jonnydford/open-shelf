@@ -101,7 +101,7 @@ struct FollowingView: View {
                 ForEach(Array(groupedEvents.enumerated()), id: \.element.title) { groupIndex, group in
                     Section {
                         ForEach(group.events) { event in
-                            if shouldShowNewDivider(before: event) {
+                            if event.id == newDividerEventID {
                                 newDivider
                             }
 
@@ -152,13 +152,10 @@ struct FollowingView: View {
         }
     }
 
-    private func shouldShowNewDivider(before event: ActivityEvent) -> Bool {
-        guard lastViewedActivityTimestamp > 0 else { return false }
+    private var newDividerEventID: UUID? {
+        guard lastViewedActivityTimestamp > 0 else { return nil }
         let threshold = Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp)
-        guard event.timestamp <= threshold else { return false }
-        guard let index = activityEvents.firstIndex(where: { $0.id == event.id }) else { return false }
-        if index == 0 { return true }
-        return activityEvents[index - 1].timestamp > threshold
+        return activityEvents.first(where: { $0.timestamp <= threshold })?.id
     }
 
     private var newDivider: some View {
