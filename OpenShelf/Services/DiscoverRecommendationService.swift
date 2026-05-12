@@ -33,10 +33,6 @@ final class DiscoverRecommendationService {
         }
 
         isLoading = true
-        defer {
-            isLoading = false
-            lastRefresh = .now
-        }
 
         let libraryKeys = Set(library.map(\.olWorkKey))
         let dismissedKeys = Set(dismissed.map(\.openLibraryWorkKey))
@@ -58,7 +54,12 @@ final class DiscoverRecommendationService {
             using: repository
         )
 
-        recommendations = [authorRec, subjectRec, genreRec].compactMap { $0 }
+        let results = [authorRec, subjectRec, genreRec].compactMap { $0 }
+        recommendations = results
+        isLoading = false
+        if !results.isEmpty {
+            lastRefresh = .now
+        }
     }
 
     // MARK: - "More from [Author]"
@@ -73,20 +74,19 @@ final class DiscoverRecommendationService {
             authorCounts[book.authorName, default: 0] += 1
         }
 
-        guard let topAuthor = authorCounts
+        guard let top = authorCounts
             .filter({ $0.value >= 2 })
-            .max(by: { $0.value < $1.value })?
-            .key else {
+            .max(by: { $0.value < $1.value }) else {
             return nil
         }
 
         do {
-            let results = try await repository.searchByAuthor(name: topAuthor)
+            let results = try await repository.searchByAuthor(name: top.key)
             let filtered = results.filter { !excludeKeys.contains($0.key) }
             guard !filtered.isEmpty else { return nil }
             return DiscoverRecommendation(
-                title: "More from \(topAuthor)",
-                subtitle: "You've read \(authorCounts[topAuthor]!) of their books",
+                title: "More from \(top.key)",
+                subtitle: "You've read \(top.value) of their books",
                 books: Array(filtered.prefix(10))
             )
         } catch {
@@ -96,17 +96,30 @@ final class DiscoverRecommendationService {
 
     // MARK: - "Because you read [Book]"
 
+    private static let genericSubjects: Set<String> = [
+        "fiction", "nonfiction", "non-fiction", "literature", "novels",
+        "classic literature", "books", "reading"
+    ]
+
     private func generateSubjectRecommendation(
         readBooks: [Book],
         excludeKeys: Set<String>,
         using repository: BookRepository
     ) async -> DiscoverRecommendation? {
-        guard let recentBook = readBooks
+        let dated = readBooks.filter { $0.dateFinished != nil }
+        let candidates = dated.isEmpty ? readBooks : dated
+
+        guard let recentBook = candidates
             .sorted(by: { ($0.dateFinished ?? .distantPast) > ($1.dateFinished ?? .distantPast) })
-            .first,
-              let topSubject = recentBook.subjects.first else {
+            .first else {
             return nil
         }
+
+        let topSubject = recentBook.subjects
+            .first { !Self.genericSubjects.contains($0.lowercased()) }
+            ?? recentBook.subjects.first
+
+        guard let topSubject else { return nil }
 
         do {
             let response = try await repository.fetchSubject(topSubject, limit: 20)
@@ -116,7 +129,7 @@ final class DiscoverRecommendationService {
             guard !filtered.isEmpty else { return nil }
             return DiscoverRecommendation(
                 title: "Because you read \(recentBook.title)",
-                subtitle: "More in \(topSubject)",
+                subtitle: "More in \(topSubject.capitalized)",
                 books: Array(filtered.prefix(10))
             )
         } catch {
