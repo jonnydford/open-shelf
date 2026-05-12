@@ -18,7 +18,7 @@ struct SharedWithMeView: View {
                 ContentUnavailableView {
                     Label("Couldn't Load", systemImage: "icloud.slash")
                 } description: {
-                    Text("Check your internet connection and try again.")
+                    Text("Something went wrong. Check your connection or iCloud settings and try again.")
                 } actions: {
                     Button("Retry") {
                         Task { await sharingService.fetchSharedWithMe() }
