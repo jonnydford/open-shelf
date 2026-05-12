@@ -12,9 +12,33 @@ struct ReadingCalendarView: View {
         return Set(readingDays.map { calendar.startOfDay(for: $0.date) })
     }
 
+    private var yearSummary: some View {
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: .now)
+        let daysThisYear = readingDays.filter {
+            calendar.component(.year, from: $0.date) == year
+        }.count
+        let streak = ReadingDay.streak(from: readingDays.map(\.date))
+
+        return VStack(spacing: 4) {
+            Text("\(daysThisYear) day\(daysThisYear == 1 ? "" : "s") read in \(String(year))")
+                .font(.title3.bold())
+            if streak > 0 {
+                Text("Current streak: \(streak) day\(streak == 1 ? "" : "s")")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
+    }
+
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 24) {
+                yearSummary
+
                 ForEach(monthsToShow(), id: \.self) { month in
                     MonthGridView(
                         month: month,
@@ -68,10 +92,33 @@ private struct MonthGridView: View {
         return f
     }()
 
+    private var daysReadInMonth: Int {
+        let calendar = Calendar.current
+        let range = calendar.range(of: .day, in: .month, for: month)!
+        var count = 0
+        for day in range {
+            let date = calendar.date(bySetting: .day, value: day, of: month)!
+            let startOfDay = calendar.startOfDay(for: date)
+            if readingDates.contains(startOfDay) {
+                count += 1
+            }
+        }
+        return count
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(Self.monthFormatter.string(from: month))
-                .font(.headline)
+            HStack {
+                Text(Self.monthFormatter.string(from: month))
+                    .font(.headline)
+                Spacer()
+                let count = daysReadInMonth
+                if count > 0 {
+                    Text("\(count) day\(count == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             let calendar = Calendar.current
             let dayLabels = calendar.veryShortWeekdaySymbols
