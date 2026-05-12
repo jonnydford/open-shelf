@@ -16,6 +16,9 @@ struct BookDetailSheet: View {
     @State private var showRatingPrompt = false
     @State private var rating: Double?
     @State private var alreadyInLibrary = false
+    @State private var addedBook: Book?
+
+    @Query(sort: \ReadingList.dateCreated, order: .reverse) private var readingLists: [ReadingList]
 
     @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 180
     @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 270
@@ -155,7 +158,14 @@ struct BookDetailSheet: View {
 
     private var addToShelfSection: some View {
         VStack(spacing: 12) {
-            if alreadyInLibrary {
+            if let book = addedBook {
+                Label("Added to \(selectedShelf.displayName)", systemImage: "checkmark.circle.fill")
+                    .font(.headline)
+                    .foregroundStyle(.green)
+                    .padding(.bottom, 4)
+
+                listPrompt(for: book)
+            } else if alreadyInLibrary {
                 Label("Already in your library", systemImage: "checkmark.circle.fill")
                     .font(.headline)
                     .foregroundStyle(.green)
@@ -187,6 +197,45 @@ struct BookDetailSheet: View {
                 .padding(.horizontal)
             }
         }
+    }
+
+    @ViewBuilder
+    private func listPrompt(for book: Book) -> some View {
+        VStack(spacing: 8) {
+            Divider()
+                .padding(.horizontal)
+
+            Text("Add to a reading list?")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            ForEach(readingLists) { list in
+                let isInList = list.bookKeys.contains(book.olWorkKey)
+                Button {
+                    list.toggleBook(key: book.olWorkKey)
+                    try? modelContext.save()
+                } label: {
+                    HStack {
+                        Text(list.name)
+                        Spacer()
+                        Image(systemName: isInList ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(isInList ? .green : .secondary)
+                    }
+                    .frame(minHeight: 44)
+                    .padding(.horizontal)
+                }
+                .tint(.primary)
+                .accessibilityLabel(list.name)
+                .accessibilityValue(isInList ? "Added" : "Not added")
+            }
+
+            Button("Done") {
+                dismiss()
+            }
+            .buttonStyle(.bordered)
+            .padding(.top, 4)
+        }
+        .padding(.horizontal)
     }
 
     // MARK: - Rating Sheet
@@ -279,10 +328,16 @@ struct BookDetailSheet: View {
             if let rating {
                 repository.updateRating(book, rating: rating)
             }
+            withAnimation(.easeInOut(duration: 0.3)) {
+                addedBook = book
+            }
         }
 
         onAdded()
-        dismiss()
+
+        if readingLists.isEmpty || selectedShelf == .read {
+            dismiss()
+        }
     }
 }
 
