@@ -165,12 +165,16 @@ struct SearchResultDetailView: View {
 
     @ViewBuilder
     private var communityStatsSection: some View {
-        let hasRating = workRatings != nil || searchResult.ratingsAverage != nil
-        let hasShelves = workBookshelves != nil
+        let hasRating = workRatings.map({ $0.summary.count >= 5 }) ?? false
+            || (searchResult.ratingsAverage != nil && (searchResult.ratingsCount ?? 0) >= 5)
+        let shelfTotal = workBookshelves.map {
+            $0.counts.wantToRead + $0.counts.currentlyReading + $0.counts.alreadyRead
+        } ?? 0
+        let hasShelves = shelfTotal >= 50
 
         if hasRating || hasShelves {
             VStack(spacing: 12) {
-                if let ratings = workRatings {
+                if let ratings = workRatings, ratings.summary.count >= 5 {
                     VStack(spacing: 4) {
                         HStack(spacing: 4) {
                             Image(systemName: "star.fill")
@@ -181,11 +185,14 @@ struct SearchResultDetailView: View {
                                 .foregroundStyle(.secondary)
                         }
                         .font(.subheadline)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("Rated \(String(format: "%.1f", ratings.summary.average)) out of 5 from \(ratings.summary.count) ratings")
 
                         ratingBreakdown(ratings.counts)
                     }
                 } else if let avg = searchResult.ratingsAverage,
-                          let count = searchResult.ratingsCount {
+                          let count = searchResult.ratingsCount,
+                          count >= 5 {
                     HStack(spacing: 4) {
                         Image(systemName: "star.fill")
                             .foregroundStyle(.orange)
@@ -195,9 +202,11 @@ struct SearchResultDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                     .font(.subheadline)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Rated \(String(format: "%.1f", avg)) out of 5 from \(count) ratings")
                 }
 
-                if let shelves = workBookshelves {
+                if let shelves = workBookshelves, hasShelves {
                     HStack(spacing: 16) {
                         shelfStat(
                             count: shelves.counts.wantToRead,
@@ -214,10 +223,11 @@ struct SearchResultDetailView: View {
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(shelves.counts.wantToRead) want to read, \(shelves.counts.currentlyReading) reading, \(shelves.counts.alreadyRead) have read")
                 }
             }
             .padding(.horizontal)
-            .accessibilityElement(children: .combine)
         }
     }
 
@@ -240,7 +250,7 @@ struct SearchResultDetailView: View {
 
                     GeometryReader { geo in
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(.orange.opacity(0.6))
+                            .fill(.orange.opacity(0.7))
                             .frame(
                                 width: maxCount > 0
                                     ? geo.size.width * CGFloat(bar.count) / CGFloat(maxCount)
@@ -254,9 +264,11 @@ struct SearchResultDetailView: View {
                         .foregroundStyle(.tertiary)
                         .frame(width: 30, alignment: .leading)
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(bar.label) stars, \(bar.count) ratings")
             }
         }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, 32)
     }
 
     private func shelfStat(count: Int, label: String) -> some View {
@@ -338,21 +350,16 @@ struct SearchResultDetailView: View {
     // MARK: - Actions
 
     private func loadDetail() async {
-        defer { isLoadingDetail = false }
+        let key = searchResult.key
+        async let detailFetch = try? repository.fetchDetail(for: key)
+        async let ratingsFetch = try? repository.fetchRatings(workKey: key)
+        async let shelvesFetch = try? repository.fetchBookshelves(workKey: key)
 
-        do {
-            workDetail = try await repository.fetchDetail(for: searchResult.key)
-        } catch {
-            // Non-critical
-        }
-
-        async let ratingsTask: Void = {
-            self.workRatings = try? await repository.fetchRatings(workKey: searchResult.key)
-        }()
-        async let shelvesTask: Void = {
-            self.workBookshelves = try? await repository.fetchBookshelves(workKey: searchResult.key)
-        }()
-        _ = await (ratingsTask, shelvesTask)
+        let (detail, ratings, shelves) = await (detailFetch, ratingsFetch, shelvesFetch)
+        workDetail = detail
+        workRatings = ratings
+        workBookshelves = shelves
+        isLoadingDetail = false
     }
 
     private func handleAdd() {
