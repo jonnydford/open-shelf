@@ -83,6 +83,17 @@ struct DiscoverSection: View {
         Set(dismissedBooks.map(\.openLibraryWorkKey))
     }
 
+    private var libraryGenreCounts: [String: Int] {
+        var counts: [String: Int] = [:]
+        for book in libraryBooks where book.shelf == .read {
+            let genre = StatsCalculator.classifyGenre(subjects: book.subjects)
+            if genre != "Other" && genre != "Uncategorised" {
+                counts[genre, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             recommendationsSection
@@ -116,6 +127,7 @@ struct DiscoverSection: View {
         .task {
             let libKeys = libraryKeys
             let disKeys = dismissedKeySet
+            let genreCounts = libraryGenreCounts
             await recommendationService.refreshIfNeeded(
                 library: libraryBooks,
                 dismissed: dismissedBooks,
@@ -124,6 +136,7 @@ struct DiscoverSection: View {
             await popularBooksService.refreshIfNeeded(
                 libraryKeys: libKeys,
                 dismissedKeys: disKeys,
+                genreCounts: genreCounts,
                 using: repository
             )
         }
