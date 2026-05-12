@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 enum CoverSize: String, Sendable {
     case small = "S"
@@ -33,6 +34,8 @@ enum OpenLibraryError: Error, LocalizedError, Sendable {
 }
 
 actor OpenLibraryClient {
+    private static let logger = Logger(subsystem: "com.forddevinc.OpenShelf", category: "OpenLibrary")
+
     private let session: URLSession
     private let baseURL = "https://openlibrary.org"
     private let coversBaseURL = "https://covers.openlibrary.org"
@@ -51,8 +54,9 @@ actor OpenLibraryClient {
             config.httpAdditionalHeaders = [
                 "User-Agent": "OpenShelf/1.0 (contact@openshelf.app)"
             ]
-            config.timeoutIntervalForRequest = 15
-            config.timeoutIntervalForResource = 30
+            // Open Library search regularly takes 20-30s under load
+            config.timeoutIntervalForRequest = 30
+            config.timeoutIntervalForResource = 60
             self.session = URLSession(configuration: config)
         }
     }
@@ -226,12 +230,22 @@ actor OpenLibraryClient {
     // MARK: - Private
 
     private func performRequest<T: Decodable & Sendable>(url: URL) async throws -> T {
+        let endpoint = url.lastPathComponent
+        Self.logger.debug("Request started: \(endpoint, privacy: .public)")
+        let start = ContinuousClock.now
+
         let data: Data
         let response: URLResponse
 
         do {
             (data, response) = try await session.data(from: url)
         } catch {
+            let elapsed = ContinuousClock.now - start
+            if (error as? URLError)?.code == .timedOut {
+                Self.logger.error("Request timed out after \(elapsed, privacy: .public): \(endpoint, privacy: .public)")
+            } else {
+                Self.logger.error("Request failed after \(elapsed, privacy: .public): \(endpoint, privacy: .public) — \(error.localizedDescription, privacy: .public)")
+            }
             throw OpenLibraryError.networkError(error)
         }
 
@@ -241,20 +255,26 @@ actor OpenLibraryClient {
             )
         }
 
+        let elapsed = ContinuousClock.now - start
+
         switch httpResponse.statusCode {
         case 200:
-            break
+            Self.logger.debug("Request completed in \(elapsed, privacy: .public): \(endpoint, privacy: .public)")
         case 404:
+            Self.logger.warning("Not found (404) after \(elapsed, privacy: .public): \(endpoint, privacy: .public)")
             throw OpenLibraryError.notFound
         case 429:
+            Self.logger.warning("Rate limited (429) after \(elapsed, privacy: .public): \(endpoint, privacy: .public)")
             throw OpenLibraryError.rateLimited
         default:
+            Self.logger.error("HTTP \(httpResponse.statusCode) after \(elapsed, privacy: .public): \(endpoint, privacy: .public)")
             throw OpenLibraryError.httpError(statusCode: httpResponse.statusCode)
         }
 
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
+            Self.logger.error("Decoding failed for \(endpoint, privacy: .public): \(error.localizedDescription, privacy: .public)")
             throw OpenLibraryError.decodingError(error)
         }
     }
