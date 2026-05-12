@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct SharedWithMeView: View {
     @Environment(CloudSharingService.self) private var sharingService
@@ -108,8 +109,11 @@ struct SharedListDetailView: View {
     let listID: String
 
     @Environment(CloudSharingService.self) private var sharingService
+    @Environment(\.modelContext) private var modelContext
+    @Query private var libraryBooks: [Book]
 
     @State private var newKeys: Set<String> = []
+    @State private var showAddedToast = false
 
     private var list: SharedListRecord? {
         sharingService.sharedWithMe.first { $0.id == listID }
@@ -118,72 +122,22 @@ struct SharedListDetailView: View {
     var body: some View {
         if let list {
             List(list.books, id: \.olWorkKey) { book in
-                HStack(spacing: 12) {
-                    if let coverID = book.coverImageID {
-                        AsyncImage(
-                            url: URL(
-                                string: "https://covers.openlibrary.org/b/id/\(coverID)-M.jpg"
-                            )
-                        ) { image in
-                            image.resizable().aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Image(systemName: "book.closed.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(width: 44, height: 66)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xSmall))
-                    } else {
-                        Image(systemName: "book.closed.fill")
-                            .font(.title2)
-                            .foregroundStyle(.secondary)
-                            .frame(width: 44, height: 66)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 6) {
-                            Text(book.title)
-                                .font(.headline)
-                                .lineLimit(2)
-                            if newKeys.contains(book.olWorkKey) {
-                                Text("New")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 1)
-                                    .background(Color.accentColor, in: Capsule())
-                                    .accessibilityLabel("New addition")
-                            }
-                        }
-                        Text(book.authorName)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        if let rating = book.rating {
-                            HStack(spacing: 2) {
-                                Image(systemName: "star.fill")
-                                    .font(.caption2)
-                                    .foregroundStyle(.yellow)
-                                Text(
-                                    rating == floor(rating)
-                                        ? String(format: "%.0f", rating)
-                                        : String(format: "%.1f", rating)
-                                )
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        if let note = book.note, !note.isEmpty {
-                            Text(note)
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                                .lineLimit(2)
-                        }
-                    }
-
-                    Spacer()
+                NavigationLink {
+                    SearchResultDetailView(searchResult: book.asSearchResult)
+                } label: {
+                    sharedBookRow(book)
                 }
-                .padding(.vertical, 4)
+                .contextMenu {
+                    if isInLibrary(book) {
+                        Label("Already in Library", systemImage: "checkmark.circle")
+                    } else {
+                        Button {
+                            addToShelf(book)
+                        } label: {
+                            Label("Add to Want to Read", systemImage: "bookmark")
+                        }
+                    }
+                }
             }
             .listStyle(.plain)
             .navigationTitle(list.name)
@@ -198,6 +152,7 @@ struct SharedListDetailView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .toast(isPresented: $showAddedToast, message: "Added to Want to Read")
             .task {
                 newKeys = sharingService.newBookKeys(in: list)
             }
@@ -215,6 +170,97 @@ struct SharedListDetailView: View {
             } description: {
                 Text("This list may have been removed.")
             }
+        }
+    }
+
+    private func sharedBookRow(_ book: SharedBookEntry) -> some View {
+        HStack(spacing: 12) {
+            if let coverID = book.coverImageID {
+                AsyncImage(
+                    url: URL(
+                        string: "https://covers.openlibrary.org/b/id/\(coverID)-M.jpg"
+                    )
+                ) { image in
+                    image.resizable().aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Image(systemName: "book.closed.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: 44, height: 66)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xSmall))
+            } else {
+                Image(systemName: "book.closed.fill")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 44, height: 66)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(book.title)
+                        .font(.headline)
+                        .lineLimit(2)
+                    if newKeys.contains(book.olWorkKey) {
+                        Text("New")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(Color.accentColor, in: Capsule())
+                            .accessibilityLabel("New addition")
+                    }
+                }
+                Text(book.authorName)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                if let rating = book.rating {
+                    HStack(spacing: 2) {
+                        Image(systemName: "star.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.yellow)
+                        Text(
+                            rating == floor(rating)
+                                ? String(format: "%.0f", rating)
+                                : String(format: "%.1f", rating)
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+
+                if let note = book.note, !note.isEmpty {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func isInLibrary(_ book: SharedBookEntry) -> Bool {
+        libraryBooks.contains { $0.olWorkKey == book.olWorkKey }
+    }
+
+    private func addToShelf(_ book: SharedBookEntry) {
+        let newBook = Book(
+            olWorkKey: book.olWorkKey,
+            isbn13: book.isbn13,
+            title: book.title,
+            authorName: book.authorName,
+            coverImageID: book.coverImageID,
+            shelf: .wantToRead
+        )
+        modelContext.insert(newBook)
+        do {
+            try modelContext.save()
+            showAddedToast = true
+        } catch {
+            modelContext.rollback()
         }
     }
 }
