@@ -13,6 +13,7 @@ final class CloudSharingService {
     private(set) var isLoading = false
     private(set) var sharedWithMeFetchFailed = false
     private(set) var publicShelfShareURL: URL?
+    private(set) var publicShelfFollowerCount: Int = 0
 
     private var cachedShares: [String: CKShare] = [:]
     private(set) var hiddenListIDs: Set<String> = []
@@ -410,6 +411,7 @@ final class CloudSharingService {
 
         cachedShares.removeValue(forKey: Self.publicShelfRecordName)
         publicShelfShareURL = nil
+        publicShelfFollowerCount = 0
     }
 
     func fetchPublicShelfURL() async {
@@ -427,10 +429,13 @@ final class CloudSharingService {
                 let shareRecord = try await container.privateCloudDatabase.record(for: shareRef.recordID)
                 if let ckShare = shareRecord as? CKShare {
                     publicShelfShareURL = ckShare.url
+                    let accepted = ckShare.participants.filter { $0.acceptanceStatus == .accepted && $0.role != .owner }
+                    publicShelfFollowerCount = accepted.count
                 }
             }
         } catch {
             publicShelfShareURL = nil
+            publicShelfFollowerCount = 0
         }
     }
 
