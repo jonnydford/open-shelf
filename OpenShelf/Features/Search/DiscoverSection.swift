@@ -64,7 +64,7 @@ struct DiscoverSection: View {
         if !lists.isEmpty {
             VStack(alignment: .leading, spacing: 24) {
                 ForEach(groupedLists, id: \.category) { group in
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 12) {
                         Text(group.category.displayName)
                             .font(.headline)
                             .padding(.horizontal)
@@ -83,6 +83,7 @@ struct DiscoverSection: View {
                             .scrollTargetLayout()
                             .padding(.horizontal)
                         }
+                        .scrollTargetBehavior(.viewAligned)
                     }
                 }
             }
@@ -96,33 +97,47 @@ struct DiscoverSection: View {
             Text(list.name)
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .lineLimit(1)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text("^[\(list.books.count) book](inflect: true)")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
         .frame(width: 160)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(list.name), \(list.description), \(list.books.count) books")
         .accessibilityAddTraits(.isButton)
         .accessibilityHint("Double tap to view list")
     }
 
     private func coverGrid(_ books: [CuratedBookEntry]) -> some View {
-        let topBooks = Array(books.prefix(4))
-        return LazyVGrid(
-            columns: [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)],
-            spacing: 4
-        ) {
-            ForEach(topBooks) { book in
-                CoverImage(coverID: book.coverID, size: .small)
-                    .frame(width: 76, height: 114)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xSmall))
+        let covers = Array(books.prefix(4))
+        return VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                coverCell(covers.indices.contains(0) ? covers[0] : nil)
+                coverCell(covers.indices.contains(1) ? covers[1] : nil)
+            }
+            HStack(spacing: 4) {
+                coverCell(covers.indices.contains(2) ? covers[2] : nil)
+                coverCell(covers.indices.contains(3) ? covers[3] : nil)
             }
         }
-        .frame(width: 156, height: 232)
         .padding(2)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
+    }
+
+    @ViewBuilder
+    private func coverCell(_ book: CuratedBookEntry?) -> some View {
+        if let book {
+            CoverImage(coverID: book.coverID, size: .medium)
+                .frame(width: 76, height: 114)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xSmall))
+        } else {
+            RoundedRectangle(cornerRadius: CornerRadius.xSmall)
+                .fill(.quaternary)
+                .frame(width: 76, height: 114)
+        }
     }
 
     init() {
