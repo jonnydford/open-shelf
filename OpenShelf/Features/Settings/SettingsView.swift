@@ -9,10 +9,14 @@ struct SettingsView: View {
     @Query(sort: \FollowedAuthor.dateFollowed, order: .reverse) private var followedAuthors: [FollowedAuthor]
     @Query(sort: \DismissedBook.dateDismissed, order: .reverse) private var dismissedBooks: [DismissedBook]
 
+    @Environment(BookRepository.self) private var repository
+
     @State private var showImportView = false
     @State private var showExportView = false
     @State private var showSetGoal = false
     @State private var showLibraryPicker = false
+    @State private var cacheSize: Int64?
+    @State private var showClearCacheAlert = false
 
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
@@ -38,6 +42,7 @@ struct SettingsView: View {
                 librarySection
                 importSection
                 exportSection
+                storageSection
                 pastUnwrappedSection
                 goalHistorySection
                 aboutSection
@@ -379,6 +384,58 @@ struct SettingsView: View {
                 Label("Export Library", systemImage: "square.and.arrow.up")
             }
         }
+    }
+
+    // MARK: - Storage Section
+
+    private var storageSection: some View {
+        Section("Storage") {
+            HStack {
+                Text("Cache size")
+                Spacer()
+                if let size = cacheSize {
+                    Text(formattedCacheSize(size))
+                        .foregroundStyle(.secondary)
+                } else {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+            .task { await computeCacheSize() }
+
+            Button(role: .destructive) {
+                showClearCacheAlert = true
+            } label: {
+                Label("Clear Cache", systemImage: "trash")
+            }
+            .disabled(cacheSize == nil || cacheSize == 0)
+            .alert("Clear Cache?", isPresented: $showClearCacheAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Clear", role: .destructive) {
+                    Task { await clearAllCaches() }
+                }
+            } message: {
+                Text("This will remove cached book covers and metadata. They will be re-downloaded as needed.")
+            }
+        }
+    }
+
+    private func computeCacheSize() async {
+        let coverSize = await repository.imageCache.cacheSize()
+        let metaSize = await repository.metadataCache.cacheSize()
+        cacheSize = coverSize + metaSize
+    }
+
+    private func clearAllCaches() async {
+        await repository.imageCache.clearCache()
+        await repository.metadataCache.clearCache()
+        await computeCacheSize()
+    }
+
+    private func formattedCacheSize(_ bytes: Int64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
     }
 
     // MARK: - Past Unwrapped Section
