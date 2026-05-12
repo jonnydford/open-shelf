@@ -13,6 +13,7 @@ struct StatsView: View {
 
     @State private var filter: YearFilter = .year(Calendar.current.component(.year, from: .now))
     @State private var didMarkReadToday = false
+    @Environment(BookRepository.self) private var repository
 
     private var currentYear: Int {
         Calendar.current.component(.year, from: .now)
@@ -399,6 +400,18 @@ struct StatsView: View {
         return f
     }()
 
+    @State private var toggledDates: Set<Date> = []
+
+    private static let backfillLimit = 14
+
+    private func isEditable(_ day: Date) -> Bool {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        guard day <= today else { return false }
+        let daysAgo = calendar.dateComponents([.day], from: day, to: today).day ?? 0
+        return daysAgo < Self.backfillLimit
+    }
+
     private var streakHeatmap: some View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
@@ -425,15 +438,44 @@ struct StatsView: View {
                         let daysAgo = (1 - week) * 7 + (6 - dayIndex)
                         let day = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
                         let didRead = dates.contains(day)
+                        let editable = isEditable(day)
 
                         Circle()
                             .fill(didRead ? Color.orange : Color.primary.opacity(0.1))
                             .frame(width: 14, height: 14)
+                            .scaleEffect(toggledDates.contains(day) ? 1.3 : 1.0)
+                            .onTapGesture {
+                                guard editable else { return }
+                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                generator.impactOccurred()
+                                withAnimation(.spring(duration: 0.3, bounce: 0.5)) {
+                                    _ = repository.toggleReadingDay(for: day)
+                                    toggledDates.insert(day)
+                                }
+                                Task {
+                                    try? await Task.sleep(for: .milliseconds(400))
+                                    await MainActor.run {
+                                        withAnimation { toggledDates.remove(day) }
+                                    }
+                                }
+                            }
+                            .opacity(editable ? 1.0 : 0.6)
                             .accessibilityLabel("\(Self.heatmapDateFormatter.string(from: day)): \(didRead ? "read" : "did not read")")
+                            .accessibilityAddTraits(editable ? .isButton : [])
+                            .accessibilityHint(editable ? "Tap to toggle" : "")
                     }
                     Spacer()
                 }
             }
+
+            NavigationLink {
+                ReadingCalendarView()
+            } label: {
+                Text("See all")
+                    .font(.caption)
+                    .foregroundStyle(Color.accentColor)
+            }
+            .padding(.top, 4)
         }
     }
 

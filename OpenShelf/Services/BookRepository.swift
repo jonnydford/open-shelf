@@ -38,6 +38,44 @@ final class BookRepository {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    func removeReadingDay(for date: Date) {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        let descriptor = FetchDescriptor<ReadingDay>(
+            predicate: #Predicate { $0.date >= startOfDay && $0.date < endOfDay }
+        )
+        guard let days = try? modelContext.fetch(descriptor) else { return }
+        for day in days {
+            modelContext.delete(day)
+        }
+        try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    func toggleReadingDay(for date: Date) -> Bool {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        let descriptor = FetchDescriptor<ReadingDay>(
+            predicate: #Predicate { $0.date >= startOfDay && $0.date < endOfDay }
+        )
+        let existing = (try? modelContext.fetch(descriptor)) ?? []
+        if existing.isEmpty {
+            modelContext.insert(ReadingDay(date: startOfDay))
+            try? modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
+            return true
+        } else {
+            for day in existing {
+                modelContext.delete(day)
+            }
+            try? modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
+            return false
+        }
+    }
+
     // MARK: - Local operations
 
     func addBook(from searchResult: SearchResult, detail: WorkDetail?, shelf: Shelf) {
