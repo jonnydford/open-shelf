@@ -114,14 +114,16 @@ struct DiscoverSection: View {
             }
         }
         .task {
+            let libKeys = libraryKeys
+            let disKeys = dismissedKeySet
             await recommendationService.refreshIfNeeded(
                 library: libraryBooks,
                 dismissed: dismissedBooks,
                 using: repository
             )
             await popularBooksService.refreshIfNeeded(
-                libraryKeys: libraryKeys,
-                dismissedKeys: dismissedKeySet,
+                libraryKeys: libKeys,
+                dismissedKeys: disKeys,
                 using: repository
             )
         }
@@ -160,7 +162,7 @@ struct DiscoverSection: View {
                                     Button {
                                         selectedRecommendation = book
                                     } label: {
-                                        recommendedBookCard(book)
+                                        discoverBookCard(book)
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityHint("Double tap to view details")
@@ -213,7 +215,7 @@ struct DiscoverSection: View {
                                 Button {
                                     selectedRecommendation = book
                                 } label: {
-                                    popularBookCard(book)
+                                    discoverBookCard(book, showReaderCount: true)
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityHint("Double tap to view details")
@@ -234,7 +236,7 @@ struct DiscoverSection: View {
             }
         } else if popularBooksService.isLoading {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Popular Books")
+                Text("Most Read")
                     .font(.headline)
                     .padding(.horizontal)
                     .accessibilityAddTraits(.isHeader)
@@ -247,7 +249,9 @@ struct DiscoverSection: View {
         }
     }
 
-    private func popularBookCard(_ book: SearchResult) -> some View {
+    // MARK: - Shared Book Card
+
+    private func discoverBookCard(_ book: SearchResult, showReaderCount: Bool = false) -> some View {
         VStack(spacing: 6) {
             CoverImage(coverID: book.coverI, size: .medium)
                 .frame(width: 100, height: 150)
@@ -265,7 +269,7 @@ struct DiscoverSection: View {
                 .lineLimit(1)
                 .frame(width: 100)
 
-            if let count = book.readinglogCount, count > 0 {
+            if showReaderCount, let count = book.readinglogCount, count > 0 {
                 Text("\(Self.formatCount(count)) readers")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
@@ -274,34 +278,15 @@ struct DiscoverSection: View {
         .accessibilityElement(children: .combine)
     }
 
-    private static func formatCount(_ count: Int) -> String {
+    static func formatCount(_ count: Int) -> String {
         if count >= 1_000_000 {
-            return String(format: "%.1fM", Double(count) / 1_000_000)
+            let value = Double(count) / 1_000_000
+            return value >= 10 ? "\(Int(value))M" : String(format: "%.1fM", value)
         } else if count >= 1_000 {
-            return String(format: "%.1fK", Double(count) / 1_000)
+            let value = Double(count) / 1_000
+            return value >= 100 ? "\(Int(value))K" : String(format: "%.1fK", value)
         }
         return "\(count)"
-    }
-
-    private func recommendedBookCard(_ book: SearchResult) -> some View {
-        VStack(spacing: 6) {
-            CoverImage(coverID: book.coverI, size: .medium)
-                .frame(width: 100, height: 150)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
-
-            Text(book.title)
-                .font(.caption)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .frame(width: 100)
-
-            Text(book.authorName?.first ?? "Unknown Author")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .frame(width: 100)
-        }
-        .accessibilityElement(children: .combine)
     }
 
     private func dismissRecommendedBook(_ book: SearchResult) {
