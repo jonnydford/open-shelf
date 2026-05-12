@@ -40,6 +40,7 @@ targets:
         INFOPLIST_KEY_NSCameraUsageDescription: "Open Shelf uses your camera to scan book barcodes for quick adding."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Open Shelf lets you pick a cover image from your photos for manually added books."
         INFOPLIST_KEY_NSFaceIDUsageDescription: "Open Shelf uses Face ID to protect your private books."
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Open Shelf checks your local weather to show personalised reading suggestions. Your location is never stored or shared."
     info:
       path: OpenShelf/Info.plist
       properties:

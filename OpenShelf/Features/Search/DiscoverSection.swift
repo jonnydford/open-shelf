@@ -57,6 +57,7 @@ struct CuratedList: Codable, Identifiable {
 // MARK: - Discover Section (grouped horizontal-scroll layout)
 
 struct DiscoverSection: View {
+    @Environment(ReadingPromptService.self) private var readingPromptService
     @Environment(DiscoverRecommendationService.self) private var recommendationService
     @Environment(PopularBooksService.self) private var popularBooksService
     @Environment(BookRepository.self) private var repository
@@ -96,6 +97,8 @@ struct DiscoverSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
+            readingPromptBanner
+
             recommendationsSection
 
             popularSection
@@ -142,6 +145,32 @@ struct DiscoverSection: View {
         }
         .sheet(item: $selectedRecommendation) { result in
             BookDetailSheet(searchResult: result, onAdded: {})
+        }
+    }
+
+    // MARK: - Reading Prompt Banner
+
+    @ViewBuilder
+    private var readingPromptBanner: some View {
+        if let prompt = readingPromptService.currentPrompt {
+            HStack(spacing: 12) {
+                Image(systemName: prompt.systemImage)
+                    .font(.title2)
+                    .foregroundStyle(prompt.tintColor)
+                    .accessibilityHidden(true)
+
+                Text(prompt.message)
+                    .font(.subheadline)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(prompt.tintColor.opacity(0.1), in: RoundedRectangle(cornerRadius: CornerRadius.medium))
+            .padding(.horizontal)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Reading suggestion: \(prompt.message)")
+            .transition(.opacity)
+            .animation(.easeInOut, value: prompt.message)
+            .task { await readingPromptService.refresh() }
         }
     }
 

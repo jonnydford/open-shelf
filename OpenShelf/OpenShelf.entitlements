@@ -9,6 +9,8 @@
     <!-- CloudKit requires real code signing with a provisioning profile.
          These entitlements are set up correctly but will only function
          when the app is signed with a real Apple Developer identity. -->
+    <key>com.apple.developer.weatherkit</key>
+    <true/>
     <key>com.apple.developer.icloud-services</key>
     <array>
         <string>CloudKit</string>
