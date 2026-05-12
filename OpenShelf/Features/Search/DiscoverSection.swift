@@ -51,7 +51,15 @@ struct CuratedList: Codable, Identifiable {
 // MARK: - Discover Section (grouped horizontal-scroll layout)
 
 struct DiscoverSection: View {
+    @Environment(DiscoverRecommendationService.self) private var recommendationService
+    @Environment(BookRepository.self) private var repository
+    @Environment(\.modelContext) private var modelContext
+
+    @Query private var libraryBooks: [Book]
+    @Query private var dismissedBooks: [DismissedBook]
+
     @State private var lists: [CuratedList] = []
+    @State private var selectedRecommendation: SearchResult?
 
     private var groupedLists: [(category: CuratedListCategory, lists: [CuratedList])] {
         CuratedListCategory.allCases.compactMap { category in
@@ -61,23 +69,86 @@ struct DiscoverSection: View {
     }
 
     var body: some View {
-        if !lists.isEmpty {
-            VStack(alignment: .leading, spacing: 24) {
-                ForEach(groupedLists, id: \.category) { group in
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(group.category.displayName)
-                            .font(.headline)
-                            .padding(.horizontal)
+        VStack(alignment: .leading, spacing: 24) {
+            recommendationsSection
+
+            ForEach(groupedLists, id: \.category) { group in
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(group.category.displayName)
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 12) {
+                            ForEach(group.lists) { list in
+                                NavigationLink {
+                                    CuratedListDetailView(list: list)
+                                } label: {
+                                    curatedListCard(list)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .scrollTargetLayout()
+                        .padding(.horizontal)
+                    }
+                    .scrollTargetBehavior(.viewAligned)
+                }
+            }
+        }
+        .task {
+            await recommendationService.refreshIfNeeded(
+                library: libraryBooks,
+                dismissed: dismissedBooks,
+                using: repository
+            )
+        }
+        .sheet(item: $selectedRecommendation) { result in
+            BookDetailSheet(searchResult: result, onAdded: {})
+        }
+    }
+
+    // MARK: - Recommendations
+
+    @ViewBuilder
+    private var recommendationsSection: some View {
+        if !recommendationService.recommendations.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Recommended for You")
+                    .font(.headline)
+                    .padding(.horizontal)
+                    .accessibilityAddTraits(.isHeader)
+
+                ForEach(recommendationService.recommendations) { rec in
+                    VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(rec.title)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .accessibilityAddTraits(.isHeader)
+                            Text(rec.subtitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal)
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             LazyHStack(spacing: 12) {
-                                ForEach(group.lists) { list in
-                                    NavigationLink {
-                                        CuratedListDetailView(list: list)
+                                ForEach(rec.books) { book in
+                                    Button {
+                                        selectedRecommendation = book
                                     } label: {
-                                        curatedListCard(list)
+                                        recommendedBookCard(book)
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityHint("Double tap to view details")
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            dismissRecommendedBook(book)
+                                        } label: {
+                                            Label("Not Interested", systemImage: "hand.thumbsdown")
+                                        }
+                                    }
                                 }
                             }
                             .scrollTargetLayout()
@@ -87,6 +158,51 @@ struct DiscoverSection: View {
                     }
                 }
             }
+        } else if recommendationService.isLoading {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Recommended for You")
+                    .font(.headline)
+                    .padding(.horizontal)
+                    .accessibilityAddTraits(.isHeader)
+
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                    .accessibilityLabel("Loading recommendations")
+            }
+        }
+    }
+
+    private func recommendedBookCard(_ book: SearchResult) -> some View {
+        VStack(spacing: 6) {
+            CoverImage(coverID: book.coverI, size: .medium)
+                .frame(width: 100, height: 150)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+
+            Text(book.title)
+                .font(.caption)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(width: 100)
+
+            Text(book.authorName?.first ?? "Unknown Author")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .frame(width: 100)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func dismissRecommendedBook(_ book: SearchResult) {
+        let dismissed = DismissedBook(
+            openLibraryWorkKey: book.key,
+            title: book.title,
+            author: book.authorName?.first ?? "Unknown Author"
+        )
+        withAnimation {
+            modelContext.insert(dismissed)
+            try? modelContext.save()
         }
     }
 
