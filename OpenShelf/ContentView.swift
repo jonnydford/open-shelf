@@ -7,6 +7,9 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(BookRepository.self) private var repository
 
+    @Query private var activityEvents: [ActivityEvent]
+    @AppStorage("lastViewedActivityTimestamp") private var lastViewedActivityTimestamp: Double = 0
+
     @State private var selectedTab = "Library"
     @State private var deepLinkBookKey: String?
     @State private var showDeepLinkBook = false
@@ -14,6 +17,21 @@ struct ContentView: View {
     @State private var deepLinkSearchResult: SearchResult?
     @State private var isLoadingDeepLink = false
     @State private var deepLinkSearchQuery: String?
+
+    init() {
+        let cutoff = Date.now.addingTimeInterval(-30 * 24 * 60 * 60)
+        _activityEvents = Query(
+            filter: #Predicate<ActivityEvent> { $0.timestamp > cutoff },
+            sort: \.timestamp,
+            order: .reverse
+        )
+    }
+
+    private var unseenActivityCount: Int {
+        guard lastViewedActivityTimestamp > 0 else { return 0 }
+        let threshold = Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp)
+        return min(activityEvents.filter { $0.timestamp > threshold }.count, 99)
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -28,6 +46,7 @@ struct ContentView: View {
             Tab("Following", systemImage: "person.2", value: "Following") {
                 FollowingView()
             }
+            .badge(unseenActivityCount)
 
             Tab("Stats", systemImage: "chart.bar", value: "Stats") {
                 StatsView()
@@ -56,6 +75,11 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .publicShelfFollowed)) { notification in
             handleFollowedShelfNotification(notification)
+        }
+        .onChange(of: selectedTab) { _, newTab in
+            if newTab == "Following" {
+                lastViewedActivityTimestamp = Date.now.timeIntervalSinceReferenceDate
+            }
         }
     }
 

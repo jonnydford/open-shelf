@@ -7,6 +7,8 @@ struct FollowingView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(CloudSharingService.self) private var sharingService
 
+    @AppStorage("lastViewedActivityTimestamp") private var lastViewedActivityTimestamp: Double = 0
+
     @State private var shelfToUnfollow: FollowedShelf?
     @State private var showClearAllAlert = false
 
@@ -65,7 +67,14 @@ struct FollowingView: View {
         List {
             if !activityEvents.isEmpty {
                 Section {
-                    ForEach(activityEvents) { event in
+                    ForEach(Array(activityEvents.enumerated()), id: \.element.id) { index, event in
+                        if index > 0,
+                           lastViewedActivityTimestamp > 0,
+                           activityEvents[index - 1].timestamp > Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp),
+                           event.timestamp <= Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp) {
+                            newDivider
+                        }
+
                         if let searchResult = event.asSearchResult {
                             NavigationLink {
                                 SearchResultDetailView(searchResult: searchResult)
@@ -106,6 +115,19 @@ struct FollowingView: View {
                 }
             }
         }
+    }
+
+    private var newDivider: some View {
+        HStack {
+            VStack { Divider() }
+            Text("New")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            VStack { Divider() }
+        }
+        .listRowSeparator(.hidden)
+        .padding(.vertical, 4)
     }
 
     private func refreshAll() async {
