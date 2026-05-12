@@ -10,13 +10,7 @@ struct ReadingListsView: View {
     @State private var newListName = ""
 
     var body: some View {
-        Group {
-            if lists.isEmpty {
-                emptyState
-            } else {
-                listContent
-            }
-        }
+        listContent
         .navigationTitle("Reading Lists")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -41,33 +35,52 @@ struct ReadingListsView: View {
         }
     }
 
-    // MARK: - Empty State
-
-    private var emptyState: some View {
-        ContentUnavailableView {
-            Label("Organise your reads into lists", systemImage: "list.bullet.rectangle")
-        } description: {
-            Text("Group books by theme, mood, or however you like.")
-        } actions: {
-            Button("Create a List") {
-                newListName = ""
-                showNewListAlert = true
-            }
-        }
-    }
-
     // MARK: - List Content
 
     private var listContent: some View {
         List {
-            ForEach(lists) { list in
-                NavigationLink {
-                    ReadingListDetailView(readingList: list)
-                } label: {
-                    listRow(list)
+            Section("Smart Lists") {
+                ForEach(SmartList.allCases) { smartList in
+                    NavigationLink {
+                        SmartListDetailView(smartList: smartList)
+                    } label: {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(smartList.name)
+                                    .font(.headline)
+                                Text(smartList.subtitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 4)
+                        } icon: {
+                            Image(systemName: smartList.systemImage)
+                                .foregroundStyle(.tint)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityHint(smartList.subtitle)
+                }
+                .deleteDisabled(true)
+            }
+
+            Section("My Lists") {
+                if lists.isEmpty {
+                    Text("Tap + to create your first list")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(lists) { list in
+                        NavigationLink {
+                            ReadingListDetailView(readingList: list)
+                        } label: {
+                            listRow(list)
+                        }
+                    }
+                    .onDelete(perform: deleteLists)
                 }
             }
-            .onDelete(perform: deleteLists)
 
             if CloudSharingService.isAvailable {
                 Section {
@@ -93,7 +106,7 @@ struct ReadingListsView: View {
                 }
             }
         }
-        .listStyle(.plain)
+        .listStyle(.insetGrouped)
         .task {
             guard CloudSharingService.isAvailable else { return }
             await sharingService.fetchSharedWithMe()
