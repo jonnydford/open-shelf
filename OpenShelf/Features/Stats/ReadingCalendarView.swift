@@ -89,27 +89,37 @@ private struct MonthGridView: View {
                         let didRead = readingDates.contains(date)
                         let editable = isEditable(date)
 
-                        Circle()
-                            .fill(didRead ? Color.orange : Color.primary.opacity(0.1))
-                            .frame(width: 24, height: 24)
-                            .scaleEffect(toggledDates.contains(date) ? 1.3 : 1.0)
-                            .onTapGesture {
-                                guard editable else { return }
-                                onToggle(date)
-                                withAnimation(.spring(duration: 0.3, bounce: 0.5)) {
-                                    toggledDates.insert(date)
-                                }
-                                Task {
-                                    try? await Task.sleep(for: .milliseconds(400))
-                                    await MainActor.run {
-                                        withAnimation { toggledDates.remove(date) }
-                                    }
+                        ZStack {
+                            Circle()
+                                .fill(didRead ? Color.orange : (editable ? Color.primary.opacity(0.15) : Color.primary.opacity(0.08)))
+                                .frame(width: 24, height: 24)
+
+                            if editable && !didRead {
+                                Circle()
+                                    .strokeBorder(Color.primary.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                                    .frame(width: 24, height: 24)
+                            }
+                        }
+                        .scaleEffect(toggledDates.contains(date) ? 1.3 : 1.0)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Circle())
+                        .onTapGesture {
+                            guard editable else { return }
+                            onToggle(date)
+                            withAnimation(.spring(duration: 0.3, bounce: 0.5)) {
+                                toggledDates.insert(date)
+                            }
+                            Task {
+                                try? await Task.sleep(for: .milliseconds(400))
+                                await MainActor.run {
+                                    withAnimation { toggledDates.remove(date) }
                                 }
                             }
-                            .opacity(editable ? 1.0 : (didRead ? 0.8 : 0.3))
-                            .accessibilityLabel(accessibilityLabel(for: date, didRead: didRead))
-                            .accessibilityAddTraits(editable ? .isButton : [])
-                            .accessibilityHint(editable ? "Tap to toggle" : "")
+                        }
+                        .opacity(editable ? 1.0 : (didRead ? 0.8 : 0.3))
+                        .accessibilityLabel(accessibilityLabel(for: date, didRead: didRead))
+                        .accessibilityAddTraits(editable ? .isButton : [])
+                        .accessibilityHint(editable ? "Tap to toggle" : "")
                     } else {
                         Color.clear
                             .frame(width: 24, height: 24)
