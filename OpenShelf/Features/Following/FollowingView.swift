@@ -20,9 +20,9 @@ struct FollowingView: View {
                     ContentUnavailableView {
                         Label("No Friends Yet", systemImage: "person.2")
                     } description: {
-                        Text("When a friend shares their shelf link with you, tap it to follow their reading activity.")
+                        Text("Follow friends who share their shelf link with you, and share yours so they can follow you back.")
                     } actions: {
-                        Button("Set Up Sharing") {
+                        Button("Share Your Shelf") {
                             showSettings = true
                         }
                     }
