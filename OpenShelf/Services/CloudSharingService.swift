@@ -7,9 +7,11 @@ final class CloudSharingService {
     static let zoneName = "SharedLists"
 
     private let recordType = "SharedReadingList"
+    private let publicShelfRecordType = "PublicShelf"
 
     private(set) var sharedWithMe: [SharedListRecord] = []
     private(set) var isLoading = false
+    private(set) var publicShelfShareURL: URL?
 
     private var cachedShares: [String: CKShare] = [:]
 
@@ -220,5 +222,121 @@ final class CloudSharingService {
             ownerName: ownerName,
             lastUpdated: lastUpdated
         )
+    }
+
+    // MARK: - Public Shelf
+
+    private static let publicShelfRecordName = "myPublicShelf"
+
+    func publishPublicShelf(snapshot: PublicShelfSnapshot) async throws -> URL? {
+        let ckContainer = try container
+        try await ensureZoneExists()
+
+        let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
+        let recordID = CKRecord.ID(
+            recordName: Self.publicShelfRecordName,
+            zoneID: zoneID
+        )
+
+        let record = CKRecord(recordType: publicShelfRecordType, recordID: recordID)
+        populatePublicShelfRecord(record, snapshot: snapshot)
+
+        let share = CKShare(rootRecord: record)
+        share[CKShare.SystemFieldKey.title] = "\(snapshot.displayName)'s Shelf" as CKRecordValue
+        share.publicPermission = .readOnly
+
+        _ = try await ckContainer.privateCloudDatabase.modifyRecords(
+            saving: [record, share], deleting: []
+        )
+
+        cachedShares[Self.publicShelfRecordName] = share
+        publicShelfShareURL = share.url
+        return share.url
+    }
+
+    func updatePublicShelf(snapshot: PublicShelfSnapshot) async throws {
+        try await ensureZoneExists()
+
+        let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
+        let recordID = CKRecord.ID(
+            recordName: Self.publicShelfRecordName,
+            zoneID: zoneID
+        )
+
+        do {
+            let record = try await container.privateCloudDatabase.record(for: recordID)
+            populatePublicShelfRecord(record, snapshot: snapshot)
+
+            if let shareRef = record.share {
+                let shareRecord = try await container.privateCloudDatabase.record(for: shareRef.recordID)
+                if let ckShare = shareRecord as? CKShare {
+                    ckShare[CKShare.SystemFieldKey.title] = "\(snapshot.displayName)'s Shelf" as CKRecordValue
+                    publicShelfShareURL = ckShare.url
+                }
+            }
+
+            _ = try await container.privateCloudDatabase.save(record)
+        } catch let error as CKError where error.code == .unknownItem {
+            _ = try await publishPublicShelf(snapshot: snapshot)
+        }
+    }
+
+    func unpublishPublicShelf() async throws {
+        let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
+        let recordID = CKRecord.ID(
+            recordName: Self.publicShelfRecordName,
+            zoneID: zoneID
+        )
+
+        do {
+            let record = try await container.privateCloudDatabase.record(for: recordID)
+            var recordsToDelete = [recordID]
+            if let shareRef = record.share {
+                recordsToDelete.append(shareRef.recordID)
+            }
+            _ = try await container.privateCloudDatabase.modifyRecords(
+                saving: [], deleting: recordsToDelete
+            )
+        } catch {
+            // Record may not exist — that's fine
+        }
+
+        cachedShares.removeValue(forKey: Self.publicShelfRecordName)
+        publicShelfShareURL = nil
+    }
+
+    func fetchPublicShelfURL() async {
+        guard Self.isAvailable else { return }
+
+        let zoneID = CKRecordZone.ID(zoneName: Self.zoneName)
+        let recordID = CKRecord.ID(
+            recordName: Self.publicShelfRecordName,
+            zoneID: zoneID
+        )
+
+        do {
+            let record = try await container.privateCloudDatabase.record(for: recordID)
+            if let shareRef = record.share {
+                let shareRecord = try await container.privateCloudDatabase.record(for: shareRef.recordID)
+                if let ckShare = shareRecord as? CKShare {
+                    publicShelfShareURL = ckShare.url
+                }
+            }
+        } catch {
+            publicShelfShareURL = nil
+        }
+    }
+
+    private func populatePublicShelfRecord(
+        _ record: CKRecord,
+        snapshot: PublicShelfSnapshot
+    ) {
+        record["displayName"] = snapshot.displayName as CKRecordValue
+        record["lastUpdated"] = snapshot.lastUpdated as CKRecordValue
+
+        if let data = try? JSONEncoder().encode(snapshot),
+           let json = String(data: data, encoding: .utf8) {
+            record["snapshotJSON"] = json as CKRecordValue
+        }
     }
 }

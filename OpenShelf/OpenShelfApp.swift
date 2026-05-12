@@ -9,6 +9,7 @@ struct OpenShelfApp: App {
     private let modelContainer: ModelContainer
     private let repository: BookRepository
     private let sharingService = CloudSharingService()
+    private let publicShelfUpdater: PublicShelfUpdater
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -16,8 +17,13 @@ struct OpenShelfApp: App {
         do {
             let container = try SharedModelContainer.makeContainer()
             self.modelContainer = container
-            self.repository = BookRepository(
+            let repo = BookRepository(
                 modelContext: container.mainContext
+            )
+            self.repository = repo
+            self.publicShelfUpdater = PublicShelfUpdater(
+                repository: repo,
+                sharingService: sharingService
             )
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
@@ -32,6 +38,7 @@ struct OpenShelfApp: App {
             ContentView()
                 .environment(repository)
                 .environment(sharingService)
+                .environment(publicShelfUpdater)
                 .task {
                     SpotlightIndexer.indexAllBooks(from: modelContainer.mainContext)
                 }

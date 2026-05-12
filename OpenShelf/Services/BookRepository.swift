@@ -3,6 +3,10 @@ import SwiftData
 import Observation
 import WidgetKit
 
+extension Notification.Name {
+    static let publicShelfNeedsUpdate = Notification.Name("publicShelfNeedsUpdate")
+}
+
 @MainActor
 @Observable
 final class BookRepository {
@@ -106,6 +110,8 @@ final class BookRepository {
             recordReadingDay(bookKey: book.olWorkKey)
         }
 
+        NotificationCenter.default.post(name: .publicShelfNeedsUpdate, object: nil)
+
         // Prefetch cover in background
         if let coverID = book.coverImageID {
             Task {
@@ -121,6 +127,7 @@ final class BookRepository {
         modelContext.delete(book)
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
+        NotificationCenter.default.post(name: .publicShelfNeedsUpdate, object: nil)
     }
 
     func updateShelf(_ book: Book, to shelf: Shelf) {
@@ -156,11 +163,14 @@ final class BookRepository {
         if shelf == .reading || shelf == .read {
             recordReadingDay(bookKey: book.olWorkKey)
         }
+
+        NotificationCenter.default.post(name: .publicShelfNeedsUpdate, object: nil)
     }
 
     func updateRating(_ book: Book, rating: Double?) {
         book.userRating = rating
         try? modelContext.save()
+        NotificationCenter.default.post(name: .publicShelfNeedsUpdate, object: nil)
     }
 
     func updateProgress(_ book: Book, page: Int) {
@@ -201,6 +211,73 @@ final class BookRepository {
     func allBooks() -> [Book] {
         let descriptor = FetchDescriptor<Book>()
         return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    // MARK: - Public Shelf Snapshot
+
+    func buildPublicShelfSnapshot(
+        displayName: String,
+        flags: PublicShelfSnapshot.VisibilityFlags
+    ) -> PublicShelfSnapshot {
+        let allBooks = allBooks().filter { !$0.isPrivate }
+
+        let currentlyReading: [PublicBookEntry] = flags.currentlyReading
+            ? allBooks.filter { $0.shelf == .reading }.map { book in
+                PublicBookEntry(
+                    olWorkKey: book.olWorkKey,
+                    title: book.title,
+                    authorName: book.authorName,
+                    isbn13: book.isbn13,
+                    coverImageID: book.coverImageID,
+                    rating: flags.ratings ? book.userRating : nil,
+                    note: flags.notes ? book.notes.map { String($0.prefix(200)) } : nil,
+                    dateFinished: nil
+                )
+            }
+            : []
+
+        let recentlyFinished: [PublicBookEntry] = flags.recentlyFinished
+            ? allBooks
+                .filter { $0.shelf == .read }
+                .sorted { ($0.dateFinished ?? .distantPast) > ($1.dateFinished ?? .distantPast) }
+                .prefix(10)
+                .map { book in
+                    PublicBookEntry(
+                        olWorkKey: book.olWorkKey,
+                        title: book.title,
+                        authorName: book.authorName,
+                        isbn13: book.isbn13,
+                        coverImageID: book.coverImageID,
+                        rating: flags.ratings ? book.userRating : nil,
+                        note: flags.notes ? book.notes.map { String($0.prefix(200)) } : nil,
+                        dateFinished: book.dateFinished
+                    )
+                }
+            : []
+
+        var goalProgress: String?
+        if flags.goalProgress {
+            let year = Calendar.current.component(.year, from: .now)
+            let descriptor = FetchDescriptor<ReadingGoal>(
+                predicate: #Predicate { $0.year == year }
+            )
+            if let goal = (try? modelContext.fetch(descriptor))?.first {
+                let readCount = allBooks.filter {
+                    $0.shelf == .read &&
+                    $0.dateFinished.map { Calendar.current.component(.year, from: $0) == year } ?? false
+                }.count
+                goalProgress = "\(readCount)/\(goal.target)"
+            }
+        }
+
+        return PublicShelfSnapshot(
+            displayName: displayName,
+            currentlyReading: currentlyReading,
+            recentlyFinished: recentlyFinished,
+            goalProgress: goalProgress,
+            visibilityFlags: flags,
+            lastUpdated: .now
+        )
     }
 
     // MARK: - Up Next Queue
