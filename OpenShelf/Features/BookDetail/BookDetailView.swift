@@ -126,6 +126,9 @@ struct BookDetailView: View {
         .sheet(isPresented: $showDNFSheet) {
             dnfSheet
         }
+        .sheet(isPresented: $showFinishedRating) {
+            finishedRatingSheet
+        }
         .sheet(isPresented: $showShareCardSheet) {
             ShareCardSheet(book: book, coverImage: coverImageForShare)
         }
@@ -1045,8 +1048,17 @@ struct BookDetailView: View {
                 dnfInfoSection
             }
 
-            // DNF option for currently reading
             if book.shelf == .reading {
+                Button {
+                    finishedRating = nil
+                    showFinishedRating = true
+                } label: {
+                    Label("Finished Reading", systemImage: "checkmark.circle")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(.green)
+
                 Button {
                     dnfPage = ""
                     dnfReason = ""
@@ -1340,6 +1352,57 @@ struct BookDetailView: View {
             // Non-critical — silently fail
             authorBooks = []
         }
+    }
+
+    private var finishedRatingSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Spacer()
+
+                Text("Rate This Book")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("How would you rate this book?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                RatingPicker(rating: $finishedRating, mode: .interactive)
+
+                Spacer()
+            }
+            .padding()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") {
+                        finishReading(rating: nil)
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save Rating") {
+                        finishReading(rating: finishedRating)
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func finishReading(rating: Double?) {
+        let entry = ReadEntry(
+            book: book,
+            startDate: book.dateStarted,
+            finishDate: .now,
+            rating: rating
+        )
+        modelContext.insert(entry)
+        repository.updateShelf(book, to: .read)
+        if let rating {
+            repository.updateRating(book, rating: rating)
+        }
+        try? modelContext.save()
+        showFinishedRating = false
+        promptUpNextIfAvailable()
     }
 
     private func handleShelfMove(to shelf: Shelf) {
