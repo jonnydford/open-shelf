@@ -35,6 +35,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 readingGoalSection
+                SocialSettingsSection()
                 notificationsSection
                 privacySection
                 followedAuthorsSection
