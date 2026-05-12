@@ -1,49 +1,326 @@
 [
   {
+    "id": "science-fiction",
+    "name": "Science Fiction",
+    "description": "Mind-bending stories of technology, space, and the future of humanity",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL893415W", "title": "Dune", "author": "Frank Herbert", "coverID": 11481354, "subjects": ["Science fiction", "Ecology", "Fiction", "Fantasy fiction", "American literature"]},
+      {"workKey": "/works/OL27258W", "title": "Neuromancer", "author": "William Gibson", "coverID": 283860, "subjects": ["Science fiction", "Cyberspace", "Virtual reality", "Computer hackers", "Conspiracies"]},
+      {"workKey": "/works/OL59800W", "title": "The Left Hand of Darkness", "author": "Ursula K. Le Guin", "coverID": 10618463, "subjects": ["Science fiction", "Gender identity", "Life on other planets", "Fiction", "Human-alien encounters"]},
+      {"workKey": "/works/OL49488W", "title": "Ender's Game", "author": "Orson Scott Card", "coverID": 12996033, "subjects": ["Science fiction", "Space warfare", "Fiction", "Artificial intelligence", "War games"]},
+      {"workKey": "/works/OL2163649W", "title": "The Hitchhiker's Guide to the Galaxy", "author": "Douglas Adams", "coverID": 12986869, "subjects": ["Science Fiction", "Humorous fiction", "Interplanetary voyages", "Fiction", "Life on other planets"]},
+      {"workKey": "/works/OL46125W", "title": "Foundation", "author": "Isaac Asimov", "coverID": 14612610, "subjects": ["Science Fiction", "Psychohistory", "Life on other planets", "Fiction", "Robots"]},
+      {"workKey": "/works/OL35616W", "title": "Kindred", "author": "Octavia E. Butler", "coverID": 8745330, "subjects": ["Fiction", "Time travel", "Slavery", "African American women", "Science Fiction"]},
+      {"workKey": "/works/OL38501W", "title": "Snow Crash", "author": "Neal Stephenson", "coverID": 392508, "subjects": ["Science fiction", "Virtual reality", "Cyberspace", "Fiction", "Hackers"]},
+      {"workKey": "/works/OL59863W", "title": "The Dispossessed", "author": "Ursula K. Le Guin", "coverID": 6979680, "subjects": ["Science fiction", "Anarchism", "Utopias", "Physicists", "Fiction"]},
+      {"workKey": "/works/OL98459W", "title": "Slaughterhouse-Five", "author": "Kurt Vonnegut", "coverID": 12727001, "subjects": ["Fiction", "Science fiction", "World War, 1939-1945", "Time travel", "Prisoners of war"]}
+    ]
+  },
+  {
+    "id": "fantasy",
+    "name": "Fantasy",
+    "description": "Epic adventures in magical worlds filled with wonder and peril",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL8479867W", "title": "The Name of the Wind", "author": "Patrick Rothfuss", "coverID": 11480483, "subjects": ["Fantasy fiction", "Magic", "Wizards", "Fiction", "Assassins"]},
+      {"workKey": "/works/OL257943W", "title": "A Game of Thrones", "author": "George R.R. Martin", "coverID": 9269962, "subjects": ["Fantasy fiction", "Fiction", "Epic Fantasy", "Kings and Rulers", "Dragons"]},
+      {"workKey": "/works/OL27482W", "title": "The Hobbit", "author": "J.R.R. Tolkien", "coverID": 14627509, "subjects": ["Fantasy fiction", "Fiction", "Dragons", "Magic", "Quests (Expeditions)"]},
+      {"workKey": "/works/OL59798W", "title": "A Wizard of Earthsea", "author": "Ursula K. Le Guin", "coverID": 13617691, "subjects": ["Fantasy fiction", "Magic", "Wizards", "Fiction", "Fantasy"]},
+      {"workKey": "/works/OL17363125W", "title": "The Fifth Season", "author": "N.K. Jemisin", "coverID": 8133598, "subjects": ["Fantasy", "Fiction", "Dystopian", "End of the world", "Epic fantasy"]},
+      {"workKey": "/works/OL5738148W", "title": "Mistborn: The Final Empire", "author": "Brandon Sanderson", "coverID": 14658160, "subjects": ["Fiction", "Magic", "Adventure", "Good and evil", "Thieves"]},
+      {"workKey": "/works/OL679360W", "title": "American Gods", "author": "Neil Gaiman", "coverID": 8494659, "subjects": ["Fantasy fiction", "Fiction", "Mythology", "Urban Fantasy", "Ex-convicts"]},
+      {"workKey": "/works/OL453657W", "title": "The Colour of Magic", "author": "Terry Pratchett", "coverID": 14647238, "subjects": ["Fantasy fiction", "Fiction", "Wizards", "Satire", "Humorous stories"]},
+      {"workKey": "/works/OL2707183W", "title": "Assassin's Apprentice", "author": "Robin Hobb", "coverID": 4915230, "subjects": ["Fantasy fiction", "Fiction", "Assassins", "Magic", "Fantasy"]},
+      {"workKey": "/works/OL1388028W", "title": "The Once and Future King", "author": "T.H. White", "coverID": 6630521, "subjects": ["Fantasy fiction", "Fiction", "Arthurian romances", "Kings and rulers", "Knights and knighthood"]}
+    ]
+  },
+  {
+    "id": "mystery-thriller",
+    "name": "Mystery & Thriller",
+    "description": "Page-turning suspense, crime, and detective stories",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL5784622W", "title": "The Girl with the Dragon Tattoo", "author": "Stieg Larsson", "coverID": 9274740, "subjects": ["Mystery fiction", "Suspense fiction", "Fiction", "Missing persons", "Journalists"]},
+      {"workKey": "/works/OL16239762W", "title": "Gone Girl", "author": "Gillian Flynn", "coverID": 8368314, "subjects": ["Fiction", "Suspense fiction", "Mystery fiction", "Missing persons", "Marriage"]},
+      {"workKey": "/works/OL76837W", "title": "The Da Vinci Code", "author": "Dan Brown", "coverID": 9255229, "subjects": ["Fiction", "Mystery fiction", "Secret societies", "Cryptographers", "Suspense fiction"]},
+      {"workKey": "/works/OL17116911W", "title": "Big Little Lies", "author": "Liane Moriarty", "coverID": 7352410, "subjects": ["Fiction", "Mystery fiction", "Domestic fiction", "Female friendship", "Murder"]},
+      {"workKey": "/works/OL7989979W", "title": "In the Woods", "author": "Tana French", "coverID": 1474730, "subjects": ["Fiction", "Mystery fiction", "Murder", "Detectives", "Psychological fiction"]},
+      {"workKey": "/works/OL19096402W", "title": "The Silent Patient", "author": "Alex Michaelides", "coverID": 9407338, "subjects": ["Fiction", "Psychotherapy patients", "Marriage", "Artists", "Family violence"]},
+      {"workKey": "/works/OL471565W", "title": "And Then There Were None", "author": "Agatha Christie", "coverID": 11172296, "subjects": ["Mystery fiction", "Fiction", "Islands", "Millionaires", "Murder victims"]},
+      {"workKey": "/works/OL17112428W", "title": "The Girl on the Train", "author": "Paula Hawkins", "coverID": 7350360, "subjects": ["Fiction", "Psychological fiction", "Suspense fiction", "Mystery fiction", "Railroad travel"]},
+      {"workKey": "/works/OL5842018W", "title": "Sharp Objects", "author": "Gillian Flynn", "coverID": 167973, "subjects": ["Fiction", "Murder", "Women journalists", "Thriller", "Investigation"]},
+      {"workKey": "/works/OL36633W", "title": "Rebecca", "author": "Daphne du Maurier", "coverID": 8238729, "subjects": ["Fiction", "Suspense fiction", "Gothic fiction", "Love stories", "Married women"]}
+    ]
+  },
+  {
+    "id": "romance",
+    "name": "Romance",
+    "description": "Love stories that sweep you off your feet",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL66554W", "title": "Pride and Prejudice", "author": "Jane Austen", "coverID": 14348537, "subjects": ["Fiction", "Love stories", "Sisters", "Courtship", "Social classes"]},
+      {"workKey": "/works/OL3261155W", "title": "Outlander", "author": "Diana Gabaldon", "coverID": 14428230, "subjects": ["Historical fiction", "Fiction", "Time travel", "Love stories", "Fantasy fiction"]},
+      {"workKey": "/works/OL54797W", "title": "The Notebook", "author": "Nicholas Sparks", "coverID": 7382153, "subjects": ["Love stories", "Fiction", "Romance fiction", "Older people", "Oral reading"]},
+      {"workKey": "/works/OL20734329W", "title": "Beach Read", "author": "Emily Henry", "coverID": 9426296, "subjects": ["Fiction", "Romance", "Authors", "Writer's block", "Man-woman relationships"]},
+      {"workKey": "/works/OL20032935W", "title": "The Hating Game", "author": "Sally Thorne", "coverID": 9247684, "subjects": ["Fiction", "Romance", "Man-woman relationships", "Competition (Psychology)", "Love stories"]},
+      {"workKey": "/works/OL20090688W", "title": "Red, White & Royal Blue", "author": "Casey McQuiston", "coverID": 9171544, "subjects": ["Fiction", "Romance", "LGBTQ romance", "Humor", "Contemporary romance"]},
+      {"workKey": "/works/OL18020194W", "title": "It Ends with Us", "author": "Colleen Hoover", "coverID": 10473609, "subjects": ["Fiction", "Man-woman relationships", "First loves", "Businesswomen", "Contemporary Women"]},
+      {"workKey": "/works/OL4720160W", "title": "The Time Traveler's Wife", "author": "Audrey Niffenegger", "coverID": 9273734, "subjects": ["Fiction", "Time travel", "Love stories", "Married people", "Fantasy fiction"]},
+      {"workKey": "/works/OL20150260W", "title": "Normal People", "author": "Sally Rooney", "coverID": 8794265, "subjects": ["Fiction", "Man-woman relationships", "First loves", "Social classes", "College students"]},
+      {"workKey": "/works/OL16817509W", "title": "Me Before You", "author": "Jojo Moyes", "coverID": 14419339, "subjects": ["Fiction", "Love stories", "Romance fiction", "Young women", "People with disabilities"]}
+    ]
+  },
+  {
+    "id": "historical-fiction",
+    "name": "Historical Fiction",
+    "description": "Stories that bring the past vividly to life",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL16821606W", "title": "All the Light We Cannot See", "author": "Anthony Doerr", "coverID": 14559680, "subjects": ["Fiction", "World War, 1939-1945", "Historical fiction", "Blind", "Friendship"]},
+      {"workKey": "/works/OL5819456W", "title": "The Book Thief", "author": "Markus Zusak", "coverID": 8153054, "subjects": ["Fiction", "Historical fiction", "World War, 1939-1945", "Books and reading", "Death"]},
+      {"workKey": "/works/OL17762217W", "title": "Pachinko", "author": "Min Jin Lee", "coverID": 8044605, "subjects": ["Fiction", "Families", "Cultural Heritage", "Historical", "Koreans"]},
+      {"workKey": "/works/OL1914022W", "title": "The Pillars of the Earth", "author": "Ken Follett", "coverID": 9269909, "subjects": ["Historical fiction", "Middle Ages", "Cathedrals", "Church architecture", "Epic literature"]},
+      {"workKey": "/works/OL464512W", "title": "Wolf Hall", "author": "Hilary Mantel", "coverID": 8345848, "subjects": ["Biographical fiction", "Fiction", "History", "Historical Fiction", "Courts and courtiers"]},
+      {"workKey": "/works/OL18012166W", "title": "Circe", "author": "Madeline Miller", "coverID": 8739376, "subjects": ["Fantasy", "Mythology", "Historical Fiction", "Greek Mythology", "Fiction"]},
+      {"workKey": "/works/OL17116910W", "title": "The Nightingale", "author": "Kristin Hannah", "coverID": 8314147, "subjects": ["Fiction", "Historical fiction", "World War, 1939-1945", "Sisters", "Women in war"]},
+      {"workKey": "/works/OL20743965W", "title": "Hamnet", "author": "Maggie O'Farrell", "coverID": 10306590, "subjects": ["Fiction", "Historical fiction", "Family", "History", "Biographical fiction"]},
+      {"workKey": "/works/OL17619932W", "title": "The Underground Railroad", "author": "Colson Whitehead", "coverID": 7899016, "subjects": ["Historical fiction", "Underground Railroad", "Fiction", "Fugitive slaves", "African American"]},
+      {"workKey": "/works/OL50548W", "title": "Beloved", "author": "Toni Morrison", "coverID": 8261367, "subjects": ["Fiction", "Slavery", "Historical fiction", "African American women", "Infanticide"]}
+    ]
+  },
+  {
+    "id": "literary-fiction",
+    "name": "Literary Fiction",
+    "description": "Beautifully crafted novels that explore the human condition",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL17370186W", "title": "A Little Life", "author": "Hanya Yanagihara", "coverID": 12065783, "subjects": ["Fiction", "LGBTQ novels", "Coming of Age", "Male friendship", "Dysfunctional families"]},
+      {"workKey": "/works/OL16809803W", "title": "The Goldfinch", "author": "Donna Tartt", "coverID": 8771366, "subjects": ["Fiction", "Loss (Psychology)", "Art", "Coming of age", "Literary"]},
+      {"workKey": "/works/OL59038W", "title": "Never Let Me Go", "author": "Kazuo Ishiguro", "coverID": 1047334, "subjects": ["Fiction", "Science fiction", "Cloning", "Organ donors", "Friendship"]},
+      {"workKey": "/works/OL3951520W", "title": "Middlesex", "author": "Jeffrey Eugenides", "coverID": 12367196, "subjects": ["Fiction", "Intersexuality", "Greek Americans", "Gender identity", "Bildungsromans"]},
+      {"workKey": "/works/OL4321141W", "title": "The Secret History", "author": "Donna Tartt", "coverID": 744854, "subjects": ["Fiction", "College students", "Murder", "Psychological fiction", "Classicists"]},
+      {"workKey": "/works/OL17797130W", "title": "A Gentleman in Moscow", "author": "Amor Towles", "coverID": 11326818, "subjects": ["Fiction", "Historical fiction", "Literary fiction", "Aristocracy", "Hotels"]},
+      {"workKey": "/works/OL5781992W", "title": "The Kite Runner", "author": "Khaled Hosseini", "coverID": 14846827, "subjects": ["Fiction", "Male friendship", "Betrayal", "Afghanistan", "Bildungsromans"]},
+      {"workKey": "/works/OL2827199W", "title": "Life of Pi", "author": "Yann Martel", "coverID": 12840573, "subjects": ["Fiction", "Survival at sea", "Tigers", "Adventure fiction", "Storytelling"]},
+      {"workKey": "/works/OL20783698W", "title": "On Earth We're Briefly Gorgeous", "author": "Ocean Vuong", "coverID": 10030425, "subjects": ["LGBTQ novels", "Vietnamese Americans", "Fiction", "Mothers and sons", "Coming of age"]},
+      {"workKey": "/works/OL1855944W", "title": "Atonement", "author": "Ian McEwan", "coverID": 8381043, "subjects": ["Fiction", "Historical fiction", "World War, 1939-1945", "Psychological fiction", "Sisters"]}
+    ]
+  },
+  {
+    "id": "horror",
+    "name": "Horror",
+    "description": "Stories that creep under your skin and stay there",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL81633W", "title": "The Shining", "author": "Stephen King", "coverID": 12376585, "subjects": ["Horror fiction", "Haunted houses", "Fiction", "Alcoholism", "Families"]},
+      {"workKey": "/works/OL20759125W", "title": "Mexican Gothic", "author": "Silvia Moreno-Garcia", "coverID": 10239163, "subjects": ["Horror", "Gothic", "Haunted houses", "Fiction", "Family secrets"]},
+      {"workKey": "/works/OL32195W", "title": "House of Leaves", "author": "Mark Z. Danielewski", "coverID": 6450442, "subjects": ["Fiction", "Horror tales", "Experimental fiction", "Labyrinths", "Paranormal fiction"]},
+      {"workKey": "/works/OL3171069W", "title": "The Haunting of Hill House", "author": "Shirley Jackson", "coverID": 4289014, "subjects": ["Haunted houses", "Fiction", "Horror tales", "Psychological fiction", "Ghost stories"]},
+      {"workKey": "/works/OL17857318W", "title": "Bird Box", "author": "Josh Malerman", "coverID": 8159409, "subjects": ["Fiction", "Horror", "Survival", "Mass extinctions", "Mother and child"]},
+      {"workKey": "/works/OL81613W", "title": "It", "author": "Stephen King", "coverID": 8569284, "subjects": ["Horror fiction", "Horror", "Monsters", "Clowns", "Good and evil"]},
+      {"workKey": "/works/OL927199W", "title": "The Exorcist", "author": "William Peter Blatty", "coverID": 12715730, "subjects": ["Fiction", "Horror", "Demonic possession", "Exorcism", "Demoniac possession"]},
+      {"workKey": "/works/OL450063W", "title": "Frankenstein", "author": "Mary Shelley", "coverID": 12356249, "subjects": ["Fiction", "Scientists", "Monsters", "Horror stories", "Gothic fiction"]},
+      {"workKey": "/works/OL85892W", "title": "Dracula", "author": "Bram Stoker", "coverID": 12216503, "subjects": ["Fiction", "Horror", "Vampires", "Gothic literature", "Classics"]},
+      {"workKey": "/works/OL276386W", "title": "The Turn of the Screw", "author": "Henry James", "coverID": 181493, "subjects": ["Psychological fiction", "Supernatural", "Governesses", "Children", "Ghost stories"]}
+    ]
+  },
+  {
+    "id": "biography-memoir",
+    "name": "Biography & Memoir",
+    "description": "Real lives, real stories, extraordinary journeys",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL18139176W", "title": "Educated", "author": "Tara Westover", "coverID": 8314077, "subjects": ["Biography", "Family", "Survivalism", "Home schooling", "Family violence"]},
+      {"workKey": "/works/OL17930367W", "title": "Becoming", "author": "Michelle Obama", "coverID": 8824664, "subjects": ["Biography", "Personal Memoirs", "African American women lawyers", "Presidents' spouses", "Autobiography"]},
+      {"workKey": "/works/OL266178W", "title": "The Diary of a Young Girl", "author": "Anne Frank", "coverID": 8584021, "subjects": ["Diaries", "Holocaust", "Jews", "World War, 1939-1945", "Personal narratives"]},
+      {"workKey": "/works/OL17824318W", "title": "Born a Crime", "author": "Trevor Noah", "coverID": 8294078, "subjects": ["Biography", "Apartheid", "Personal Memoirs", "Comedians", "Mothers and sons"]},
+      {"workKey": "/works/OL17356252W", "title": "When Breath Becomes Air", "author": "Paul Kalanithi", "coverID": 11463139, "subjects": ["Biography", "Personal Memoirs", "Neurosurgeons", "Cancer", "Death"]},
+      {"workKey": "/works/OL80021W", "title": "I Know Why the Caged Bird Sings", "author": "Maya Angelou", "coverID": 9367075, "subjects": ["Biography", "Autobiography", "African American women authors", "American Authors", "Childhood and youth"]},
+      {"workKey": "/works/OL1783377W", "title": "Long Walk to Freedom", "author": "Nelson Mandela", "coverID": 12702407, "subjects": ["Biography", "Presidents", "Apartheid", "Political prisoners", "Anti-apartheid movement"]},
+      {"workKey": "/works/OL46760W", "title": "The Glass Castle", "author": "Jeannette Walls", "coverID": 11517692, "subjects": ["Biography", "Dysfunctional families", "Children of alcoholics", "Poverty", "Survival"]},
+      {"workKey": "/works/OL15474046W", "title": "Just Kids", "author": "Patti Smith", "coverID": 6671097, "subjects": ["Biography", "Artists", "Rock musicians", "Women poets", "Autobiography"]},
+      {"workKey": "/works/OL63064W", "title": "A Moveable Feast", "author": "Ernest Hemingway", "coverID": 7268728, "subjects": ["Autobiography", "American Novelists", "Intellectual life", "France", "Biography"]}
+    ]
+  },
+  {
+    "id": "non-fiction",
+    "name": "Non-Fiction",
+    "description": "Fascinating ideas that change how you see the world",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL17075811W", "title": "Sapiens", "author": "Yuval Noah Harari", "coverID": 8634250, "subjects": ["Technology and civilization", "Human beings", "World history", "History", "Science"]},
+      {"workKey": "/works/OL15992072W", "title": "Thinking, Fast and Slow", "author": "Daniel Kahneman", "coverID": 13290711, "subjects": ["Intuition", "Thought and thinking", "Reasoning", "Decision making", "Cognitive psychology"]},
+      {"workKey": "/works/OL13850788W", "title": "The Immortal Life of Henrietta Lacks", "author": "Rebecca Skloot", "coverID": 8364866, "subjects": ["Cancer", "Cell culture", "Medical ethics", "Human experimentation in medicine", "Biography"]},
+      {"workKey": "/works/OL276558W", "title": "Guns, Germs, and Steel", "author": "Jared Diamond", "coverID": 7884018, "subjects": ["Ethnology", "Social evolution", "Civilization", "History", "Human beings"]},
+      {"workKey": "/works/OL278022W", "title": "Freakonomics", "author": "Steven D. Levitt", "coverID": 11172914, "subjects": ["Economics", "Sociology", "Popular Culture", "Psychology", "Nonfiction"]},
+      {"workKey": "/works/OL13826369W", "title": "The New Jim Crow", "author": "Michelle Alexander", "coverID": 14826736, "subjects": ["Administration of Criminal justice", "Race discrimination", "Mass incarceration", "African Americans", "Criminal Law"]},
+      {"workKey": "/works/OL16484595W", "title": "Quiet", "author": "Susan Cain", "coverID": 7079753, "subjects": ["Introverts", "Introversion", "Temperament", "Personality", "Interpersonal relations"]},
+      {"workKey": "/works/OL20333471W", "title": "The Body", "author": "Bill Bryson", "coverID": 12722746, "subjects": ["Human anatomy", "Human physiology", "Anatomy", "Physiology", "Human body"]},
+      {"workKey": "/works/OL17892614W", "title": "Bad Blood", "author": "John Carreyrou", "coverID": 12735651, "subjects": ["Entrepreneurship", "Fraud", "Theranos", "Medical supplies", "Nonfiction"]},
+      {"workKey": "/works/OL17930368W", "title": "Atomic Habits", "author": "James Clear", "coverID": 12539702, "subjects": ["Habit", "Behavior modification", "Self-actualization", "Personal Growth", "Psychology"]}
+    ]
+  },
+  {
+    "id": "self-help",
+    "name": "Self-Help",
+    "description": "Books to help you grow, focus, and live intentionally",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL17930368W", "title": "Atomic Habits", "author": "James Clear", "coverID": 12539702, "subjects": ["Habit", "Behavior modification", "Self-actualization", "Personal Growth", "Psychology"]},
+      {"workKey": "/works/OL2629977W", "title": "The 7 Habits of Highly Effective People", "author": "Stephen R. Covey", "coverID": 10079937, "subjects": ["Success", "Self-actualization", "Leadership", "Character", "Psychology"]},
+      {"workKey": "/works/OL1063267W", "title": "How to Win Friends and Influence People", "author": "Dale Carnegie", "coverID": 13314878, "subjects": ["Applied Psychology", "Success", "Interpersonal relations", "Leadership", "Persuasion"]},
+      {"workKey": "/works/OL5727686W", "title": "The Power of Now", "author": "Eckhart Tolle", "coverID": 551262, "subjects": ["Spiritual life", "Spirituality", "Self-actualization", "Consciousness", "Religion and Psychology"]},
+      {"workKey": "/works/OL17713267W", "title": "Deep Work", "author": "Cal Newport", "coverID": 7988607, "subjects": ["Mental work", "Distraction", "Success", "Cognition", "Labor productivity"]},
+      {"workKey": "/works/OL2003465W", "title": "Mindset", "author": "Carol S. Dweck", "coverID": 746414, "subjects": ["Success", "Psychology", "Self-actualization", "Achievement motivation", "Cognitive Psychology"]},
+      {"workKey": "/works/OL17590212W", "title": "The Subtle Art of Not Giving a F*ck", "author": "Mark Manson", "coverID": 8231990, "subjects": ["Self-realization", "Conduct of life", "Self-help", "Personal Growth", "Psychology"]},
+      {"workKey": "/works/OL1268413W", "title": "Man's Search for Meaning", "author": "Viktor E. Frankl", "coverID": 8516506, "subjects": ["Logotherapy", "Concentration camps", "Existentialism", "Holocaust", "Psychology"]},
+      {"workKey": "/works/OL16664399W", "title": "Daring Greatly", "author": "Brené Brown", "coverID": 7367250, "subjects": ["Risk", "Courage", "Assertiveness", "Morale", "Self-help"]},
+      {"workKey": "/works/OL27203W", "title": "The Four Agreements", "author": "Don Miguel Ruiz", "coverID": 924521, "subjects": ["Conduct of life", "Toltec philosophy", "Philosophy", "Spirituality", "Character"]}
+    ]
+  },
+  {
+    "id": "poetry",
+    "name": "Poetry",
+    "description": "Verse that captures emotion in its purest form",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL17606111W", "title": "Milk and Honey", "author": "Rupi Kaur", "coverID": 8743595, "subjects": ["Poetry", "Canadian poetry", "Survival", "Women", "Literature"]},
+      {"workKey": "/works/OL17800586W", "title": "The Sun and Her Flowers", "author": "Rupi Kaur", "coverID": 8084615, "subjects": ["Poetry", "American poetry", "Self-actualization", "Women", "Poetry collections"]},
+      {"workKey": "/works/OL1865549W", "title": "Ariel", "author": "Sylvia Plath", "coverID": 33279, "subjects": ["American poetry", "Poetry", "Textual Criticism", "American literature", "Poetry collections"]},
+      {"workKey": "/works/OL16333W", "title": "Leaves of Grass", "author": "Walt Whitman", "coverID": 9000447, "subjects": ["Poetry", "American poetry", "Classic Literature", "Free verse", "American literature"]},
+      {"workKey": "/works/OL19720501W", "title": "Devotions", "author": "Mary Oliver", "coverID": 10326261, "subjects": ["Poetry", "Poetry collections", "American poetry"]},
+      {"workKey": "/works/OL979517W", "title": "Twenty Love Poems and a Song of Despair", "author": "Pablo Neruda", "coverID": 747596, "subjects": ["Chilean Love poetry", "Chilean poetry", "Poetry", "Spanish poetry", "Romance literature"]},
+      {"workKey": "/works/OL1142292W", "title": "The Waste Land", "author": "T.S. Eliot", "coverID": 115288, "subjects": ["English poetry", "Poetry collections", "Classic Literature", "American poetry", "Modernism"]},
+      {"workKey": "/works/OL28552W", "title": "Selected Poems", "author": "Langston Hughes", "coverID": 900284, "subjects": ["African Americans", "Poetry", "American literature"]},
+      {"workKey": "/works/OL102483W", "title": "Howl and Other Poems", "author": "Allen Ginsberg", "coverID": 662901, "subjects": ["Poetry collections", "American poetry", "Beat generation", "Poetry", "American Poets"]},
+      {"workKey": "/works/OL318900W", "title": "The Prophet", "author": "Kahlil Gibran", "coverID": 418324, "subjects": ["Poetry", "Classics", "Literature", "Religion", "Philosophy"]}
+    ]
+  },
+  {
+    "id": "short-stories",
+    "name": "Short Stories",
+    "description": "Brilliant tales you can finish in a single sitting",
+    "category": "genre",
+    "books": [
+      {"workKey": "/works/OL2001058W", "title": "Interpreter of Maladies", "author": "Jhumpa Lahiri", "coverID": 4915588, "subjects": ["East Indian Americans", "Short stories", "Fiction", "American Short stories", "Asian Americans"]},
+      {"workKey": "/works/OL86320W", "title": "Dubliners", "author": "James Joyce", "coverID": 8216412, "subjects": ["Short Stories", "Fiction", "Irish Short stories", "Classic Literature", "Literature"]},
+      {"workKey": "/works/OL3335290W", "title": "Nine Stories", "author": "J.D. Salinger", "coverID": 392623, "subjects": ["Fiction", "Short stories", "American fiction", "American literature", "Psychology"]},
+      {"workKey": "/works/OL110971W", "title": "Ficciones", "author": "Jorge Luis Borges", "coverID": 10832290, "subjects": ["Fiction", "Short stories", "Argentine Short stories", "Spanish fiction", "Literary Criticism"]},
+      {"workKey": "/works/OL1865851W", "title": "What We Talk About When We Talk About Love", "author": "Raymond Carver", "coverID": 914747, "subjects": ["American Short stories", "Fiction", "Short stories", "Manners and customs", "American fiction"]},
+      {"workKey": "/works/OL931680W", "title": "Runaway", "author": "Alice Munro", "coverID": 8363456, "subjects": ["Women", "Fiction", "Short stories", "Canadian Short stories", "Short Stories collections"]},
+      {"workKey": "/works/OL15332376W", "title": "The Short Stories of Ernest Hemingway", "author": "Ernest Hemingway", "coverID": 7943308, "subjects": ["American Short stories", "Fiction", "Short stories", "Modern Literature", "Adventure fiction"]},
+      {"workKey": "/works/OL1865880W", "title": "Cathedral", "author": "Raymond Carver", "coverID": 419856, "subjects": ["Short stories", "Fiction", "American Short stories", "Manners and customs", "English literature"]},
+      {"workKey": "/works/OL16599873W", "title": "Tenth of December", "author": "George Saunders", "coverID": 8346437, "subjects": ["Short Stories", "American Short stories", "Fiction", "Satire", "Literary fiction"]},
+      {"workKey": "/works/OL20149336W", "title": "Exhalation", "author": "Ted Chiang", "coverID": 8793546, "subjects": ["Science fiction", "Short stories", "Fiction", "Artificial intelligence", "American Science fiction"]}
+    ]
+  },
+  {
     "id": "classics",
     "name": "Classics Everyone Should Read",
-    "description": "Timeless works of literature",
-    "bookKeys": [
-      "/works/OL45804W",
-      "/works/OL103123W",
-      "/works/OL66554W",
-      "/works/OL15099W",
-      "/works/OL27516W",
-      "/works/OL53908W",
-      "/works/OL35187W"
+    "description": "The timeless works that shaped modern literature",
+    "category": "collection",
+    "books": [
+      {"workKey": "/works/OL66554W", "title": "Pride and Prejudice", "author": "Jane Austen", "coverID": 14348537, "subjects": ["Fiction", "Romance", "Historical", "Courtship", "Social classes"]},
+      {"workKey": "/works/OL1168083W", "title": "1984", "author": "George Orwell", "coverID": 9267242, "subjects": ["Dystopias", "Political fiction", "Totalitarianism", "Science Fiction", "Classic Literature"]},
+      {"workKey": "/works/OL3140822W", "title": "To Kill a Mockingbird", "author": "Harper Lee", "coverID": 14351077, "subjects": ["Fiction", "Racial injustice", "Southern Gothic", "Bildungsromans", "Fathers and daughters"]},
+      {"workKey": "/works/OL468431W", "title": "The Great Gatsby", "author": "F. Scott Fitzgerald", "coverID": 10590366, "subjects": ["American fiction", "Wealth", "American Dream", "Upper class", "Man-woman relationships"]},
+      {"workKey": "/works/OL274505W", "title": "One Hundred Years of Solitude", "author": "Gabriel García Márquez", "coverID": 12627383, "subjects": ["Fiction", "Magic realism", "Colombian fiction", "Latin American fiction", "Social conditions"]},
+      {"workKey": "/works/OL1095427W", "title": "Jane Eyre", "author": "Charlotte Brontë", "coverID": 8235363, "subjects": ["Fiction", "Romance", "Gothic fiction", "Bildungsromans", "Love stories"]},
+      {"workKey": "/works/OL21177W", "title": "Wuthering Heights", "author": "Emily Brontë", "coverID": 12818862, "subjects": ["Fiction", "Romance", "Gothic fiction", "Revenge", "Psychological fiction"]},
+      {"workKey": "/works/OL8721462W", "title": "Great Expectations", "author": "Charles Dickens", "coverID": 13322313, "subjects": ["Fiction", "Bildungsromans", "Classic Literature", "Orphans", "Social classes"]},
+      {"workKey": "/works/OL3335245W", "title": "The Catcher in the Rye", "author": "J.D. Salinger", "coverID": 9273490, "subjects": ["Fiction", "Adolescence", "Bildungsromans", "Classics", "Alienation"]},
+      {"workKey": "/works/OL64365W", "title": "Brave New World", "author": "Aldous Huxley", "coverID": 8231823, "subjects": ["Dystopias", "Science fiction", "Totalitarianism", "Genetic engineering", "Classics"]}
     ]
   },
   {
     "id": "uk-authors",
     "name": "UK Authors to Discover",
     "description": "Brilliant British and Irish writers worth exploring",
-    "bookKeys": [
-      "/works/OL82563W",
-      "/works/OL14933414W",
-      "/works/OL17860744W",
-      "/works/OL20648482W",
-      "/works/OL15836W",
-      "/works/OL362684W"
+    "category": "collection",
+    "books": [
+      {"workKey": "/works/OL20150260W", "title": "Normal People", "author": "Sally Rooney", "coverID": 8794265, "subjects": ["Man-woman relationships", "College students", "Social classes", "First loves", "Coming of Age"]},
+      {"workKey": "/works/OL20645179W", "title": "Shuggie Bain", "author": "Douglas Stuart", "coverID": 9271540, "subjects": ["Coming of age", "Family life", "Working class families", "Mothers and sons", "Fiction"]},
+      {"workKey": "/works/OL464512W", "title": "Wolf Hall", "author": "Hilary Mantel", "coverID": 8345848, "subjects": ["Historical Fiction", "Biographical fiction", "Courts and courtiers", "Interpersonal relations", "Fiction"]},
+      {"workKey": "/works/OL20893680W", "title": "Piranesi", "author": "Susanna Clarke", "coverID": 10226290, "subjects": ["Fantasy", "Labyrinths", "Curiosities and wonders", "Dwellings", "Fiction"]},
+      {"workKey": "/works/OL5860211W", "title": "Small Island", "author": "Andrea Levy", "coverID": 181927, "subjects": ["Immigrants", "Racism", "Jamaicans", "Social conditions", "Fiction"]},
+      {"workKey": "/works/OL481143W", "title": "White Teeth", "author": "Zadie Smith", "coverID": 5276331, "subjects": ["Immigrants", "Male friendship", "Ethnic relations", "Multiculturalism", "Race relations"]},
+      {"workKey": "/works/OL59048W", "title": "The Remains of the Day", "author": "Kazuo Ishiguro", "coverID": 95742, "subjects": ["Butlers", "Country homes", "Man-woman relationships", "Historical fiction", "Social classes"]},
+      {"workKey": "/works/OL1855944W", "title": "Atonement", "author": "Ian McEwan", "coverID": 8381043, "subjects": ["Historical fiction", "World War, 1939-1945", "Sisters", "Guilt", "Atonement"]},
+      {"workKey": "/works/OL11930W", "title": "A Suitable Boy", "author": "Vikram Seth", "coverID": 911254, "subjects": ["Fiction", "India", "History", "Indian literature", "Romance"]},
+      {"workKey": "/works/OL20470196W", "title": "Girl, Woman, Other", "author": "Bernardine Evaristo", "coverID": 9134982, "subjects": ["Black women", "LGBTQ novels", "Social life and customs", "Fiction", "Manners and customs"]}
     ]
   },
   {
-    "id": "best-2026",
-    "name": "Best of 2026",
-    "description": "Popular and acclaimed recent releases",
-    "bookKeys": [
-      "/works/OL27448W",
-      "/works/OL76837W",
-      "/works/OL15413843W",
-      "/works/OL17930368W",
-      "/works/OL20817234W"
+    "id": "quick-reads",
+    "name": "Quick Reads",
+    "description": "Great books you can finish in a weekend",
+    "category": "collection",
+    "books": [
+      {"workKey": "/works/OL63073W", "title": "The Old Man and the Sea", "author": "Ernest Hemingway", "coverID": 463307, "subjects": ["American Sea stories", "Male friendship", "Fishers", "Fiction", "American fiction"]},
+      {"workKey": "/works/OL1168007W", "title": "Animal Farm", "author": "George Orwell", "coverID": 11261770, "subjects": ["Political satire", "Fiction", "Totalitarianism", "Domestic animals", "Allegories"]},
+      {"workKey": "/works/OL1230613W", "title": "The Stranger", "author": "Albert Camus", "coverID": 13151269, "subjects": ["Philosophical Novels", "Murder", "Fiction", "French fiction", "Classics"]},
+      {"workKey": "/works/OL872932W", "title": "Siddhartha", "author": "Hermann Hesse", "coverID": 6562535, "subjects": ["Buddhism", "Enlightenment", "Fiction", "Spiritual life", "Classic Literature"]},
+      {"workKey": "/works/OL7966118W", "title": "The Pearl", "author": "John Steinbeck", "coverID": 2523104, "subjects": ["Pearl divers", "Avarice", "Fiction", "Parables", "Good and evil"]},
+      {"workKey": "/works/OL23204W", "title": "Of Mice and Men", "author": "John Steinbeck", "coverID": 14319003, "subjects": ["Male friendship", "Fiction", "Ranch life", "People with mental disabilities", "Classic Literature"]},
+      {"workKey": "/works/OL498556W", "title": "The Metamorphosis", "author": "Franz Kafka", "coverID": 12820198, "subjects": ["Fantasy fiction", "Metamorphosis", "Fiction", "Alienation", "Psychological fiction"]},
+      {"workKey": "/works/OL32466W", "title": "A Christmas Carol", "author": "Charles Dickens", "coverID": 12875748, "subjects": ["Christmas stories", "Ghost stories", "Fiction", "Ghosts", "Drama"]},
+      {"workKey": "/works/OL3243765W", "title": "The House on Mango Street", "author": "Sandra Cisneros", "coverID": 8804569, "subjects": ["Mexican Americans", "Fiction", "Coming of Age", "Girls", "Short stories"]},
+      {"workKey": "/works/OL103123W", "title": "Fahrenheit 451", "author": "Ray Bradbury", "coverID": 12993656, "subjects": ["Censorship", "Book burning", "Totalitarianism", "Fiction", "Science fiction"]}
     ]
   },
   {
-    "id": "book-of-the-month",
-    "name": "Book of the Month",
-    "description": "Our pick for this month",
-    "bookKeys": [
-      "/works/OL45804W"
+    "id": "pulitzer-winners",
+    "name": "Pulitzer Prize Winners",
+    "description": "Award-winning fiction celebrated for excellence",
+    "category": "collection",
+    "books": [
+      {"workKey": "/works/OL16809803W", "title": "The Goldfinch", "author": "Donna Tartt", "coverID": 8771366, "subjects": ["Fiction", "Self-realization", "Loss (Psychology)", "Artists", "Coming of age"]},
+      {"workKey": "/works/OL16821606W", "title": "All the Light We Cannot See", "author": "Anthony Doerr", "coverID": 14559680, "subjects": ["Blind", "Fiction", "World War, 1939-1945", "Historical fiction", "Survival"]},
+      {"workKey": "/works/OL17619932W", "title": "The Underground Railroad", "author": "Colson Whitehead", "coverID": 7899016, "subjects": ["Underground Railroad", "Fiction", "Fugitive slaves", "Historical fiction", "African American"]},
+      {"workKey": "/works/OL19710804W", "title": "Less", "author": "Andrew Sean Greer", "coverID": 8596367, "subjects": ["Voyages and travels", "Authors", "Gay men", "Fiction", "LGBTQ novels"]},
+      {"workKey": "/works/OL19074847W", "title": "The Overstory", "author": "Richard Powers", "coverID": 8758252, "subjects": ["Trees", "Forest conservation", "Fiction", "Forests and forestry", "Activism"]},
+      {"workKey": "/works/OL20072032W", "title": "The Nickel Boys", "author": "Colson Whitehead", "coverID": 8747820, "subjects": ["Racism", "Reformatories", "African American boys", "Male friendship", "Segregation"]},
+      {"workKey": "/works/OL50548W", "title": "Beloved", "author": "Toni Morrison", "coverID": 8261367, "subjects": ["African American women", "Slavery", "Fiction", "Infanticide", "Historical fiction"]},
+      {"workKey": "/works/OL273644W", "title": "The Color Purple", "author": "Alice Walker", "coverID": 8564628, "subjects": ["African American women", "Sisters", "Epistolary fiction", "Domestic fiction", "Fiction"]},
+      {"workKey": "/works/OL3951520W", "title": "Middlesex", "author": "Jeffrey Eugenides", "coverID": 12367196, "subjects": ["Intersexuality", "Greek Americans", "Fiction", "Gender identity", "Bildungsromans"]},
+      {"workKey": "/works/OL40873W", "title": "The Road", "author": "Cormac McCarthy", "coverID": 198120, "subjects": ["Fiction", "Fathers and sons", "Survival skills", "Apocalyptic fiction", "Dystopia"]}
+    ]
+  },
+  {
+    "id": "booker-winners",
+    "name": "Booker Prize Winners",
+    "description": "The best in contemporary English-language fiction",
+    "category": "collection",
+    "books": [
+      {"workKey": "/works/OL16810597W", "title": "The Luminaries", "author": "Eleanor Catton", "coverID": 7268574, "subjects": ["Gold discoveries", "Historical fiction", "Adventure fiction", "Trials (Murder)", "Immigrants"]},
+      {"workKey": "/works/OL20645179W", "title": "Shuggie Bain", "author": "Douglas Stuart", "coverID": 9271540, "subjects": ["Literary fiction", "Coming of age", "Family life", "LGBTQ novels", "Mothers and sons"]},
+      {"workKey": "/works/OL24312436W", "title": "The Promise", "author": "Damon Galgut", "coverID": 10829050, "subjects": ["Family life", "South Africa", "Families", "Brothers and sisters", "Funeral rites and ceremonies"]},
+      {"workKey": "/works/OL17334243W", "title": "The Vegetarian", "author": "Han Kang", "coverID": 7412625, "subjects": ["Vegetarians", "Women", "Fiction", "Families", "Dreams"]},
+      {"workKey": "/works/OL17635834W", "title": "Lincoln in the Bardo", "author": "George Saunders", "coverID": 7909378, "subjects": ["Biographical fiction", "Historical fiction", "Grief", "Presidents", "Purgatory"]},
+      {"workKey": "/works/OL19344016W", "title": "Milkman", "author": "Anna Burns", "coverID": 13561491, "subjects": ["Northern Ireland", "Coming of age", "Psychological fiction", "English fiction", "Irish authors"]},
+      {"workKey": "/works/OL1052133W", "title": "The God of Small Things", "author": "Arundhati Roy", "coverID": 10513792, "subjects": ["Literary Fiction", "Psychological fiction", "Domestic fiction", "Twins", "Social classes"]},
+      {"workKey": "/works/OL2827199W", "title": "Life of Pi", "author": "Yann Martel", "coverID": 12840573, "subjects": ["Shipwreck survival", "Tigers", "Ocean travel", "Survival", "Religion"]},
+      {"workKey": "/works/OL97945W", "title": "The Inheritance of Loss", "author": "Kiran Desai", "coverID": 5728169, "subjects": ["Judges", "Retirement", "Grandparent and child", "Ethnic relations", "Psychological fiction"]},
+      {"workKey": "/works/OL9740815W", "title": "The White Tiger", "author": "Aravind Adiga", "coverID": 2787359, "subjects": ["Businesspeople", "Chauffeurs", "Ambition", "Poor", "Fiction"]}
+    ]
+  },
+  {
+    "id": "books-to-films",
+    "name": "Books That Became Films",
+    "description": "Read the book before (or after) watching the movie",
+    "category": "collection",
+    "books": [
+      {"workKey": "/works/OL14917451W", "title": "Rita Hayworth and Shawshank Redemption", "author": "Stephen King", "coverID": 14653969, "subjects": ["Prisoners", "Prisons", "Fiction", "Large type books", "Short stories"]},
+      {"workKey": "/works/OL23481W", "title": "The Silence of the Lambs", "author": "Thomas Harris", "coverID": 8580475, "subjects": ["Serial murderers", "Government investigators", "Suspense fiction", "Psychological fiction", "Detective and mystery stories"]},
+      {"workKey": "/works/OL16239762W", "title": "Gone Girl", "author": "Gillian Flynn", "coverID": 8368314, "subjects": ["Married people", "Disappeared persons", "Suspense fiction", "Mystery fiction", "Wives"]},
+      {"workKey": "/works/OL17091839W", "title": "The Martian", "author": "Andy Weir", "coverID": 11447888, "subjects": ["Science fiction", "Astronauts", "Survival", "Fiction", "Survival skills"]},
+      {"workKey": "/works/OL29983W", "title": "Little Women", "author": "Louisa May Alcott", "coverID": 8775559, "subjects": ["Sisters", "Young women", "Family life", "Domestic fiction", "Historical fiction"]},
+      {"workKey": "/works/OL8034526W", "title": "Call Me by Your Name", "author": "André Aciman", "coverID": 11123807, "subjects": ["Romance", "Coming of age", "Gay teenagers", "Italy", "LGBTQ novels"]},
+      {"workKey": "/works/OL5781992W", "title": "The Kite Runner", "author": "Khaled Hosseini", "coverID": 14846827, "subjects": ["Male friendship", "Betrayal", "Social classes", "Historical fiction", "Coming of age"]},
+      {"workKey": "/works/OL40875W", "title": "No Country for Old Men", "author": "Cormac McCarthy", "coverID": 9296899, "subjects": ["Drug traffic", "Sheriffs", "Treasure troves", "Suspense fiction", "Psychological fiction"]},
+      {"workKey": "/works/OL18941W", "title": "Fight Club", "author": "Chuck Palahniuk", "coverID": 7890578, "subjects": ["Young men", "Hand-to-hand fighting", "Self-destructive behavior", "Gangs", "Aggressiveness"]},
+      {"workKey": "/works/OL893415W", "title": "Dune", "author": "Frank Herbert", "coverID": 11481354, "subjects": ["Science fiction", "Ecology", "Fantasy fiction", "American Science fiction", "Dune (Imaginary place)"]}
     ]
   }
 ]

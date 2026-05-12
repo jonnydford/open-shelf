@@ -1,13 +1,36 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - Curated List Model
+// MARK: - Curated List Models
+
+struct CuratedBookEntry: Codable, Identifiable, Hashable {
+    let workKey: String
+    let title: String
+    let author: String
+    let coverID: Int?
+    let subjects: [String]
+
+    var id: String { workKey }
+}
+
+enum CuratedListCategory: String, Codable, CaseIterable {
+    case genre
+    case collection
+
+    var displayName: String {
+        switch self {
+        case .genre: "By Genre"
+        case .collection: "Curated Collections"
+        }
+    }
+}
 
 struct CuratedList: Codable, Identifiable {
     let id: String
     let name: String
     let description: String
-    let bookKeys: [String]
+    let category: CuratedListCategory
+    let books: [CuratedBookEntry]
 }
 
 // MARK: - Discover Section (vertical grid of curated lists)
@@ -57,7 +80,7 @@ struct DiscoverSection: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(3)
 
-            Text("\(list.bookKeys.count) \(list.bookKeys.count == 1 ? "book" : "books")")
+            Text("\(list.books.count) \(list.books.count == 1 ? "book" : "books")")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -87,14 +110,9 @@ struct DiscoverSection: View {
 struct CuratedListDetailView: View {
     let list: CuratedList
 
-    @Environment(BookRepository.self) private var repository
     @Environment(\.modelContext) private var modelContext
     @Query private var libraryBooks: [Book]
     @Query private var dismissedBooks: [DismissedBook]
-
-    @State private var fetchedBooks: [FetchedCuratedBook] = []
-    @State private var isLoading = false
-    @State private var hasLoaded = false
 
     private let columns = [
         GridItem(.flexible()),
@@ -102,11 +120,10 @@ struct CuratedListDetailView: View {
         GridItem(.flexible()),
     ]
 
-    /// Books filtered to exclude dismissed titles and books already in the library.
-    private var visibleBooks: [FetchedCuratedBook] {
+    private var visibleBooks: [CuratedBookEntry] {
         let dismissedKeys = Set(dismissedBooks.map(\.openLibraryWorkKey))
         let libraryKeys = Set(libraryBooks.map(\.olWorkKey))
-        return fetchedBooks.filter { book in
+        return list.books.filter { book in
             !dismissedKeys.contains(book.workKey) && !libraryKeys.contains(book.workKey)
         }
     }
@@ -119,11 +136,7 @@ struct CuratedListDetailView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal)
 
-                if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 40)
-                } else if visibleBooks.isEmpty && !fetchedBooks.isEmpty {
+                if visibleBooks.isEmpty && !list.books.isEmpty {
                     ContentUnavailableView(
                         "You've seen everything here",
                         systemImage: "sparkles",
@@ -159,22 +172,17 @@ struct CuratedListDetailView: View {
             .padding(.bottom, 32)
         }
         .navigationTitle(list.name)
-        .task(id: list.id) {
-            guard !hasLoaded else { return }
-            await loadBooks()
-        }
-        .refreshable { await loadBooks() }
     }
 
     @ViewBuilder
-    private func bookDestination(_ book: FetchedCuratedBook) -> some View {
+    private func bookDestination(_ book: CuratedBookEntry) -> some View {
         if let libraryBook = libraryBooks.first(where: { $0.olWorkKey == book.workKey }) {
             BookDetailView(book: libraryBook)
         } else {
             let searchResult = SearchResult(
                 key: book.workKey,
                 title: book.title,
-                authorName: book.author.map { [$0] },
+                authorName: [book.author],
                 firstPublishYear: nil,
                 numberOfPagesMedian: nil,
                 coverI: book.coverID,
@@ -187,7 +195,7 @@ struct CuratedListDetailView: View {
         }
     }
 
-    private func bookCell(_ book: FetchedCuratedBook) -> some View {
+    private func bookCell(_ book: CuratedBookEntry) -> some View {
         VStack(spacing: 6) {
             ZStack(alignment: .topTrailing) {
                 CoverImage(coverID: book.coverID, size: .medium)
@@ -210,76 +218,16 @@ struct CuratedListDetailView: View {
         }
     }
 
-    private func dismissBook(_ book: FetchedCuratedBook) {
+    private func dismissBook(_ book: CuratedBookEntry) {
         let dismissed = DismissedBook(
             openLibraryWorkKey: book.workKey,
             title: book.title,
-            author: book.author ?? "Unknown Author"
+            author: book.author
         )
         withAnimation {
             modelContext.insert(dismissed)
             try? modelContext.save()
         }
     }
-
-    private func loadBooks() async {
-        if !hasLoaded { isLoading = true }
-        defer {
-            isLoading = false
-            hasLoaded = true
-        }
-
-        let keys = list.bookKeys
-        let repo = repository
-
-        let results: [FetchedCuratedBook] = await withTaskGroup(
-            of: (Int, FetchedCuratedBook?).self
-        ) { group in
-            for (index, key) in keys.enumerated() {
-                group.addTask {
-                    do {
-                        let detail = try await repo.fetchDetail(for: key)
-                        var authorName: String?
-                        if let authorKey = detail.primaryAuthorKey {
-                            let authorDetail = try? await repo.fetchAuthorDetail(key: authorKey)
-                            authorName = authorDetail?.name
-                        }
-                        return (index, FetchedCuratedBook(
-                            workKey: key,
-                            title: detail.title,
-                            coverID: detail.primaryCoverID,
-                            subjects: detail.subjects,
-                            author: authorName
-                        ))
-                    } catch {
-                        return (index, nil)
-                    }
-                }
-            }
-
-            var indexed: [(Int, FetchedCuratedBook)] = []
-            for await (index, book) in group {
-                if let book {
-                    indexed.append((index, book))
-                }
-            }
-            return indexed
-                .sorted { $0.0 < $1.0 }
-                .map(\.1)
-        }
-
-        fetchedBooks = results
-    }
 }
 
-// MARK: - Fetched Curated Book
-
-struct FetchedCuratedBook: Identifiable {
-    let workKey: String
-    let title: String
-    let coverID: Int?
-    let subjects: [String]?
-    let author: String?
-
-    var id: String { workKey }
-}
