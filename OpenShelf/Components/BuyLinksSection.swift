@@ -3,8 +3,11 @@ import SwiftUI
 struct BuyLinksSection: View {
     let isbn: String?
 
+    @Environment(BookRepository.self) private var repository
     @AppStorage("preferredBookshop") private var preferredBookshop: String = BookshopPreference.bookshopOrg.rawValue
     @AppStorage("preferredAudiobook") private var preferredAudiobook: String = AudiobookPreference.libroFm.rawValue
+    @State private var appleBooksURL: URL?
+    @State private var appleBooksPrice: String?
 
     var body: some View {
         if let isbn {
@@ -13,8 +16,38 @@ struct BuyLinksSection: View {
                     .padding(.horizontal)
 
                 buyButtons(isbn: isbn)
+                appleBooksButton()
                 listenButtons(isbn: isbn)
             }
+            .animation(.default, value: appleBooksURL)
+            .task(id: isbn) {
+                await loadAppleBooksLink(isbn: isbn)
+            }
+        }
+    }
+
+    private func loadAppleBooksLink(isbn: String) async {
+        if let ebook = await repository.fetchAppleBooksLink(isbn: isbn) {
+            appleBooksURL = ebook.trackViewUrl
+            appleBooksPrice = ebook.formattedPrice
+        }
+    }
+
+    @ViewBuilder
+    private func appleBooksButton() -> some View {
+        if let url = appleBooksURL {
+            let priceLabel = appleBooksPrice.map { " (\($0))" } ?? ""
+            Button {
+                UIApplication.shared.open(url)
+            } label: {
+                Label("Buy on Apple Books\(priceLabel)", systemImage: "book.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal)
+            .accessibilityLabel("Buy on Apple Books")
+            .accessibilityValue(appleBooksPrice ?? "")
+            .accessibilityHint("Opens in Apple Books")
         }
     }
 
