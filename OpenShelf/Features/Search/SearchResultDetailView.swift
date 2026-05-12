@@ -17,6 +17,8 @@ struct SearchResultDetailView: View {
     @State private var showRatingPrompt = false
     @State private var rating: Double?
     @State private var addedBook: Book?
+    @State private var workRatings: WorkRatings?
+    @State private var workBookshelves: WorkBookshelves?
 
     @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 200
     @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 300
@@ -45,6 +47,8 @@ struct SearchResultDetailView: View {
             VStack(spacing: 20) {
                 coverSection
                 metadataSection
+
+                communityStatsSection
 
                 if isLoadingDetail {
                     ProgressView()
@@ -157,6 +161,112 @@ struct SearchResultDetailView: View {
         }
     }
 
+    // MARK: - Community Stats Section
+
+    @ViewBuilder
+    private var communityStatsSection: some View {
+        let hasRating = workRatings != nil || searchResult.ratingsAverage != nil
+        let hasShelves = workBookshelves != nil
+
+        if hasRating || hasShelves {
+            VStack(spacing: 12) {
+                if let ratings = workRatings {
+                    VStack(spacing: 4) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(.orange)
+                            Text(String(format: "%.1f", ratings.summary.average))
+                                .fontWeight(.semibold)
+                            Text("(\(ratings.summary.count) ratings)")
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.subheadline)
+
+                        ratingBreakdown(ratings.counts)
+                    }
+                } else if let avg = searchResult.ratingsAverage,
+                          let count = searchResult.ratingsCount {
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .foregroundStyle(.orange)
+                        Text(String(format: "%.1f", avg))
+                            .fontWeight(.semibold)
+                        Text("(\(count) ratings)")
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.subheadline)
+                }
+
+                if let shelves = workBookshelves {
+                    HStack(spacing: 16) {
+                        shelfStat(
+                            count: shelves.counts.wantToRead,
+                            label: "want to read"
+                        )
+                        shelfStat(
+                            count: shelves.counts.currentlyReading,
+                            label: "reading"
+                        )
+                        shelfStat(
+                            count: shelves.counts.alreadyRead,
+                            label: "read"
+                        )
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal)
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    private func ratingBreakdown(_ counts: WorkRatings.RatingCounts) -> some View {
+        let bars: [(label: String, count: Int)] = [
+            ("5", counts.five),
+            ("4", counts.four),
+            ("3", counts.three),
+            ("2", counts.two),
+            ("1", counts.one),
+        ]
+        let maxCount = bars.map(\.count).max() ?? 1
+
+        return VStack(spacing: 2) {
+            ForEach(bars, id: \.label) { bar in
+                HStack(spacing: 4) {
+                    Text(bar.label)
+                        .font(.caption2)
+                        .frame(width: 12, alignment: .trailing)
+
+                    GeometryReader { geo in
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(.orange.opacity(0.6))
+                            .frame(
+                                width: maxCount > 0
+                                    ? geo.size.width * CGFloat(bar.count) / CGFloat(maxCount)
+                                    : 0
+                            )
+                    }
+                    .frame(height: 8)
+
+                    Text("\(bar.count)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .frame(width: 30, alignment: .leading)
+                }
+            }
+        }
+        .padding(.horizontal, 40)
+    }
+
+    private func shelfStat(count: Int, label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(DiscoverSection.formatCount(count))
+                .fontWeight(.medium)
+            Text(label)
+        }
+    }
+
     // MARK: - Add to Library Section
 
     private var addToLibrarySection: some View {
@@ -235,6 +345,14 @@ struct SearchResultDetailView: View {
         } catch {
             // Non-critical
         }
+
+        async let ratingsTask: Void = {
+            self.workRatings = try? await repository.fetchRatings(workKey: searchResult.key)
+        }()
+        async let shelvesTask: Void = {
+            self.workBookshelves = try? await repository.fetchBookshelves(workKey: searchResult.key)
+        }()
+        _ = await (ratingsTask, shelvesTask)
     }
 
     private func handleAdd() {

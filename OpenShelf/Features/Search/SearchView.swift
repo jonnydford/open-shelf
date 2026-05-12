@@ -215,14 +215,23 @@ struct SearchView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 12) {
-                    if let year = result.firstPublishYear {
-                        Text(String(year))
+                    if let rating = result.ratingsAverage {
+                        Label(
+                            String(format: "%.1f", rating),
+                            systemImage: "star.fill"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                    }
+
+                    if let count = result.readinglogCount, count > 0 {
+                        Text("\(DiscoverSection.formatCount(count)) readers")
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
 
-                    if let editions = result.editionCount {
-                        Text("\(editions) editions")
+                    if let year = result.firstPublishYear {
+                        Text(String(year))
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
