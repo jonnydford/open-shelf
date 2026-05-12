@@ -11,6 +11,7 @@ struct FollowingView: View {
 
     @State private var shelfToUnfollow: FollowedShelf?
     @State private var showClearAllAlert = false
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -19,7 +20,11 @@ struct FollowingView: View {
                     ContentUnavailableView {
                         Label("No Friends Yet", systemImage: "person.2")
                     } description: {
-                        Text("When a friend shares their shelf link with you, tap it to follow their reading activity.\n\nShare your own shelf from Settings to let friends follow you too.")
+                        Text("When a friend shares their shelf link with you, tap it to follow their reading activity.")
+                    } actions: {
+                        Button("Set Up Sharing") {
+                            showSettings = true
+                        }
                     }
                 } else {
                     list
@@ -59,6 +64,9 @@ struct FollowingView: View {
                 }
             } message: {
                 Text("This will remove all activity events from your feed.")
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
             }
         }
     }
