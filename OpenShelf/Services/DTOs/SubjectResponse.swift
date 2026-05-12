@@ -14,7 +14,7 @@ struct SubjectResponse: Codable, Sendable {
     }
 }
 
-struct SubjectWork: Codable, Sendable, Identifiable {
+struct SubjectWork: Codable, Sendable, Identifiable, Hashable {
     let key: String
     let title: String
     let editionCount: Int?
@@ -55,7 +55,9 @@ struct SubjectWork: Codable, Sendable, Identifiable {
     }
 }
 
-struct SubjectAuthor: Codable, Sendable {
+struct SubjectAuthor: Codable, Sendable, Identifiable, Hashable {
     let key: String
     let name: String
+
+    var id: String { key }
 }

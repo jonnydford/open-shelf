@@ -154,11 +154,14 @@ actor OpenLibraryClient {
     // MARK: - Subjects
 
     func fetchSubject(_ slug: String, limit: Int = 20) async throws -> SubjectResponse {
-        guard var components = URLComponents(string: "\(baseURL)/subjects/\(slug).json") else {
+        let sanitised = slug.lowercased()
+            .replacingOccurrences(of: " ", with: "_")
+            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? slug
+        guard var components = URLComponents(string: "\(baseURL)/subjects/\(sanitised).json") else {
             throw OpenLibraryError.invalidURL
         }
         components.queryItems = [
-            URLQueryItem(name: "limit", value: String(limit)),
+            URLQueryItem(name: "limit", value: String(limit))
         ]
         guard let url = components.url else {
             throw OpenLibraryError.invalidURL
