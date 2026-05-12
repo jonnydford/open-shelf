@@ -166,7 +166,32 @@ final class CloudSharingService {
     }
 
     func acceptShare(metadata: CKShare.Metadata) async throws {
-        _ = try await container.accept(metadata)
+        let ckContainer = try container
+        _ = try await ckContainer.accept(metadata)
+
+        do {
+            let record = try await ckContainer.sharedCloudDatabase.record(for: metadata.rootRecordID)
+            if record.recordType == publicShelfRecordType {
+                if let json = record["snapshotJSON"] as? String,
+                   let data = json.data(using: .utf8) {
+                    let ownerName = record.recordID.zoneID.ownerName
+                    let displayName = record["displayName"] as? String ?? "Friend"
+                    NotificationCenter.default.post(
+                        name: .publicShelfFollowed,
+                        object: nil,
+                        userInfo: [
+                            "ownerRecordName": ownerName,
+                            "displayName": displayName,
+                            "snapshotData": data
+                        ]
+                    )
+                }
+                return
+            }
+        } catch {
+            // Could not identify record type — fall through to list refresh
+        }
+
         await fetchSharedWithMe()
     }
 
@@ -339,4 +364,47 @@ final class CloudSharingService {
             record["snapshotJSON"] = json as CKRecordValue
         }
     }
+
+    // MARK: - Following
+
+    func fetchAllFollowedShelfSnapshots() async -> [FollowedShelfInfo] {
+        guard Self.isAvailable else { return [] }
+
+        do {
+            let query = CKQuery(
+                recordType: publicShelfRecordType,
+                predicate: NSPredicate(value: true)
+            )
+            let (results, _) = try await container.sharedCloudDatabase.records(
+                matching: query
+            )
+
+            return results.compactMap { _, result in
+                guard let record = try? result.get(),
+                      let json = record["snapshotJSON"] as? String,
+                      let data = json.data(using: .utf8) else { return nil }
+
+                let ownerName = record.recordID.zoneID.ownerName
+                let displayName = record["displayName"] as? String ?? "Friend"
+
+                return FollowedShelfInfo(
+                    ownerRecordName: ownerName,
+                    displayName: displayName,
+                    snapshotData: data
+                )
+            }
+        } catch {
+            return []
+        }
+    }
+}
+
+struct FollowedShelfInfo: Sendable {
+    let ownerRecordName: String
+    let displayName: String
+    let snapshotData: Data
+}
+
+extension Notification.Name {
+    static let publicShelfFollowed = Notification.Name("publicShelfFollowed")
 }

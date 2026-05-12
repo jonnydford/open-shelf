@@ -54,6 +54,38 @@ struct ContentView: View {
                 selectedTab = "Discover"
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .publicShelfFollowed)) { notification in
+            handleFollowedShelfNotification(notification)
+        }
+    }
+
+    // MARK: - Follow Handling
+
+    private func handleFollowedShelfNotification(_ notification: Notification) {
+        guard let info = notification.userInfo,
+              let ownerRecordName = info["ownerRecordName"] as? String,
+              let displayName = info["displayName"] as? String,
+              let snapshotData = info["snapshotData"] as? Data else { return }
+
+        let owner = ownerRecordName
+        let descriptor = FetchDescriptor<FollowedShelf>(
+            predicate: #Predicate { $0.ownerRecordName == owner }
+        )
+
+        if let existing = (try? modelContext.fetch(descriptor))?.first {
+            existing.cachedSnapshot = snapshotData
+            existing.displayName = displayName
+            existing.lastFetched = .now
+        } else {
+            let shelf = FollowedShelf(
+                ownerRecordName: ownerRecordName,
+                displayName: displayName,
+                cachedSnapshot: snapshotData
+            )
+            modelContext.insert(shelf)
+        }
+        try? modelContext.save()
+        selectedTab = "Following"
     }
 
     // MARK: - Spotlight Handling
