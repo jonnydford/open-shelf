@@ -39,7 +39,7 @@ actor OpenLibraryClient {
     private let session: URLSession
     private let baseURL = "https://openlibrary.org"
     private let coversBaseURL = "https://covers.openlibrary.org"
-    private let searchFields = "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,edition_count,isbn,subject,id_goodreads"
+    private let searchFields = "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,edition_count,isbn,subject,id_goodreads,ratings_average,ratings_count,readinglog_count,want_to_read_count,currently_reading_count,already_read_count"
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
@@ -102,6 +102,48 @@ actor OpenLibraryClient {
 
         let response: SearchResponse = try await performRequest(url: url)
         return response.docs
+    }
+
+    // MARK: - Popular by Subject
+
+    func searchPopular(subject: String, limit: Int = 10) async throws -> [SearchResult] {
+        guard var components = URLComponents(string: "\(baseURL)/search.json") else {
+            throw OpenLibraryError.invalidURL
+        }
+
+        components.queryItems = [
+            URLQueryItem(name: "q", value: "subject:\(subject)"),
+            URLQueryItem(name: "fields", value: searchFields),
+            URLQueryItem(name: "sort", value: "readinglog"),
+            URLQueryItem(name: "limit", value: "\(limit)")
+        ]
+
+        guard let url = components.url else {
+            throw OpenLibraryError.invalidURL
+        }
+
+        let response: SearchResponse = try await performRequest(url: url)
+        return response.docs
+    }
+
+    // MARK: - Ratings
+
+    func fetchRatings(workKey: String) async throws -> WorkRatings {
+        let path = workKey.hasPrefix("/") ? workKey : "/works/\(workKey)"
+        guard let url = URL(string: "\(baseURL)\(path)/ratings.json") else {
+            throw OpenLibraryError.invalidURL
+        }
+        return try await performRequest(url: url)
+    }
+
+    // MARK: - Bookshelves
+
+    func fetchBookshelves(workKey: String) async throws -> WorkBookshelves {
+        let path = workKey.hasPrefix("/") ? workKey : "/works/\(workKey)"
+        guard let url = URL(string: "\(baseURL)\(path)/bookshelves.json") else {
+            throw OpenLibraryError.invalidURL
+        }
+        return try await performRequest(url: url)
     }
 
     // MARK: - ISBN Lookup

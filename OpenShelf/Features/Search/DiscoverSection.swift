@@ -23,7 +23,13 @@ struct CuratedBookEntry: Codable, Identifiable, Hashable {
             editionCount: nil,
             isbn: nil,
             subject: subjects,
-            idGoodreads: nil
+            idGoodreads: nil,
+            ratingsAverage: nil,
+            ratingsCount: nil,
+            readinglogCount: nil,
+            wantToReadCount: nil,
+            currentlyReadingCount: nil,
+            alreadyReadCount: nil
         )
     }
 }
@@ -52,6 +58,7 @@ struct CuratedList: Codable, Identifiable {
 
 struct DiscoverSection: View {
     @Environment(DiscoverRecommendationService.self) private var recommendationService
+    @Environment(PopularBooksService.self) private var popularBooksService
     @Environment(BookRepository.self) private var repository
     @Environment(\.modelContext) private var modelContext
 
@@ -68,9 +75,19 @@ struct DiscoverSection: View {
         }
     }
 
+    private var libraryKeys: Set<String> {
+        Set(libraryBooks.map(\.olWorkKey))
+    }
+
+    private var dismissedKeySet: Set<String> {
+        Set(dismissedBooks.map(\.openLibraryWorkKey))
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             recommendationsSection
+
+            popularSection
 
             ForEach(groupedLists, id: \.category) { group in
                 VStack(alignment: .leading, spacing: 12) {
@@ -97,9 +114,16 @@ struct DiscoverSection: View {
             }
         }
         .task {
+            let libKeys = libraryKeys
+            let disKeys = dismissedKeySet
             await recommendationService.refreshIfNeeded(
                 library: libraryBooks,
                 dismissed: dismissedBooks,
+                using: repository
+            )
+            await popularBooksService.refreshIfNeeded(
+                libraryKeys: libKeys,
+                dismissedKeys: disKeys,
                 using: repository
             )
         }
@@ -138,7 +162,7 @@ struct DiscoverSection: View {
                                     Button {
                                         selectedRecommendation = book
                                     } label: {
-                                        recommendedBookCard(book)
+                                        discoverBookCard(book)
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityHint("Double tap to view details")
@@ -173,7 +197,61 @@ struct DiscoverSection: View {
         }
     }
 
-    private func recommendedBookCard(_ book: SearchResult) -> some View {
+    // MARK: - Popular
+
+    @ViewBuilder
+    private var popularSection: some View {
+        if !popularBooksService.sections.isEmpty {
+            ForEach(popularBooksService.sections) { section in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Most Read in \(section.genre)")
+                        .font(.headline)
+                        .padding(.horizontal)
+                        .accessibilityAddTraits(.isHeader)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 12) {
+                            ForEach(section.books) { book in
+                                Button {
+                                    selectedRecommendation = book
+                                } label: {
+                                    discoverBookCard(book, showReaderCount: true)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityHint("Double tap to view details")
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        dismissRecommendedBook(book)
+                                    } label: {
+                                        Label("Not Interested", systemImage: "hand.thumbsdown")
+                                    }
+                                }
+                            }
+                        }
+                        .scrollTargetLayout()
+                        .padding(.horizontal)
+                    }
+                    .scrollTargetBehavior(.viewAligned)
+                }
+            }
+        } else if popularBooksService.isLoading {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Most Read")
+                    .font(.headline)
+                    .padding(.horizontal)
+                    .accessibilityAddTraits(.isHeader)
+
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                    .accessibilityLabel("Loading popular books")
+            }
+        }
+    }
+
+    // MARK: - Shared Book Card
+
+    private func discoverBookCard(_ book: SearchResult, showReaderCount: Bool = false) -> some View {
         VStack(spacing: 6) {
             CoverImage(coverID: book.coverI, size: .medium)
                 .frame(width: 100, height: 150)
@@ -185,13 +263,30 @@ struct DiscoverSection: View {
                 .multilineTextAlignment(.center)
                 .frame(width: 100)
 
-            Text(book.authorName?.first ?? "Unknown Author")
+            Text(book.primaryAuthor)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .frame(width: 100)
+
+            if showReaderCount, let count = book.readinglogCount, count > 0 {
+                Text("\(Self.formatCount(count)) readers")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    static func formatCount(_ count: Int) -> String {
+        if count >= 1_000_000 {
+            let value = Double(count) / 1_000_000
+            return value >= 10 ? "\(Int(value))M" : String(format: "%.1fM", value)
+        } else if count >= 1_000 {
+            let value = Double(count) / 1_000
+            return value >= 100 ? "\(Int(value))K" : String(format: "%.1fK", value)
+        }
+        return "\(count)"
     }
 
     private func dismissRecommendedBook(_ book: SearchResult) {
