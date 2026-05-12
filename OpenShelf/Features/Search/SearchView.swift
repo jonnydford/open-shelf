@@ -14,6 +14,8 @@ struct SearchView: View {
     @State private var errorMessage: String?
     @State private var hasSearched = false
     @State private var showManualEntry = false
+    @State private var isSearchPresented = false
+    @State private var navigationPath = NavigationPath()
 
     @Query private var allLibraryBooks: [Book]
 
@@ -43,7 +45,7 @@ struct SearchView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Group {
                 if let errorMessage {
                     errorState(message: errorMessage)
@@ -58,7 +60,7 @@ struct SearchView: View {
                 }
             }
             .navigationTitle("Discover")
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Title, author, or ISBN")
+            .searchable(text: $searchText, isPresented: $isSearchPresented, placement: .navigationBarDrawer(displayMode: .always), prompt: "Title, author, or ISBN")
             .searchSuggestions {
                 if searchText.isEmpty && !searchHistory.isEmpty {
                     ForEach(searchHistory, id: \.self) { query in
@@ -168,9 +170,13 @@ struct SearchView: View {
     private var resultsList: some View {
         List {
             ForEach(results) { result in
-                NavigationLink(value: result) {
+                Button {
+                    isSearchPresented = false
+                    navigationPath.append(result)
+                } label: {
                     searchResultRow(result)
                 }
+                .tint(.primary)
                 .accessibilityHint("Double tap to view book details")
             }
 
