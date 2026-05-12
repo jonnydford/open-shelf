@@ -11,6 +11,21 @@ struct CuratedBookEntry: Codable, Identifiable, Hashable {
     let subjects: [String]
 
     var id: String { workKey }
+
+    var asSearchResult: SearchResult {
+        SearchResult(
+            key: workKey,
+            title: title,
+            authorName: [author],
+            firstPublishYear: nil,
+            numberOfPagesMedian: nil,
+            coverI: coverID,
+            editionCount: nil,
+            isbn: nil,
+            subject: subjects,
+            idGoodreads: nil
+        )
+    }
 }
 
 enum CuratedListCategory: String, Codable, CaseIterable {
@@ -80,7 +95,7 @@ struct DiscoverSection: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(3)
 
-            Text("\(list.books.count) \(list.books.count == 1 ? "book" : "books")")
+            Text("^[\(list.books.count) book](inflect: true)")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -89,6 +104,8 @@ struct DiscoverSection: View {
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Double tap to view list")
     }
 
     init() {
@@ -114,17 +131,29 @@ struct CuratedListDetailView: View {
     @Query private var libraryBooks: [Book]
     @Query private var dismissedBooks: [DismissedBook]
 
+    @State private var selectedBook: CuratedBookEntry?
+
     private let columns = [
         GridItem(.flexible()),
         GridItem(.flexible()),
         GridItem(.flexible()),
     ]
 
+    private var dismissedKeys: Set<String> {
+        Set(dismissedBooks.map(\.openLibraryWorkKey))
+    }
+
+    private var nonPrivateLibraryKeys: Set<String> {
+        Set(libraryBooks.filter { !$0.isPrivate }.map(\.olWorkKey))
+    }
+
+    private var allLibraryKeys: Set<String> {
+        Set(libraryBooks.map(\.olWorkKey))
+    }
+
     private var visibleBooks: [CuratedBookEntry] {
-        let dismissedKeys = Set(dismissedBooks.map(\.openLibraryWorkKey))
-        let libraryKeys = Set(libraryBooks.map(\.olWorkKey))
         return list.books.filter { book in
-            !dismissedKeys.contains(book.workKey) && !libraryKeys.contains(book.workKey)
+            !dismissedKeys.contains(book.workKey) && !allLibraryKeys.contains(book.workKey)
         }
     }
 
@@ -138,23 +167,33 @@ struct CuratedListDetailView: View {
 
                 if visibleBooks.isEmpty && !list.books.isEmpty {
                     ContentUnavailableView(
-                        "You've seen everything here",
+                        "You've explored everything here",
                         systemImage: "sparkles",
-                        description: Text("Check back later for new picks.")
+                        description: Text("All books in this list are in your library or dismissed.")
                     )
                 } else if visibleBooks.isEmpty {
                     ContentUnavailableView(
                         "No books available",
                         systemImage: "book.closed",
-                        description: Text("Could not load books for this list.")
+                        description: Text("This list is currently empty.")
                     )
                 } else {
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(visibleBooks) { book in
-                            NavigationLink {
-                                bookDestination(book)
-                            } label: {
-                                bookCell(book)
+                            Group {
+                                if let libraryBook = libraryBooks.first(where: { $0.olWorkKey == book.workKey }) {
+                                    NavigationLink {
+                                        BookDetailView(book: libraryBook)
+                                    } label: {
+                                        bookCell(book)
+                                    }
+                                } else {
+                                    Button {
+                                        selectedBook = book
+                                    } label: {
+                                        bookCell(book)
+                                    }
+                                }
                             }
                             .buttonStyle(.plain)
                             .contextMenu {
@@ -172,26 +211,11 @@ struct CuratedListDetailView: View {
             .padding(.bottom, 32)
         }
         .navigationTitle(list.name)
-    }
-
-    @ViewBuilder
-    private func bookDestination(_ book: CuratedBookEntry) -> some View {
-        if let libraryBook = libraryBooks.first(where: { $0.olWorkKey == book.workKey }) {
-            BookDetailView(book: libraryBook)
-        } else {
-            let searchResult = SearchResult(
-                key: book.workKey,
-                title: book.title,
-                authorName: [book.author],
-                firstPublishYear: nil,
-                numberOfPagesMedian: nil,
-                coverI: book.coverID,
-                editionCount: nil,
-                isbn: nil,
-                subject: book.subjects,
-                idGoodreads: nil
+        .sheet(item: $selectedBook) { book in
+            BookDetailSheet(
+                searchResult: book.asSearchResult,
+                onAdded: {}
             )
-            BookDetailSheet(searchResult: searchResult, onAdded: {})
         }
     }
 
@@ -202,7 +226,7 @@ struct CuratedListDetailView: View {
                     .frame(width: 100, height: 150)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 
-                if libraryBooks.contains(where: { $0.olWorkKey == book.workKey && !$0.isPrivate }) {
+                if nonPrivateLibraryKeys.contains(book.workKey) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.caption)
                         .foregroundStyle(.white, .green)
@@ -215,7 +239,14 @@ struct CuratedListDetailView: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .frame(width: 100)
+
+            Text(book.author)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .frame(width: 100)
         }
+        .accessibilityElement(children: .combine)
     }
 
     private func dismissBook(_ book: CuratedBookEntry) {
