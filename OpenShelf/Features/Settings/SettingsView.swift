@@ -408,6 +408,7 @@ struct SettingsView: View {
             } label: {
                 Label("Clear Cache", systemImage: "trash")
             }
+            .disabled(cacheSize == nil || cacheSize == 0)
             .alert("Clear Cache?", isPresented: $showClearCacheAlert) {
                 Button("Cancel", role: .cancel) {}
                 Button("Clear", role: .destructive) {
