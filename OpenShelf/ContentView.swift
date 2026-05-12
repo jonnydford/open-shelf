@@ -30,7 +30,7 @@ struct ContentView: View {
     private var unseenActivityCount: Int {
         guard lastViewedActivityTimestamp > 0 else { return 0 }
         let threshold = Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp)
-        return activityEvents.filter { $0.timestamp > threshold }.count
+        return min(activityEvents.filter { $0.timestamp > threshold }.count, 99)
     }
 
     var body: some View {
