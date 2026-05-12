@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 struct SocialSettingsSection: View {
     @Binding var showCopiedToast: Bool
