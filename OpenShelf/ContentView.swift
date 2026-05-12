@@ -7,6 +7,9 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(BookRepository.self) private var repository
 
+    @Query(sort: \ActivityEvent.timestamp, order: .reverse) private var activityEvents: [ActivityEvent]
+    @AppStorage("lastViewedActivityTimestamp") private var lastViewedActivityTimestamp: Double = 0
+
     @State private var selectedTab = "Library"
     @State private var deepLinkBookKey: String?
     @State private var showDeepLinkBook = false
@@ -14,6 +17,12 @@ struct ContentView: View {
     @State private var deepLinkSearchResult: SearchResult?
     @State private var isLoadingDeepLink = false
     @State private var deepLinkSearchQuery: String?
+
+    private var unseenActivityCount: Int {
+        guard lastViewedActivityTimestamp > 0 else { return 0 }
+        let threshold = Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp)
+        return activityEvents.filter { $0.timestamp > threshold }.count
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -28,6 +37,7 @@ struct ContentView: View {
             Tab("Following", systemImage: "person.2", value: "Following") {
                 FollowingView()
             }
+            .badge(unseenActivityCount)
 
             Tab("Stats", systemImage: "chart.bar", value: "Stats") {
                 StatsView()
@@ -56,6 +66,11 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .publicShelfFollowed)) { notification in
             handleFollowedShelfNotification(notification)
+        }
+        .onChange(of: selectedTab) { _, newTab in
+            if newTab == "Following" {
+                lastViewedActivityTimestamp = Date.now.timeIntervalSinceReferenceDate
+            }
         }
     }
 
