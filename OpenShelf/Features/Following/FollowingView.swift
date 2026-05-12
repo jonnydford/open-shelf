@@ -3,15 +3,17 @@ import SwiftData
 
 struct FollowingView: View {
     @Query(sort: \FollowedShelf.displayName) private var followedShelves: [FollowedShelf]
+    @Query(sort: \ActivityEvent.timestamp, order: .reverse) private var activityEvents: [ActivityEvent]
     @Environment(\.modelContext) private var modelContext
     @Environment(CloudSharingService.self) private var sharingService
 
     @State private var shelfToUnfollow: FollowedShelf?
+    @State private var showClearAllAlert = false
 
     var body: some View {
         NavigationStack {
             Group {
-                if followedShelves.isEmpty {
+                if followedShelves.isEmpty && activityEvents.isEmpty {
                     ContentUnavailableView {
                         Label("No Friends Yet", systemImage: "person.2")
                     } description: {
@@ -26,6 +28,7 @@ struct FollowingView: View {
                 await refreshAll()
             }
             .task {
+                pruneExpiredEvents()
                 let hasStale = followedShelves.contains(where: \.isStale)
                 if hasStale {
                     await refreshAll()
@@ -47,22 +50,58 @@ struct FollowingView: View {
                     Text("You'll need \(shelf.displayName) to share their link again to re-follow.")
                 }
             }
+            .alert("Clear Activity?", isPresented: $showClearAllAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Clear All", role: .destructive) {
+                    clearAllEvents()
+                }
+            } message: {
+                Text("This will remove all activity events from your feed.")
+            }
         }
     }
 
     private var list: some View {
         List {
-            ForEach(followedShelves) { shelf in
-                NavigationLink {
-                    FriendShelfDetailView(shelf: shelf)
-                } label: {
-                    FriendShelfRow(shelf: shelf)
+            if !activityEvents.isEmpty {
+                Section {
+                    ForEach(activityEvents) { event in
+                        if let searchResult = event.asSearchResult {
+                            NavigationLink {
+                                SearchResultDetailView(searchResult: searchResult)
+                            } label: {
+                                ActivityEventRow(event: event)
+                            }
+                        } else {
+                            ActivityEventRow(event: event)
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Text("Activity")
+                        Spacer()
+                        Button("Clear All") {
+                            showClearAllAlert = true
+                        }
+                        .font(.caption)
+                        .textCase(nil)
+                    }
                 }
-                .swipeActions(edge: .trailing) {
-                    Button(role: .destructive) {
-                        shelfToUnfollow = shelf
+            }
+
+            Section("Friends") {
+                ForEach(followedShelves) { shelf in
+                    NavigationLink {
+                        FriendShelfDetailView(shelf: shelf)
                     } label: {
-                        Label("Unfollow", systemImage: "person.badge.minus")
+                        FriendShelfRow(shelf: shelf)
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            shelfToUnfollow = shelf
+                        } label: {
+                            Label("Unfollow", systemImage: "person.badge.minus")
+                        }
                     }
                 }
             }
@@ -74,6 +113,21 @@ struct FollowingView: View {
 
         for info in snapshots {
             if let existing = followedShelves.first(where: { $0.ownerRecordName == info.ownerRecordName }) {
+                let oldSnapshot = existing.decodedSnapshot
+                let newSnapshot = try? JSONDecoder().decode(PublicShelfSnapshot.self, from: info.snapshotData)
+
+                if let newSnapshot {
+                    let events = ActivityDiffEngine.diff(
+                        old: oldSnapshot,
+                        new: newSnapshot,
+                        friendDisplayName: info.displayName,
+                        friendRecordName: info.ownerRecordName
+                    )
+                    for event in events {
+                        modelContext.insert(event)
+                    }
+                }
+
                 existing.displayName = info.displayName
                 existing.cachedSnapshot = info.snapshotData
                 existing.lastFetched = .now
@@ -87,6 +141,23 @@ struct FollowingView: View {
             }
         }
         try? modelContext.save()
+    }
+
+    private func clearAllEvents() {
+        for event in activityEvents {
+            modelContext.delete(event)
+        }
+        try? modelContext.save()
+    }
+
+    private func pruneExpiredEvents() {
+        let expired = activityEvents.filter(\.isExpired)
+        for event in expired {
+            modelContext.delete(event)
+        }
+        if !expired.isEmpty {
+            try? modelContext.save()
+        }
     }
 }
 
