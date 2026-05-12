@@ -214,11 +214,19 @@ struct FriendShelfRow: View {
 struct FriendShelfDetailView: View {
     let shelf: FollowedShelf
 
+    @Query private var libraryBooks: [Book]
+    @Environment(\.modelContext) private var modelContext
+    @State private var showAddedToast = false
+
     private var hasActivity: Bool {
         guard let snapshot = shelf.decodedSnapshot else { return false }
         return !snapshot.currentlyReading.isEmpty
             || !snapshot.recentlyFinished.isEmpty
             || snapshot.goalProgress != nil
+    }
+
+    private func isInLibrary(_ book: PublicBookEntry) -> Bool {
+        libraryBooks.contains { $0.olWorkKey == book.olWorkKey }
     }
 
     var body: some View {
@@ -249,6 +257,7 @@ struct FriendShelfDetailView: View {
             }
             .navigationTitle("\(snapshot.displayName)'s Shelf")
             .navigationBarTitleDisplayMode(.inline)
+            .toast(isPresented: $showAddedToast, message: "Added to Want to Read")
         } else if shelf.decodedSnapshot != nil {
             ContentUnavailableView {
                 Label("No Recent Activity", systemImage: "book.closed")
@@ -300,5 +309,30 @@ struct FriendShelfDetailView: View {
                 }
             }
         }
+        .contextMenu {
+            if isInLibrary(book) {
+                Label("Already in Library", systemImage: "checkmark.circle")
+            } else {
+                Button {
+                    addToShelf(book)
+                } label: {
+                    Label("Add to Want to Read", systemImage: "bookmark")
+                }
+            }
+        }
+    }
+
+    private func addToShelf(_ book: PublicBookEntry) {
+        let newBook = Book(
+            olWorkKey: book.olWorkKey,
+            isbn13: book.isbn13,
+            title: book.title,
+            authorName: book.authorName,
+            coverImageID: book.coverImageID,
+            shelf: .wantToRead
+        )
+        modelContext.insert(newBook)
+        try? modelContext.save()
+        showAddedToast = true
     }
 }
