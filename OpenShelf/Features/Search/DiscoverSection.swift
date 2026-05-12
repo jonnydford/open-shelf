@@ -127,6 +127,7 @@ struct DiscoverSection: View {
         .task {
             let libKeys = libraryKeys
             let disKeys = dismissedKeySet
+            let genreCounts = libraryGenreCounts
             await recommendationService.refreshIfNeeded(
                 library: libraryBooks,
                 dismissed: dismissedBooks,
@@ -135,7 +136,7 @@ struct DiscoverSection: View {
             await popularBooksService.refreshIfNeeded(
                 libraryKeys: libKeys,
                 dismissedKeys: disKeys,
-                genreCounts: libraryGenreCounts,
+                genreCounts: genreCounts,
                 using: repository
             )
         }

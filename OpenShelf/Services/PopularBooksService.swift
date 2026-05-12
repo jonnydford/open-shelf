@@ -88,13 +88,19 @@ final class PopularBooksService {
         }
     }
 
-    private static let genreNameToSlug: [String: String] = [
-        "Fiction": "fiction",
-        "Science Fiction": "science_fiction",
-        "Mystery": "mystery",
-        "Romance": "romance",
-        "Fantasy": "fantasy",
-    ]
+    private static let genreNameToSlug: [String: String] = {
+        var mapping = Dictionary(uniqueKeysWithValues: popularGenres.map { ($0.displayName, $0.slug) })
+        mapping["Thriller"] = "mystery"
+        mapping["Historical Fiction"] = "fiction"
+        mapping["Literary Fiction"] = "fiction"
+        mapping["Horror"] = "fantasy"
+        mapping["Non-Fiction"] = "fiction"
+        return mapping
+    }()
+
+    private static let slugIndex: [String: Int] = Dictionary(
+        uniqueKeysWithValues: popularGenres.enumerated().map { ($1.slug, $0) }
+    )
 
     private static func sortedGenres(
         by genreCounts: [String: Int]
@@ -109,7 +115,7 @@ final class PopularBooksService {
             let countA = slugCounts[a.slug] ?? 0
             let countB = slugCounts[b.slug] ?? 0
             if countA != countB { return countA > countB }
-            return false
+            return (slugIndex[a.slug] ?? 0) < (slugIndex[b.slug] ?? 0)
         }
     }
 
