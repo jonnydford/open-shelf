@@ -48,64 +48,81 @@ struct CuratedList: Codable, Identifiable {
     let books: [CuratedBookEntry]
 }
 
-// MARK: - Discover Section (vertical grid of curated lists)
+// MARK: - Discover Section (grouped horizontal-scroll layout)
 
 struct DiscoverSection: View {
     @State private var lists: [CuratedList] = []
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-    ]
+    private var groupedLists: [(category: CuratedListCategory, lists: [CuratedList])] {
+        CuratedListCategory.allCases.compactMap { category in
+            let matching = lists.filter { $0.category == category }
+            return matching.isEmpty ? nil : (category, matching)
+        }
+    }
 
     var body: some View {
         if !lists.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Curated Lists")
-                    .font(.headline)
-                    .padding(.horizontal)
+            VStack(alignment: .leading, spacing: 24) {
+                ForEach(groupedLists, id: \.category) { group in
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(group.category.displayName)
+                            .font(.headline)
+                            .padding(.horizontal)
 
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(lists) { list in
-                        NavigationLink {
-                            CuratedListDetailView(list: list)
-                        } label: {
-                            curatedListCard(list)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: 12) {
+                                ForEach(group.lists) { list in
+                                    NavigationLink {
+                                        CuratedListDetailView(list: list)
+                                    } label: {
+                                        curatedListCard(list)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .scrollTargetLayout()
+                            .padding(.horizontal)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal)
             }
         }
     }
 
     private func curatedListCard(_ list: CuratedList) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
+            coverGrid(list.books)
+
             Text(list.name)
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Spacer(minLength: 0)
-
-            Text(list.description)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(3)
+                .lineLimit(1)
 
             Text("^[\(list.books.count) book](inflect: true)")
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(minHeight: 100)
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
+        .frame(width: 160)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityHint("Double tap to view list")
+    }
+
+    private func coverGrid(_ books: [CuratedBookEntry]) -> some View {
+        let topBooks = Array(books.prefix(4))
+        return LazyVGrid(
+            columns: [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)],
+            spacing: 4
+        ) {
+            ForEach(topBooks) { book in
+                CoverImage(coverID: book.coverID, size: .small)
+                    .frame(width: 76, height: 114)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xSmall))
+            }
+        }
+        .frame(width: 156, height: 232)
+        .padding(2)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
     }
 
     init() {
