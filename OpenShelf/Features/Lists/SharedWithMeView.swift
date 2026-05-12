@@ -256,7 +256,11 @@ struct SharedListDetailView: View {
             shelf: .wantToRead
         )
         modelContext.insert(newBook)
-        try? modelContext.save()
-        showAddedToast = true
+        do {
+            try modelContext.save()
+            showAddedToast = true
+        } catch {
+            modelContext.rollback()
+        }
     }
 }
