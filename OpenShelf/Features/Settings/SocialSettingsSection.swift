@@ -118,6 +118,15 @@ struct SocialSettingsSection: View {
                 ) {
                     Label("Share My Shelf Link", systemImage: "square.and.arrow.up")
                 }
+
+                let count = sharingService.publicShelfFollowerCount
+                if count > 0 {
+                    Label(
+                        count == 1 ? "1 follower" : "\(count) followers",
+                        systemImage: "person.2"
+                    )
+                    .foregroundStyle(.secondary)
+                }
             }
 
             Button {
