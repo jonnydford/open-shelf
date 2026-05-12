@@ -427,7 +427,7 @@ struct StatsView: View {
                     Text(dayLabels[weekday - 1])
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                        .frame(width: 14)
+                        .frame(minWidth: 44)
                 }
                 Spacer()
             }
@@ -452,7 +452,7 @@ struct StatsView: View {
                             }
                         }
                         .scaleEffect(toggledDates.contains(day) ? 1.3 : 1.0)
-                        .frame(width: 28, height: 28)
+                        .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Circle())
                         .onTapGesture {
                             guard editable else { return }
@@ -482,6 +482,7 @@ struct StatsView: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .padding(.top, 2)
+                .accessibilityLabel("Tap a recent day in the heatmap to mark it as read")
 
             NavigationLink {
                 ReadingCalendarView()

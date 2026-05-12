@@ -122,7 +122,7 @@ private struct MonthGridView: View {
                         .accessibilityHint(editable ? "Tap to toggle" : "")
                     } else {
                         Color.clear
-                            .frame(width: 24, height: 24)
+                            .frame(minWidth: 44, minHeight: 44)
                     }
                 }
             }
