@@ -67,7 +67,7 @@ struct SharedWithMeView: View {
             }
         } message: {
             if let list = listToUnsubscribe {
-                Text("You'll no longer see updates to \"\(list.name)\". You'll need the owner to share it again to re-subscribe.")
+                Text("You'll no longer see updates to \"\(list.name)\".")
             }
         }
     }
