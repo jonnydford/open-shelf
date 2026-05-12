@@ -17,7 +17,7 @@ enum ActivityDiffEngine {
             events.append(ActivityEvent(
                 friendDisplayName: friendDisplayName,
                 friendRecordName: friendRecordName,
-                eventType: "started",
+                eventType: .started,
                 bookTitle: book.title,
                 bookAuthor: book.authorName,
                 bookCoverID: book.coverImageID,
@@ -29,7 +29,7 @@ enum ActivityDiffEngine {
             events.append(ActivityEvent(
                 friendDisplayName: friendDisplayName,
                 friendRecordName: friendRecordName,
-                eventType: "finished",
+                eventType: .finished,
                 bookTitle: book.title,
                 bookAuthor: book.authorName,
                 bookCoverID: book.coverImageID,
@@ -44,12 +44,12 @@ enum ActivityDiffEngine {
         )
         for book in (new.currentlyReading + new.recentlyFinished) {
             guard let rating = book.rating, oldRatings[book.olWorkKey] == nil else { continue }
-            let alreadyHasFinished = events.contains { $0.bookWorkKey == book.olWorkKey && $0.eventType == "finished" }
+            let alreadyHasFinished = events.contains { $0.bookWorkKey == book.olWorkKey && $0.eventType == .finished }
             if alreadyHasFinished { continue }
             events.append(ActivityEvent(
                 friendDisplayName: friendDisplayName,
                 friendRecordName: friendRecordName,
-                eventType: "rated",
+                eventType: .rated,
                 bookTitle: book.title,
                 bookAuthor: book.authorName,
                 bookCoverID: book.coverImageID,
@@ -65,7 +65,7 @@ enum ActivityDiffEngine {
                 events.append(ActivityEvent(
                     friendDisplayName: friendDisplayName,
                     friendRecordName: friendRecordName,
-                    eventType: "goal",
+                    eventType: .goal,
                     bookTitle: "",
                     bookAuthor: ""
                 ))

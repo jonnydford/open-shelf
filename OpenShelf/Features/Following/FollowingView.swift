@@ -63,13 +63,11 @@ struct FollowingView: View {
                     HStack {
                         Text("Activity")
                         Spacer()
-                        if !activityEvents.isEmpty {
-                            Button("Clear All") {
-                                clearAllEvents()
-                            }
-                            .font(.caption)
-                            .textCase(nil)
+                        Button("Clear All") {
+                            clearAllEvents()
                         }
+                        .font(.caption)
+                        .textCase(nil)
                     }
                 }
             }

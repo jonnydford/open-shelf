@@ -12,7 +12,7 @@ struct ActivityEventRow: View {
                     .font(.subheadline)
                     .lineLimit(3)
 
-                if event.eventType == "rated", let rating = event.rating {
+                if event.eventType == .rated, let rating = event.rating {
                     HStack(spacing: 2) {
                         ForEach(1...5, id: \.self) { star in
                             Image(systemName: Double(star) <= rating ? "star.fill" : "star")
@@ -53,20 +53,18 @@ struct ActivityEventRow: View {
     private var eventMessage: AttributedString {
         let name = event.friendDisplayName
         switch event.eventType {
-        case "started":
+        case .started:
             return buildMessage("\(name) started reading ", title: event.bookTitle)
-        case "finished":
+        case .finished:
             return buildMessage("\(name) finished ", title: event.bookTitle)
-        case "rated":
+        case .rated:
             return buildMessage("\(name) rated ", title: event.bookTitle)
-        case "goal":
+        case .goal:
             var result = AttributedString("\(name) reached their reading goal!")
             if let range = result.range(of: name) {
                 result[range].font = .subheadline.bold()
             }
             return result
-        default:
-            return AttributedString(name)
         }
     }
 

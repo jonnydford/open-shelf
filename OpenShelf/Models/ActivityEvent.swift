@@ -1,12 +1,18 @@
 import Foundation
 import SwiftData
 
+enum ActivityEventType: String, Codable {
+    case started, finished, rated, goal
+}
+
 @Model
 final class ActivityEvent {
+    private static let expiryInterval: TimeInterval = 30 * 24 * 60 * 60
+
     var id: UUID
     var friendDisplayName: String
     var friendRecordName: String
-    var eventType: String
+    var eventType: ActivityEventType
     var bookTitle: String
     var bookAuthor: String
     var bookCoverID: Int?
@@ -18,7 +24,7 @@ final class ActivityEvent {
         id: UUID = UUID(),
         friendDisplayName: String,
         friendRecordName: String,
-        eventType: String,
+        eventType: ActivityEventType,
         bookTitle: String,
         bookAuthor: String,
         bookCoverID: Int? = nil,
@@ -39,6 +45,6 @@ final class ActivityEvent {
     }
 
     var isExpired: Bool {
-        Date.now.timeIntervalSince(timestamp) > 30 * 24 * 60 * 60
+        Date.now.timeIntervalSince(timestamp) > Self.expiryInterval
     }
 }
