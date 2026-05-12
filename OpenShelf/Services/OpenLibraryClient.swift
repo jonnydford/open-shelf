@@ -151,6 +151,24 @@ actor OpenLibraryClient {
         return try await performRequest(url: url)
     }
 
+    // MARK: - Subjects
+
+    func fetchSubject(_ slug: String, limit: Int = 20) async throws -> SubjectResponse {
+        let sanitised = slug.lowercased()
+            .replacingOccurrences(of: " ", with: "_")
+            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? slug
+        guard var components = URLComponents(string: "\(baseURL)/subjects/\(sanitised).json") else {
+            throw OpenLibraryError.invalidURL
+        }
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        guard let url = components.url else {
+            throw OpenLibraryError.invalidURL
+        }
+        return try await performRequest(url: url)
+    }
+
     // MARK: - Wikipedia Link Resolution
 
     func resolveWikipediaURL(wikidataID: String) async throws -> URL? {

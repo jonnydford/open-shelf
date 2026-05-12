@@ -558,6 +558,12 @@ final class BookRepository {
         try await apiClient.fetchAuthorWorks(authorKey: authorKey, limit: limit)
     }
 
+    // MARK: - Subjects
+
+    nonisolated func fetchSubject(_ slug: String, limit: Int = 20) async throws -> SubjectResponse {
+        try await apiClient.fetchSubject(slug, limit: limit)
+    }
+
     // MARK: - Author Detail
 
     nonisolated func fetchAuthorDetail(key: String, forceRefresh: Bool = false) async throws -> AuthorDetail {
