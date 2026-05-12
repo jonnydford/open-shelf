@@ -54,6 +54,7 @@ struct LibraryView: View {
     @Environment(BookRepository.self) private var repository
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Book.dateAdded, order: .reverse) private var allBooks: [Book]
+    @Query(sort: \ReadingList.dateCreated, order: .reverse) private var readingLists: [ReadingList]
 
     @State private var selectedFilter: ShelfFilter = .all
     @State private var sortOption: LibrarySortOption = .dateAdded
@@ -73,6 +74,7 @@ struct LibraryView: View {
     @State private var showDNFPrompt = false
     @State private var dnfPage: String = ""
     @State private var dnfReason: String = ""
+    @State private var bookForListAdd: Book?
 
     // Add-book flow states
     @State private var showBarcodeScanner = false
@@ -216,6 +218,19 @@ struct LibraryView: View {
             }
             .sheet(isPresented: $showDNFPrompt) {
                 dnfSheet
+            }
+            .sheet(item: $bookForListAdd) { book in
+                NavigationStack {
+                    AddBookToListSheet(book: book, readingLists: readingLists)
+                        .navigationTitle("Reading Lists")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { bookForListAdd = nil }
+                            }
+                        }
+                }
+                .presentationDetents([.medium])
             }
             .sheet(isPresented: $showBarcodeScanner) {
                 BarcodeScannerView()
@@ -724,6 +739,38 @@ struct LibraryView: View {
             )
         }
 
+        if readingLists.isEmpty {
+            Button {
+                bookForListAdd = book
+            } label: {
+                Label("Add to Reading List", systemImage: "list.bullet.rectangle")
+            }
+        } else {
+            Menu {
+                ForEach(readingLists) { list in
+                    Button {
+                        toggleBookInList(book, list: list)
+                    } label: {
+                        if list.bookKeys.contains(book.olWorkKey) {
+                            Label(list.name, systemImage: "checkmark")
+                        } else {
+                            Text(list.name)
+                        }
+                    }
+                }
+
+                Divider()
+
+                Button {
+                    bookForListAdd = book
+                } label: {
+                    Label("New List", systemImage: "plus")
+                }
+            } label: {
+                Label("Reading Lists", systemImage: "list.bullet.rectangle")
+            }
+        }
+
         Divider()
 
         Button(role: .destructive) {
@@ -940,6 +987,15 @@ struct LibraryView: View {
     }
 
     // MARK: - Shelf Move Logic
+
+    private func toggleBookInList(_ book: Book, list: ReadingList) {
+        if list.bookKeys.contains(book.olWorkKey) {
+            list.bookKeys.removeAll { $0 == book.olWorkKey }
+        } else {
+            list.bookKeys.append(book.olWorkKey)
+        }
+        try? modelContext.save()
+    }
 
     private func moveBook(_ book: Book, to shelf: Shelf) {
         switch shelf {
