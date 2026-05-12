@@ -9,15 +9,18 @@ final class BookRepository {
     private let modelContext: ModelContext
     private let apiClient: OpenLibraryClient
     private let coverCache: CoverImageCache
+    private let _metadataCache: MetadataCache
 
     init(
         modelContext: ModelContext,
         apiClient: OpenLibraryClient = OpenLibraryClient(),
-        coverCache: CoverImageCache = CoverImageCache()
+        coverCache: CoverImageCache = CoverImageCache(),
+        metadataCache: MetadataCache = MetadataCache()
     ) {
         self.modelContext = modelContext
         self.apiClient = apiClient
         self.coverCache = coverCache
+        self._metadataCache = metadataCache
     }
 
     // MARK: - Reading Day Tracking
@@ -420,8 +423,18 @@ final class BookRepository {
         }
     }
 
-    nonisolated func fetchDetail(for key: String) async throws -> WorkDetail {
-        try await apiClient.fetchWorkDetail(key: key)
+    nonisolated func fetchDetail(for key: String, forceRefresh: Bool = false) async throws -> WorkDetail {
+        if forceRefresh {
+            let detail = try await apiClient.fetchWorkDetail(key: key)
+            await metadataCache.set(detail, for: key, ttl: 24 * 60 * 60)
+            return detail
+        }
+        if let cached = await metadataCache.cachedWork(for: key, fetch: { [apiClient] in
+            try await apiClient.fetchWorkDetail(key: key)
+        }) {
+            return cached
+        }
+        throw OpenLibraryError.networkError(URLError(.notConnectedToInternet))
     }
 
     // MARK: - Author Works
@@ -432,18 +445,38 @@ final class BookRepository {
 
     // MARK: - Author Detail
 
-    nonisolated func fetchAuthorDetail(key: String) async throws -> AuthorDetail {
-        try await apiClient.fetchAuthorDetail(key: key)
+    nonisolated func fetchAuthorDetail(key: String, forceRefresh: Bool = false) async throws -> AuthorDetail {
+        if forceRefresh {
+            let detail = try await apiClient.fetchAuthorDetail(key: key)
+            await metadataCache.set(detail, for: key, ttl: 7 * 24 * 60 * 60)
+            return detail
+        }
+        if let cached = await metadataCache.cachedAuthor(for: key, fetch: { [apiClient] in
+            try await apiClient.fetchAuthorDetail(key: key)
+        }) {
+            return cached
+        }
+        throw OpenLibraryError.networkError(URLError(.notConnectedToInternet))
     }
 
-    nonisolated func resolveWikipediaURL(wikidataID: String) async throws -> URL? {
-        try await apiClient.resolveWikipediaURL(wikidataID: wikidataID)
+    nonisolated func resolveWikipediaURL(wikidataID: String, forceRefresh: Bool = false) async throws -> URL? {
+        let cacheKey = "wikipedia_\(wikidataID)"
+        if !forceRefresh, let cached: CachedURL = await metadataCache.get(CachedURL.self, for: cacheKey) {
+            return cached.url
+        }
+        let url = try await apiClient.resolveWikipediaURL(wikidataID: wikidataID)
+        await metadataCache.set(CachedURL(url: url), for: cacheKey, ttl: 7 * 24 * 60 * 60)
+        return url
     }
 
     // MARK: - Cover cache access
 
     nonisolated var imageCache: CoverImageCache {
         coverCache
+    }
+
+    nonisolated var metadataCache: MetadataCache {
+        _metadataCache
     }
 }
 
@@ -459,4 +492,8 @@ enum ImportError: Error {
     case notImplemented
     case invalidCSV
     case parsingFailed(String)
+}
+
+private struct CachedURL: Codable, Sendable {
+    let url: URL?
 }
