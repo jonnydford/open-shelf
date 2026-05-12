@@ -63,37 +63,72 @@ struct FollowingView: View {
         }
     }
 
+    private var groupedEvents: [(title: String, events: [ActivityEvent])] {
+        let calendar = Calendar.current
+        let now = Date.now
+        let startOfToday = calendar.startOfDay(for: now)
+        let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday)!
+        let startOfWeek = calendar.date(byAdding: .day, value: -7, to: startOfToday)!
+
+        var today: [ActivityEvent] = []
+        var yesterday: [ActivityEvent] = []
+        var thisWeek: [ActivityEvent] = []
+        var earlier: [ActivityEvent] = []
+
+        for event in activityEvents {
+            if event.timestamp >= startOfToday {
+                today.append(event)
+            } else if event.timestamp >= startOfYesterday {
+                yesterday.append(event)
+            } else if event.timestamp >= startOfWeek {
+                thisWeek.append(event)
+            } else {
+                earlier.append(event)
+            }
+        }
+
+        return [
+            ("Today", today),
+            ("Yesterday", yesterday),
+            ("This Week", thisWeek),
+            ("Earlier", earlier),
+        ].filter { !$0.1.isEmpty }
+    }
+
     private var list: some View {
         List {
             if !activityEvents.isEmpty {
-                Section {
-                    ForEach(Array(activityEvents.enumerated()), id: \.element.id) { index, event in
-                        if index > 0,
-                           lastViewedActivityTimestamp > 0,
-                           activityEvents[index - 1].timestamp > Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp),
-                           event.timestamp <= Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp) {
-                            newDivider
-                        }
+                ForEach(Array(groupedEvents.enumerated()), id: \.element.title) { groupIndex, group in
+                    Section {
+                        ForEach(group.events) { event in
+                            if shouldShowNewDivider(before: event) {
+                                newDivider
+                            }
 
-                        if let searchResult = event.asSearchResult {
-                            NavigationLink {
-                                SearchResultDetailView(searchResult: searchResult)
-                            } label: {
+                            if let searchResult = event.asSearchResult {
+                                NavigationLink {
+                                    SearchResultDetailView(searchResult: searchResult)
+                                } label: {
+                                    ActivityEventRow(event: event)
+                                }
+                            } else {
                                 ActivityEventRow(event: event)
                             }
+                        }
+                    } header: {
+                        if groupIndex == 0 {
+                            HStack {
+                                Text(group.title)
+                                Spacer()
+                                Button("Clear All") {
+                                    showClearAllAlert = true
+                                }
+                                .font(.caption)
+                                .textCase(nil)
+                            }
                         } else {
-                            ActivityEventRow(event: event)
+                            Text(group.title)
                         }
-                    }
-                } header: {
-                    HStack {
-                        Text("Activity")
-                        Spacer()
-                        Button("Clear All") {
-                            showClearAllAlert = true
-                        }
-                        .font(.caption)
-                        .textCase(nil)
                     }
                 }
             }
@@ -115,6 +150,15 @@ struct FollowingView: View {
                 }
             }
         }
+    }
+
+    private func shouldShowNewDivider(before event: ActivityEvent) -> Bool {
+        guard lastViewedActivityTimestamp > 0 else { return false }
+        let threshold = Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp)
+        guard event.timestamp <= threshold else { return false }
+        guard let index = activityEvents.firstIndex(where: { $0.id == event.id }) else { return false }
+        if index == 0 { return true }
+        return activityEvents[index - 1].timestamp > threshold
     }
 
     private var newDivider: some View {
