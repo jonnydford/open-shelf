@@ -9,7 +9,7 @@ final class BookRepository {
     private let modelContext: ModelContext
     private let apiClient: OpenLibraryClient
     private let coverCache: CoverImageCache
-    let metadataCache: MetadataCache
+    private let _metadataCache: MetadataCache
 
     init(
         modelContext: ModelContext,
@@ -20,7 +20,7 @@ final class BookRepository {
         self.modelContext = modelContext
         self.apiClient = apiClient
         self.coverCache = coverCache
-        self.metadataCache = metadataCache
+        self._metadataCache = metadataCache
     }
 
     // MARK: - Reading Day Tracking
@@ -424,14 +424,17 @@ final class BookRepository {
     }
 
     nonisolated func fetchDetail(for key: String, forceRefresh: Bool = false) async throws -> WorkDetail {
-        if !forceRefresh, let cached = await metadataCache.cachedWork(for: key, fetch: { [apiClient] in
+        if forceRefresh {
+            let detail = try await apiClient.fetchWorkDetail(key: key)
+            await metadataCache.set(detail, for: key, ttl: 24 * 60 * 60)
+            return detail
+        }
+        if let cached = await metadataCache.cachedWork(for: key, fetch: { [apiClient] in
             try await apiClient.fetchWorkDetail(key: key)
         }) {
             return cached
         }
-        let detail = try await apiClient.fetchWorkDetail(key: key)
-        await metadataCache.set(detail, for: key, ttl: 24 * 60 * 60)
-        return detail
+        throw OpenLibraryError.networkError(URLError(.notConnectedToInternet))
     }
 
     // MARK: - Author Works
@@ -443,14 +446,17 @@ final class BookRepository {
     // MARK: - Author Detail
 
     nonisolated func fetchAuthorDetail(key: String, forceRefresh: Bool = false) async throws -> AuthorDetail {
-        if !forceRefresh, let cached = await metadataCache.cachedAuthor(for: key, fetch: { [apiClient] in
+        if forceRefresh {
+            let detail = try await apiClient.fetchAuthorDetail(key: key)
+            await metadataCache.set(detail, for: key, ttl: 7 * 24 * 60 * 60)
+            return detail
+        }
+        if let cached = await metadataCache.cachedAuthor(for: key, fetch: { [apiClient] in
             try await apiClient.fetchAuthorDetail(key: key)
         }) {
             return cached
         }
-        let detail = try await apiClient.fetchAuthorDetail(key: key)
-        await metadataCache.set(detail, for: key, ttl: 7 * 24 * 60 * 60)
-        return detail
+        throw OpenLibraryError.networkError(URLError(.notConnectedToInternet))
     }
 
     nonisolated func resolveWikipediaURL(wikidataID: String, forceRefresh: Bool = false) async throws -> URL? {
@@ -467,6 +473,10 @@ final class BookRepository {
 
     nonisolated var imageCache: CoverImageCache {
         coverCache
+    }
+
+    nonisolated var metadataCache: MetadataCache {
+        _metadataCache
     }
 }
 
