@@ -427,7 +427,7 @@ struct StatsView: View {
                     Text(dayLabels[weekday - 1])
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                        .frame(width: 14)
+                        .frame(minWidth: 44)
                 }
                 Spacer()
             }
@@ -440,33 +440,49 @@ struct StatsView: View {
                         let didRead = dates.contains(day)
                         let editable = isEditable(day)
 
-                        Circle()
-                            .fill(didRead ? Color.orange : Color.primary.opacity(0.1))
-                            .frame(width: 14, height: 14)
-                            .scaleEffect(toggledDates.contains(day) ? 1.3 : 1.0)
-                            .onTapGesture {
-                                guard editable else { return }
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
-                                withAnimation(.spring(duration: 0.3, bounce: 0.5)) {
-                                    _ = repository.toggleReadingDay(for: day)
-                                    toggledDates.insert(day)
-                                }
-                                Task {
-                                    try? await Task.sleep(for: .milliseconds(400))
-                                    await MainActor.run {
-                                        withAnimation { toggledDates.remove(day) }
-                                    }
+                        ZStack {
+                            Circle()
+                                .fill(didRead ? Color.orange : (editable ? Color.primary.opacity(0.15) : Color.primary.opacity(0.08)))
+                                .frame(width: 14, height: 14)
+
+                            if editable && !didRead {
+                                Circle()
+                                    .strokeBorder(Color.primary.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                                    .frame(width: 14, height: 14)
+                            }
+                        }
+                        .scaleEffect(toggledDates.contains(day) ? 1.3 : 1.0)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Circle())
+                        .onTapGesture {
+                            guard editable else { return }
+                            let generator = UIImpactFeedbackGenerator(style: .light)
+                            generator.impactOccurred()
+                            withAnimation(.spring(duration: 0.3, bounce: 0.5)) {
+                                _ = repository.toggleReadingDay(for: day)
+                                toggledDates.insert(day)
+                            }
+                            Task {
+                                try? await Task.sleep(for: .milliseconds(400))
+                                await MainActor.run {
+                                    withAnimation { toggledDates.remove(day) }
                                 }
                             }
-                            .opacity(editable ? 1.0 : 0.6)
-                            .accessibilityLabel("\(Self.heatmapDateFormatter.string(from: day)): \(didRead ? "read" : "did not read")")
-                            .accessibilityAddTraits(editable ? .isButton : [])
-                            .accessibilityHint(editable ? "Tap to toggle" : "")
+                        }
+                        .opacity(editable ? 1.0 : 0.6)
+                        .accessibilityLabel("\(Self.heatmapDateFormatter.string(from: day)): \(didRead ? "read" : "did not read")")
+                        .accessibilityAddTraits(editable ? .isButton : [])
+                        .accessibilityHint(editable ? "Tap to toggle" : "")
                     }
                     Spacer()
                 }
             }
+
+            Text("Tap a day to mark it as read")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .padding(.top, 2)
+                .accessibilityLabel("Tap a recent day in the heatmap to mark it as read")
 
             NavigationLink {
                 ReadingCalendarView()
