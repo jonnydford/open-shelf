@@ -109,6 +109,7 @@ private struct MonthGridView: View {
                             .opacity(editable ? 1.0 : (didRead ? 0.8 : 0.3))
                             .accessibilityLabel(accessibilityLabel(for: date, didRead: didRead))
                             .accessibilityAddTraits(editable ? .isButton : [])
+                            .accessibilityHint(editable ? "Tap to toggle" : "")
                     } else {
                         Color.clear
                             .frame(width: 24, height: 24)
