@@ -29,6 +29,7 @@ final class PopularBooksService {
     func refreshIfNeeded(
         libraryKeys: Set<String>,
         dismissedKeys: Set<String>,
+        genreCounts: [String: Int],
         using repository: BookRepository
     ) async {
         guard !isLoading else { return }
@@ -41,12 +42,13 @@ final class PopularBooksService {
         defer { isLoading = false }
 
         let excludeKeys = libraryKeys.union(dismissedKeys)
+        let sorted = Self.sortedGenres(by: genreCounts)
 
         let results = await withTaskGroup(
             of: PopularGenreSection?.self,
             returning: [PopularGenreSection].self
         ) { group in
-            for genre in popularGenres {
+            for genre in sorted {
                 group.addTask {
                     await Self.fetchGenre(
                         slug: genre.slug,
@@ -64,7 +66,7 @@ final class PopularBooksService {
             return collected
         }
 
-        let slugOrder = popularGenres.map(\.slug)
+        let slugOrder = sorted.map(\.slug)
         let orderedResults = slugOrder.compactMap { slug in
             results.first { $0.id == slug }
         }
@@ -83,6 +85,31 @@ final class PopularBooksService {
         sections = deduplicated
         if !deduplicated.isEmpty {
             lastRefresh = .now
+        }
+    }
+
+    private static let genreNameToSlug: [String: String] = [
+        "Fiction": "fiction",
+        "Science Fiction": "science_fiction",
+        "Mystery": "mystery",
+        "Romance": "romance",
+        "Fantasy": "fantasy",
+    ]
+
+    private static func sortedGenres(
+        by genreCounts: [String: Int]
+    ) -> [(slug: String, displayName: String)] {
+        let slugCounts: [String: Int] = genreCounts.reduce(into: [:]) { result, pair in
+            if let slug = genreNameToSlug[pair.key] {
+                result[slug, default: 0] += pair.value
+            }
+        }
+
+        return popularGenres.sorted { a, b in
+            let countA = slugCounts[a.slug] ?? 0
+            let countB = slugCounts[b.slug] ?? 0
+            if countA != countB { return countA > countB }
+            return false
         }
     }
 
