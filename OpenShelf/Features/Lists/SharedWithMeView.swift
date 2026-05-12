@@ -88,6 +88,7 @@ struct SharedWithMeView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(Color.accentColor, in: Capsule())
+                    .accessibilityLabel("\(newCount) new \(newCount == 1 ? "book" : "books")")
             }
         }
     }
@@ -141,6 +142,7 @@ struct SharedListDetailView: View {
                                     .padding(.horizontal, 5)
                                     .padding(.vertical, 1)
                                     .background(Color.accentColor, in: Capsule())
+                                    .accessibilityLabel("New addition")
                             }
                         }
                         Text(book.authorName)
@@ -183,8 +185,8 @@ struct SharedListDetailView: View {
             .toolbar {
                 ToolbarItem(placement: .status) {
                     Text("Updated \(list.lastUpdated, style: .relative) ago")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
             .task {

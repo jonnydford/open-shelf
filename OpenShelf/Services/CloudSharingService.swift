@@ -198,6 +198,11 @@ final class CloudSharingService {
         }
 
         await fetchSharedWithMe()
+
+        let recordName = metadata.rootRecordID.recordName
+        if let list = sharedWithMe.first(where: { $0.id == recordName }) {
+            markBooksSeen(for: list.id, bookKeys: list.books.map(\.olWorkKey))
+        }
     }
 
     // MARK: - Seen Books Tracking
