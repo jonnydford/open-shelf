@@ -7,7 +7,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(BookRepository.self) private var repository
 
-    @Query(sort: \ActivityEvent.timestamp, order: .reverse) private var activityEvents: [ActivityEvent]
+    @Query private var activityEvents: [ActivityEvent]
     @AppStorage("lastViewedActivityTimestamp") private var lastViewedActivityTimestamp: Double = 0
 
     @State private var selectedTab = "Library"
@@ -17,6 +17,15 @@ struct ContentView: View {
     @State private var deepLinkSearchResult: SearchResult?
     @State private var isLoadingDeepLink = false
     @State private var deepLinkSearchQuery: String?
+
+    init() {
+        let cutoff = Date.now.addingTimeInterval(-30 * 24 * 60 * 60)
+        _activityEvents = Query(
+            filter: #Predicate<ActivityEvent> { $0.timestamp > cutoff },
+            sort: \.timestamp,
+            order: .reverse
+        )
+    }
 
     private var unseenActivityCount: Int {
         guard lastViewedActivityTimestamp > 0 else { return 0 }
