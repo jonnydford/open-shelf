@@ -45,7 +45,7 @@ struct SmartListDetailView: View {
         case .shortReads:
             "Books under 200 pages on your Want to Read shelf will appear here."
         case .unrated:
-            "Read books without a rating will appear here."
+            "Books you've read without a rating will appear here."
         }
     }
 }

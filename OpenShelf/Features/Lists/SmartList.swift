@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-enum SmartList: String, CaseIterable, Identifiable {
+enum SmartList: String, CaseIterable, Identifiable, Sendable {
     case fiveStarBooks
     case favourites
     case readThisYear
@@ -36,14 +36,14 @@ enum SmartList: String, CaseIterable, Identifiable {
         case .favourites: "Your favourited books"
         case .readThisYear: "Books finished this year"
         case .shortReads: "Want to Read under 200 pages"
-        case .unrated: "Read books without a rating"
+        case .unrated: "Books you've read without a rating"
         }
     }
 
     func matches(_ book: Book) -> Bool {
         switch self {
         case .fiveStarBooks:
-            return book.userRating == 5.0
+            return (book.userRating ?? 0) >= 4.95
         case .favourites:
             return book.isFavourite
         case .readThisYear:
@@ -53,7 +53,7 @@ enum SmartList: String, CaseIterable, Identifiable {
             guard let pages = book.pageCount else { return false }
             return pages <= 200 && book.shelf == .wantToRead
         case .unrated:
-            return book.shelf == .read && book.userRating == nil
+            return book.shelf == .read && (book.userRating == nil || book.userRating == 0)
         }
     }
 }

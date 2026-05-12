@@ -56,13 +56,21 @@ struct ReadingListsView: View {
                         } icon: {
                             Image(systemName: smartList.systemImage)
                                 .foregroundStyle(.tint)
+                                .accessibilityHidden(true)
                         }
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityHint(smartList.subtitle)
                 }
+                .deleteDisabled(true)
             }
 
-            if !lists.isEmpty {
-                Section("My Lists") {
+            Section("My Lists") {
+                if lists.isEmpty {
+                    Text("Tap + to create your first list")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
                     ForEach(lists) { list in
                         NavigationLink {
                             ReadingListDetailView(readingList: list)
