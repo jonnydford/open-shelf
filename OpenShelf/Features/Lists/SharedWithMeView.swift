@@ -100,7 +100,6 @@ struct SharedListDetailView: View {
     @Environment(CloudSharingService.self) private var sharingService
 
     @State private var newKeys: Set<String> = []
-    @State private var lastSeenBookKeys: [String] = []
 
     private var list: SharedListRecord? {
         sharingService.sharedWithMe.first { $0.id == listID }
@@ -191,11 +190,13 @@ struct SharedListDetailView: View {
             }
             .task {
                 newKeys = sharingService.newBookKeys(in: list)
-                lastSeenBookKeys = list.books.map(\.olWorkKey)
             }
             .onDisappear {
-                if !lastSeenBookKeys.isEmpty {
-                    sharingService.markBooksSeen(for: listID, bookKeys: lastSeenBookKeys)
+                if let current = self.list {
+                    sharingService.markBooksSeen(
+                        for: listID,
+                        bookKeys: current.books.map(\.olWorkKey)
+                    )
                 }
             }
         } else {
