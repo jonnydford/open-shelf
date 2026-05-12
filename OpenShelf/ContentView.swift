@@ -17,6 +17,8 @@ struct ContentView: View {
     @State private var deepLinkSearchResult: SearchResult?
     @State private var isLoadingDeepLink = false
     @State private var deepLinkSearchQuery: String?
+    @State private var showFollowedToast = false
+    @State private var followedDisplayName = ""
 
     init() {
         let cutoff = Date.now.addingTimeInterval(-30 * 24 * 60 * 60)
@@ -81,6 +83,7 @@ struct ContentView: View {
                 lastViewedActivityTimestamp = Date.now.timeIntervalSinceReferenceDate
             }
         }
+        .toast(isPresented: $showFollowedToast, message: "You're now following \(followedDisplayName)!", icon: "person.badge.plus")
     }
 
     // MARK: - Follow Handling
@@ -96,10 +99,12 @@ struct ContentView: View {
             predicate: #Predicate { $0.ownerRecordName == owner }
         )
 
+        let isNew: Bool
         if let existing = (try? modelContext.fetch(descriptor))?.first {
             existing.cachedSnapshot = snapshotData
             existing.displayName = displayName
             existing.lastFetched = .now
+            isNew = false
         } else {
             let shelf = FollowedShelf(
                 ownerRecordName: ownerRecordName,
@@ -107,9 +112,14 @@ struct ContentView: View {
                 cachedSnapshot: snapshotData
             )
             modelContext.insert(shelf)
+            isNew = true
         }
         try? modelContext.save()
         selectedTab = "Following"
+        if isNew {
+            followedDisplayName = displayName
+            showFollowedToast = true
+        }
     }
 
     // MARK: - Spotlight Handling
