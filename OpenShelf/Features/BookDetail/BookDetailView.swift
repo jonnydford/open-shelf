@@ -16,6 +16,7 @@ struct BookDetailView: View {
     @State private var showShelfPicker = false
     @State private var showFinishedRating = false
     @State private var finishedRating: Double?
+    @State private var showFinishCelebration = false
 
     // Collapsible section state (#114)
     @State private var isDetailsExpanded = true
@@ -100,6 +101,9 @@ struct BookDetailView: View {
                 collapsibleActionsSection
             }
             .padding(.bottom, 32)
+        }
+        .overlay {
+            CelebrationOverlay(isPresented: $showFinishCelebration)
         }
         .navigationTitle(book.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -1053,11 +1057,18 @@ struct BookDetailView: View {
                     finishedRating = nil
                     showFinishedRating = true
                 } label: {
-                    Label("Finished Reading", systemImage: "checkmark.circle")
-                        .frame(maxWidth: .infinity)
+                    Label(
+                        isAudiobook ? "Finished Listening" : "Finished Reading",
+                        systemImage: "checkmark.circle.fill"
+                    )
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
                 .tint(.green)
+                .accessibilityHint(isAudiobook
+                    ? "Marks this audiobook as finished and prompts for a rating"
+                    : "Marks this book as finished and prompts for a rating"
+                )
 
                 Button {
                     dnfPage = ""
@@ -1359,11 +1370,11 @@ struct BookDetailView: View {
             VStack(spacing: 24) {
                 Spacer()
 
-                Text("Rate This Book")
+                Text(isAudiobook ? "Rate This Audiobook" : "Rate This Book")
                     .font(.title2)
                     .fontWeight(.bold)
 
-                Text("How would you rate this book?")
+                Text(isAudiobook ? "How would you rate this audiobook?" : "How would you rate this book?")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -1372,6 +1383,8 @@ struct BookDetailView: View {
                 Spacer()
             }
             .padding()
+            .navigationTitle(isAudiobook ? "Rate This Audiobook" : "Rate This Book")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Skip") {
@@ -1382,6 +1395,7 @@ struct BookDetailView: View {
                     Button("Save Rating") {
                         finishReading(rating: finishedRating)
                     }
+                    .disabled(finishedRating == nil)
                 }
             }
         }
@@ -1389,6 +1403,10 @@ struct BookDetailView: View {
     }
 
     private func finishReading(rating: Double?) {
+        guard book.shelf == .reading else { return }
+        if let pageCount = book.pageCount {
+            repository.updateProgress(book, page: pageCount)
+        }
         let entry = ReadEntry(
             book: book,
             startDate: book.dateStarted,
@@ -1402,6 +1420,7 @@ struct BookDetailView: View {
         }
         try? modelContext.save()
         showFinishedRating = false
+        showFinishCelebration = true
         promptUpNextIfAvailable()
     }
 
