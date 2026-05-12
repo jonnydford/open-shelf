@@ -47,4 +47,20 @@ final class ActivityEvent {
     var isExpired: Bool {
         Date.now.timeIntervalSince(timestamp) > Self.expiryInterval
     }
+
+    var asSearchResult: SearchResult? {
+        guard let bookWorkKey else { return nil }
+        return SearchResult(
+            key: bookWorkKey,
+            title: bookTitle,
+            authorName: [bookAuthor],
+            firstPublishYear: nil,
+            numberOfPagesMedian: nil,
+            coverI: bookCoverID,
+            editionCount: nil,
+            isbn: nil,
+            subject: nil,
+            idGoodreads: nil
+        )
+    }
 }

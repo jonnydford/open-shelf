@@ -8,6 +8,7 @@ struct FollowingView: View {
     @Environment(CloudSharingService.self) private var sharingService
 
     @State private var shelfToUnfollow: FollowedShelf?
+    @State private var showClearAllAlert = false
 
     var body: some View {
         NavigationStack {
@@ -49,6 +50,14 @@ struct FollowingView: View {
                     Text("You'll need \(shelf.displayName) to share their link again to re-follow.")
                 }
             }
+            .alert("Clear Activity?", isPresented: $showClearAllAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Clear All", role: .destructive) {
+                    clearAllEvents()
+                }
+            } message: {
+                Text("This will remove all activity events from your feed.")
+            }
         }
     }
 
@@ -57,14 +66,22 @@ struct FollowingView: View {
             if !activityEvents.isEmpty {
                 Section {
                     ForEach(activityEvents) { event in
-                        ActivityEventRow(event: event)
+                        if let searchResult = event.asSearchResult {
+                            NavigationLink {
+                                SearchResultDetailView(searchResult: searchResult)
+                            } label: {
+                                ActivityEventRow(event: event)
+                            }
+                        } else {
+                            ActivityEventRow(event: event)
+                        }
                     }
                 } header: {
                     HStack {
                         Text("Activity")
                         Spacer()
                         Button("Clear All") {
-                            clearAllEvents()
+                            showClearAllAlert = true
                         }
                         .font(.caption)
                         .textCase(nil)

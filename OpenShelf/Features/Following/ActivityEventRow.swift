@@ -12,7 +12,7 @@ struct ActivityEventRow: View {
                     .font(.subheadline)
                     .lineLimit(3)
 
-                if event.eventType == .rated, let rating = event.rating {
+                if (event.eventType == .rated || event.eventType == .finished), let rating = event.rating {
                     HStack(spacing: 2) {
                         ForEach(1...5, id: \.self) { star in
                             Image(systemName: Double(star) <= rating ? "star.fill" : "star")
