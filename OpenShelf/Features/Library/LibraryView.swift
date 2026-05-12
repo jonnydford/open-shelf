@@ -749,10 +749,11 @@ struct LibraryView: View {
             Menu {
                 ForEach(readingLists) { list in
                     Button {
-                        toggleBookInList(book, list: list)
+                        list.toggleBook(key: book.olWorkKey)
+                        try? modelContext.save()
                     } label: {
                         if list.bookKeys.contains(book.olWorkKey) {
-                            Label(list.name, systemImage: "checkmark")
+                            Label(list.name, systemImage: "checkmark.circle.fill")
                         } else {
                             Text(list.name)
                         }
@@ -987,15 +988,6 @@ struct LibraryView: View {
     }
 
     // MARK: - Shelf Move Logic
-
-    private func toggleBookInList(_ book: Book, list: ReadingList) {
-        if list.bookKeys.contains(book.olWorkKey) {
-            list.bookKeys.removeAll { $0 == book.olWorkKey }
-        } else {
-            list.bookKeys.append(book.olWorkKey)
-        }
-        try? modelContext.save()
-    }
 
     private func moveBook(_ book: Book, to shelf: Shelf) {
         switch shelf {

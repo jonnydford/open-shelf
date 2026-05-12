@@ -202,47 +202,40 @@ struct BookDetailSheet: View {
     @ViewBuilder
     private func listPrompt(for book: Book) -> some View {
         VStack(spacing: 8) {
+            Divider()
+                .padding(.horizontal)
+
             Text("Add to a reading list?")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
             ForEach(readingLists) { list in
+                let isInList = list.bookKeys.contains(book.olWorkKey)
                 Button {
-                    toggleListMembership(book, list: list)
+                    list.toggleBook(key: book.olWorkKey)
+                    try? modelContext.save()
                 } label: {
                     HStack {
                         Text(list.name)
                         Spacer()
-                        if list.bookKeys.contains(book.olWorkKey) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                        } else {
-                            Image(systemName: "circle")
-                                .foregroundStyle(.secondary)
-                        }
+                        Image(systemName: isInList ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(isInList ? .green : .secondary)
                     }
-                    .padding(.vertical, 6)
+                    .frame(minHeight: 44)
                     .padding(.horizontal)
                 }
                 .tint(.primary)
+                .accessibilityLabel(list.name)
+                .accessibilityValue(isInList ? "Added" : "Not added")
             }
 
             Button("Done") {
                 dismiss()
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.bordered)
             .padding(.top, 4)
         }
         .padding(.horizontal)
-    }
-
-    private func toggleListMembership(_ book: Book, list: ReadingList) {
-        if list.bookKeys.contains(book.olWorkKey) {
-            list.bookKeys.removeAll { $0 == book.olWorkKey }
-        } else {
-            list.bookKeys.append(book.olWorkKey)
-        }
-        try? modelContext.save()
     }
 
     // MARK: - Rating Sheet
@@ -335,12 +328,14 @@ struct BookDetailSheet: View {
             if let rating {
                 repository.updateRating(book, rating: rating)
             }
-            addedBook = book
+            withAnimation(.easeInOut(duration: 0.3)) {
+                addedBook = book
+            }
         }
 
         onAdded()
 
-        if readingLists.isEmpty {
+        if readingLists.isEmpty || selectedShelf == .read {
             dismiss()
         }
     }

@@ -28,4 +28,12 @@ final class ReadingList {
         self.includeNotes = includeNotes
         self.ckRecordName = ckRecordName
     }
+
+    func toggleBook(key: String) {
+        if bookKeys.contains(key) {
+            bookKeys.removeAll { $0 == key }
+        } else {
+            bookKeys.append(key)
+        }
+    }
 }
