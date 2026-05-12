@@ -6,7 +6,7 @@ struct ITunesLookupResponse: Codable, Sendable {
 }
 
 struct ITunesEbook: Codable, Sendable {
-    let trackViewUrl: String
+    let trackViewUrl: URL
     let formattedPrice: String?
     let price: Double?
     let currency: String?

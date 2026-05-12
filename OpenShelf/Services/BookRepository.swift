@@ -608,8 +608,16 @@ final class BookRepository {
 
     // MARK: - Apple Books
 
-    nonisolated func fetchAppleBooksLink(isbn: String) async throws -> ITunesEbook? {
-        try await apiClient.fetchAppleBooksLink(isbn: isbn)
+    nonisolated func fetchAppleBooksLink(isbn: String) async -> ITunesEbook? {
+        let cacheKey = "apple_books_\(isbn)"
+        if let cached: ITunesEbook = await metadataCache.get(ITunesEbook.self, for: cacheKey) {
+            return cached
+        }
+        let result = await apiClient.fetchAppleBooksLink(isbn: isbn)
+        if let result {
+            await metadataCache.set(result, for: cacheKey, ttl: 24 * 60 * 60)
+        }
+        return result
     }
 
     // MARK: - Cover cache access

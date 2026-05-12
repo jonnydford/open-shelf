@@ -264,15 +264,16 @@ actor OpenLibraryClient {
 
     // MARK: - Apple Books Lookup
 
-    func fetchAppleBooksLink(isbn: String) async throws -> ITunesEbook? {
+    func fetchAppleBooksLink(isbn: String) async -> ITunesEbook? {
         guard var components = URLComponents(string: "https://itunes.apple.com/lookup") else {
             return nil
         }
 
+        let country = Locale.current.region?.identifier ?? "GB"
         components.queryItems = [
             URLQueryItem(name: "isbn", value: isbn),
             URLQueryItem(name: "entity", value: "ebook"),
-            URLQueryItem(name: "country", value: "GB"),
+            URLQueryItem(name: "country", value: country),
         ]
 
         guard let url = components.url else { return nil }

@@ -1,5 +1,4 @@
 import SwiftUI
-import os
 
 struct BuyLinksSection: View {
     let isbn: String?
@@ -9,8 +8,6 @@ struct BuyLinksSection: View {
     @AppStorage("preferredAudiobook") private var preferredAudiobook: String = AudiobookPreference.libroFm.rawValue
     @State private var appleBooksURL: URL?
     @State private var appleBooksPrice: String?
-
-    private static let logger = Logger(subsystem: "com.forddevinc.OpenShelf", category: "BuyLinks")
 
     var body: some View {
         if let isbn {
@@ -22,39 +19,35 @@ struct BuyLinksSection: View {
                 appleBooksButton()
                 listenButtons(isbn: isbn)
             }
-            .task {
+            .animation(.default, value: appleBooksURL)
+            .task(id: isbn) {
                 await loadAppleBooksLink(isbn: isbn)
             }
         }
     }
 
     private func loadAppleBooksLink(isbn: String) async {
-        do {
-            if let ebook = try await repository.fetchAppleBooksLink(isbn: isbn) {
-                appleBooksURL = URL(string: ebook.trackViewUrl)
-                appleBooksPrice = ebook.formattedPrice
-            }
-        } catch {
-            Self.logger.error("Failed to fetch Apple Books link: \(error.localizedDescription, privacy: .public)")
+        if let ebook = await repository.fetchAppleBooksLink(isbn: isbn) {
+            appleBooksURL = ebook.trackViewUrl
+            appleBooksPrice = ebook.formattedPrice
         }
     }
 
     @ViewBuilder
     private func appleBooksButton() -> some View {
         if let url = appleBooksURL {
+            let priceLabel = appleBooksPrice.map { " (\($0))" } ?? ""
             Button {
                 UIApplication.shared.open(url)
             } label: {
-                if let price = appleBooksPrice {
-                    Label("Apple Books \(price)", systemImage: "book.fill")
-                        .frame(maxWidth: .infinity)
-                } else {
-                    Label("Apple Books", systemImage: "book.fill")
-                        .frame(maxWidth: .infinity)
-                }
+                Label("Buy on Apple Books\(priceLabel)", systemImage: "book.fill")
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
             .padding(.horizontal)
+            .accessibilityLabel("Buy on Apple Books")
+            .accessibilityValue(appleBooksPrice ?? "")
+            .accessibilityHint("Opens in Apple Books")
         }
     }
 
