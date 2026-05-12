@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct SocialSettingsSection: View {
+    @Binding var showCopiedToast: Bool
+
     @Environment(BookRepository.self) private var repository
     @Environment(CloudSharingService.self) private var sharingService
 
@@ -17,7 +19,6 @@ struct SocialSettingsSection: View {
     @State private var showStopSharingAlert = false
     @State private var showPreview = false
     @State private var isPublishing = false
-    @State private var showCopiedToast = false
 
     var body: some View {
         Section("Social") {
@@ -161,12 +162,7 @@ struct SocialSettingsSection: View {
         isPublishing = true
         Task {
             let snapshot = buildSnapshot()
-            do {
-                try await sharingService.updatePublicShelf(snapshot: snapshot)
-            } catch {
-                // First publish
-                _ = try? await sharingService.publishPublicShelf(snapshot: snapshot)
-            }
+            try? await sharingService.updatePublicShelf(snapshot: snapshot)
             isPublishing = false
         }
     }
@@ -233,16 +229,9 @@ struct PublicShelfPreviewSheet: View {
 
     private func bookRow(_ book: PublicBookEntry) -> some View {
         HStack(spacing: 12) {
-            if let coverID = book.coverImageID {
-                AsyncImage(url: URL(string: "https://covers.openlibrary.org/b/id/\(coverID)-S.jpg")) { image in
-                    image.resizable().scaledToFill()
-                } placeholder: {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(.quaternary)
-                }
+            CoverImage(coverID: book.coverImageID, size: .small)
                 .frame(width: 40, height: 60)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
-            }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(book.title)

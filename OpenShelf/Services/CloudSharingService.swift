@@ -276,8 +276,7 @@ final class CloudSharingService {
             }
 
             _ = try await container.privateCloudDatabase.save(record)
-        } catch {
-            // Record doesn't exist yet — publish fresh
+        } catch let error as CKError where error.code == .unknownItem {
             _ = try await publishPublicShelf(snapshot: snapshot)
         }
     }
