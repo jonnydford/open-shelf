@@ -117,6 +117,7 @@ struct DiscoverSection: View {
                 Text("Recommended for You")
                     .font(.headline)
                     .padding(.horizontal)
+                    .accessibilityAddTraits(.isHeader)
 
                 ForEach(recommendationService.recommendations) { rec in
                     VStack(alignment: .leading, spacing: 8) {
@@ -124,6 +125,7 @@ struct DiscoverSection: View {
                             Text(rec.title)
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
+                                .accessibilityAddTraits(.isHeader)
                             Text(rec.subtitle)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -139,6 +141,7 @@ struct DiscoverSection: View {
                                         recommendedBookCard(book)
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityHint("Double tap to view details")
                                     .contextMenu {
                                         Button(role: .destructive) {
                                             dismissRecommendedBook(book)
@@ -156,9 +159,17 @@ struct DiscoverSection: View {
                 }
             }
         } else if recommendationService.isLoading {
-            ProgressView()
-                .frame(maxWidth: .infinity)
-                .padding(.vertical)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Recommended for You")
+                    .font(.headline)
+                    .padding(.horizontal)
+                    .accessibilityAddTraits(.isHeader)
+
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                    .accessibilityLabel("Loading recommendations")
+            }
         }
     }
 
@@ -189,8 +200,10 @@ struct DiscoverSection: View {
             title: book.title,
             author: book.authorName?.first ?? "Unknown Author"
         )
-        modelContext.insert(dismissed)
-        try? modelContext.save()
+        withAnimation {
+            modelContext.insert(dismissed)
+            try? modelContext.save()
+        }
     }
 
     private func curatedListCard(_ list: CuratedList) -> some View {
