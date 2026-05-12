@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct SocialSettingsSection: View {
-    @Binding var showCopiedToast: Bool
-
     @Environment(BookRepository.self) private var repository
     @Environment(CloudSharingService.self) private var sharingService
 
@@ -113,11 +111,12 @@ struct SocialSettingsSection: View {
     private var actions: some View {
         Group {
             if let url = sharingService.publicShelfShareURL {
-                Button {
-                    UIPasteboard.general.url = url
-                    showCopiedToast = true
-                } label: {
-                    Label("Copy My Shelf Link", systemImage: "link")
+                ShareLink(
+                    item: url,
+                    subject: Text("\(resolvedDisplayName)'s Shelf"),
+                    message: Text("Follow my reading on Open Shelf")
+                ) {
+                    Label("Share My Shelf Link", systemImage: "square.and.arrow.up")
                 }
             }
 

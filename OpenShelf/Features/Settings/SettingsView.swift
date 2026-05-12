@@ -18,7 +18,6 @@ struct SettingsView: View {
     @State private var cacheSize: Int64?
     @State private var showClearCacheAlert = false
     @State private var showCacheClearedToast = false
-    @State private var showLinkCopiedToast = false
 
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
@@ -36,7 +35,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 readingGoalSection
-                SocialSettingsSection(showCopiedToast: $showLinkCopiedToast)
+                SocialSettingsSection()
                 notificationsSection
                 privacySection
                 followedAuthorsSection
@@ -68,7 +67,6 @@ struct SettingsView: View {
                 LibraryPickerView()
             }
             .toast(isPresented: $showCacheClearedToast, message: "Cache cleared")
-            .toast(isPresented: $showLinkCopiedToast, message: "Link copied")
         }
     }
 
