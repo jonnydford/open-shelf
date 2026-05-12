@@ -178,7 +178,7 @@ private struct ActivitySectionsView: View {
         return [
             ("Today", today),
             ("Yesterday", yesterday),
-            ("This Week", thisWeek),
+            ("Past 7 Days", thisWeek),
             ("Earlier", earlier),
         ].filter { !$0.1.isEmpty }
     }
@@ -217,6 +217,7 @@ private struct ActivitySectionsView: View {
                         }
                         .font(.caption)
                         .textCase(nil)
+                        .accessibilityLabel("Clear all activity events")
                     }
                 } else {
                     Text(group.title)
@@ -236,6 +237,7 @@ private struct ActivitySectionsView: View {
         }
         .listRowSeparator(.hidden)
         .padding(.vertical, 4)
+        .accessibilityLabel("New activity")
     }
 }
 
