@@ -249,7 +249,7 @@ final class CloudSharingService {
 
     func hideSharedList(_ listID: String) {
         hiddenListIDs.insert(listID)
-        UserDefaults.standard.set(Array(hiddenListIDs), forKey: Self.hiddenListsKey)
+        persistHiddenListIDs()
         sharedWithMe.removeAll { $0.id == listID }
 
         var cache = loadSeenBooksIfNeeded()
@@ -258,9 +258,25 @@ final class CloudSharingService {
         persistSeenBooks()
     }
 
+    func unhideSharedList(_ listID: String) {
+        hiddenListIDs.remove(listID)
+        persistHiddenListIDs()
+    }
+
+    private func persistHiddenListIDs() {
+        let store = NSUbiquitousKeyValueStore.default
+        store.set(Array(hiddenListIDs), forKey: Self.hiddenListsKey)
+        store.synchronize()
+    }
+
     private func loadHiddenListIDs() {
-        let ids = UserDefaults.standard.stringArray(forKey: Self.hiddenListsKey) ?? []
-        hiddenListIDs = Set(ids)
+        let cloudIDs = NSUbiquitousKeyValueStore.default.array(forKey: Self.hiddenListsKey) as? [String] ?? []
+        let localIDs = UserDefaults.standard.stringArray(forKey: Self.hiddenListsKey) ?? []
+        hiddenListIDs = Set(cloudIDs).union(localIDs)
+        if !localIDs.isEmpty {
+            persistHiddenListIDs()
+            UserDefaults.standard.removeObject(forKey: Self.hiddenListsKey)
+        }
     }
 
     // MARK: - Helpers
