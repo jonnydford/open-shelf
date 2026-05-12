@@ -264,9 +264,7 @@ final class CloudSharingService {
     }
 
     private func persistHiddenListIDs() {
-        let store = NSUbiquitousKeyValueStore.default
-        store.set(Array(hiddenListIDs), forKey: Self.hiddenListsKey)
-        store.synchronize()
+        NSUbiquitousKeyValueStore.default.set(Array(hiddenListIDs), forKey: Self.hiddenListsKey)
     }
 
     private func loadHiddenListIDs() {
