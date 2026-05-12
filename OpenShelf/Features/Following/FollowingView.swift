@@ -298,19 +298,19 @@ struct FriendShelfDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showAddedToast = false
 
-    private var hasActivity: Bool {
-        guard let snapshot = shelf.decodedSnapshot else { return false }
-        return !snapshot.currentlyReading.isEmpty
-            || !snapshot.recentlyFinished.isEmpty
-            || snapshot.goalProgress != nil
-    }
-
     private func isInLibrary(_ book: PublicBookEntry) -> Bool {
         libraryBooks.contains { $0.olWorkKey == book.olWorkKey }
     }
 
     var body: some View {
-        if let snapshot = shelf.decodedSnapshot, hasActivity {
+        let snapshot = shelf.decodedSnapshot
+        let hasActivity = snapshot.map {
+            !$0.currentlyReading.isEmpty
+                || !$0.recentlyFinished.isEmpty
+                || $0.goalProgress != nil
+        } ?? false
+
+        if let snapshot, hasActivity {
             List {
                 if !snapshot.currentlyReading.isEmpty {
                     Section("Currently Reading") {
@@ -338,7 +338,7 @@ struct FriendShelfDetailView: View {
             .navigationTitle("\(snapshot.displayName)'s Shelf")
             .navigationBarTitleDisplayMode(.inline)
             .toast(isPresented: $showAddedToast, message: "Added to Want to Read")
-        } else if shelf.decodedSnapshot != nil {
+        } else if snapshot != nil {
             ContentUnavailableView {
                 Label("No Recent Activity", systemImage: "book.closed")
             } description: {
