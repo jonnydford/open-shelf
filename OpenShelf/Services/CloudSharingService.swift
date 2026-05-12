@@ -365,6 +365,38 @@ final class CloudSharingService {
         }
     }
 
+    // MARK: - User Identity
+
+    func fetchUserDisplayName() async -> String? {
+        guard Self.isAvailable else { return nil }
+        do {
+            let ckContainer = try container
+            let recordID = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CKRecord.ID, Error>) in
+                ckContainer.fetchUserRecordID { recordID, error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else if let recordID {
+                        continuation.resume(returning: recordID)
+                    }
+                }
+            }
+            let identity = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CKUserIdentity?, Error>) in
+                ckContainer.discoverUserIdentity(withUserRecordID: recordID) { identity, error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume(returning: identity)
+                    }
+                }
+            }
+            guard let components = identity?.nameComponents else { return nil }
+            let formatted = PersonNameComponentsFormatter().string(from: components)
+            return formatted.isEmpty ? nil : formatted
+        } catch {
+            return nil
+        }
+    }
+
     // MARK: - Following
 
     func fetchAllFollowedShelfSnapshots() async -> [FollowedShelfInfo] {

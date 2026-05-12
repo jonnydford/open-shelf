@@ -24,6 +24,9 @@ struct SocialSettingsSection: View {
             Toggle("Share my reading activity", isOn: $socialEnabled)
                 .onChange(of: socialEnabled) { _, enabled in
                     if enabled {
+                        if socialDisplayName.isEmpty {
+                            fetchiCloudName()
+                        }
                         publishShelf()
                     } else {
                         showStopSharingAlert = true
@@ -172,6 +175,20 @@ struct SocialSettingsSection: View {
     private func unpublishShelf() {
         Task {
             try? await sharingService.unpublishPublicShelf()
+        }
+        shareCurrentlyReading = true
+        shareRecentlyFinished = true
+        shareRatings = true
+        shareGoalProgress = true
+        shareNotes = false
+        shareProgress = false
+    }
+
+    private func fetchiCloudName() {
+        Task {
+            if let name = await sharingService.fetchUserDisplayName() {
+                socialDisplayName = name
+            }
         }
     }
 }
