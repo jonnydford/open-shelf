@@ -16,6 +16,7 @@ struct BookDetailView: View {
     @State private var showShelfPicker = false
     @State private var showFinishedRating = false
     @State private var finishedRating: Double?
+    @State private var showFinishCelebration = false
 
     // Collapsible section state (#114)
     @State private var isDetailsExpanded = true
@@ -101,6 +102,9 @@ struct BookDetailView: View {
             }
             .padding(.bottom, 32)
         }
+        .overlay {
+            CelebrationOverlay(isPresented: $showFinishCelebration)
+        }
         .navigationTitle(book.title)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showProgressEditor) {
@@ -125,6 +129,9 @@ struct BookDetailView: View {
         }
         .sheet(isPresented: $showDNFSheet) {
             dnfSheet
+        }
+        .sheet(isPresented: $showFinishedRating) {
+            finishedRatingSheet
         }
         .sheet(isPresented: $showShareCardSheet) {
             ShareCardSheet(book: book, coverImage: coverImageForShare)
@@ -1045,8 +1052,24 @@ struct BookDetailView: View {
                 dnfInfoSection
             }
 
-            // DNF option for currently reading
             if book.shelf == .reading {
+                Button {
+                    finishedRating = nil
+                    showFinishedRating = true
+                } label: {
+                    Label(
+                        isAudiobook ? "Finished Listening" : "Finished Reading",
+                        systemImage: "checkmark.circle.fill"
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(.green)
+                .accessibilityHint(isAudiobook
+                    ? "Marks this audiobook as finished and prompts for a rating"
+                    : "Marks this book as finished and prompts for a rating"
+                )
+
                 Button {
                     dnfPage = ""
                     dnfReason = ""
@@ -1340,6 +1363,65 @@ struct BookDetailView: View {
             // Non-critical — silently fail
             authorBooks = []
         }
+    }
+
+    private var finishedRatingSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Spacer()
+
+                Text(isAudiobook ? "Rate This Audiobook" : "Rate This Book")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text(isAudiobook ? "How would you rate this audiobook?" : "How would you rate this book?")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                RatingPicker(rating: $finishedRating, mode: .interactive)
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle(isAudiobook ? "Rate This Audiobook" : "Rate This Book")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") {
+                        finishReading(rating: nil)
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save Rating") {
+                        finishReading(rating: finishedRating)
+                    }
+                    .disabled(finishedRating == nil)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func finishReading(rating: Double?) {
+        guard book.shelf == .reading else { return }
+        if let pageCount = book.pageCount {
+            repository.updateProgress(book, page: pageCount)
+        }
+        let entry = ReadEntry(
+            book: book,
+            startDate: book.dateStarted,
+            finishDate: .now,
+            rating: rating
+        )
+        modelContext.insert(entry)
+        repository.updateShelf(book, to: .read)
+        if let rating {
+            repository.updateRating(book, rating: rating)
+        }
+        try? modelContext.save()
+        showFinishedRating = false
+        showFinishCelebration = true
+        promptUpNextIfAvailable()
     }
 
     private func handleShelfMove(to shelf: Shelf) {
