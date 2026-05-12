@@ -19,6 +19,8 @@ final class CloudSharingService {
     private static let seenBooksKey = "seenSharedListBooks"
     private static let hiddenListsKey = "hiddenSharedListIDs"
 
+    private var seenBooksCache: [String: Set<String>]?
+
     private var _container: CKContainer?
     private var container: CKContainer {
         get throws {
@@ -207,15 +209,29 @@ final class CloudSharingService {
 
     // MARK: - Seen Books Tracking
 
-    func seenBookKeys(for listID: String) -> Set<String> {
+    private func loadSeenBooksIfNeeded() -> [String: Set<String>] {
+        if let cache = seenBooksCache { return cache }
         let dict = UserDefaults.standard.dictionary(forKey: Self.seenBooksKey) as? [String: [String]] ?? [:]
-        return Set(dict[listID] ?? [])
+        let cache = dict.mapValues { Set($0) }
+        seenBooksCache = cache
+        return cache
+    }
+
+    private func persistSeenBooks() {
+        guard let cache = seenBooksCache else { return }
+        let dict = cache.mapValues { Array($0) }
+        UserDefaults.standard.set(dict, forKey: Self.seenBooksKey)
+    }
+
+    func seenBookKeys(for listID: String) -> Set<String> {
+        loadSeenBooksIfNeeded()[listID] ?? []
     }
 
     func markBooksSeen(for listID: String, bookKeys: [String]) {
-        var dict = UserDefaults.standard.dictionary(forKey: Self.seenBooksKey) as? [String: [String]] ?? [:]
-        dict[listID] = bookKeys
-        UserDefaults.standard.set(dict, forKey: Self.seenBooksKey)
+        var cache = loadSeenBooksIfNeeded()
+        cache[listID] = Set(bookKeys)
+        seenBooksCache = cache
+        persistSeenBooks()
     }
 
     func newBookKeys(in list: SharedListRecord) -> Set<String> {
@@ -232,9 +248,10 @@ final class CloudSharingService {
         UserDefaults.standard.set(Array(hiddenListIDs), forKey: Self.hiddenListsKey)
         sharedWithMe.removeAll { $0.id == listID }
 
-        var dict = UserDefaults.standard.dictionary(forKey: Self.seenBooksKey) as? [String: [String]] ?? [:]
-        dict.removeValue(forKey: listID)
-        UserDefaults.standard.set(dict, forKey: Self.seenBooksKey)
+        var cache = loadSeenBooksIfNeeded()
+        cache.removeValue(forKey: listID)
+        seenBooksCache = cache
+        persistSeenBooks()
     }
 
     private func loadHiddenListIDs() {
