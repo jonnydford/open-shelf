@@ -8,6 +8,7 @@ struct FollowingView: View {
     @Environment(CloudSharingService.self) private var sharingService
 
     @AppStorage("lastViewedActivityTimestamp") private var lastViewedActivityTimestamp: Double = 0
+    @AppStorage("socialEnabled") private var socialEnabled = false
 
     @State private var shelfToUnfollow: FollowedShelf?
     @State private var showClearAllAlert = false
@@ -31,6 +32,15 @@ struct FollowingView: View {
                 }
             }
             .navigationTitle("Following")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Label("Social Settings", systemImage: "gearshape")
+                    }
+                }
+            }
             .refreshable {
                 await refreshAll()
             }
@@ -73,6 +83,17 @@ struct FollowingView: View {
 
     private var list: some View {
         List {
+            if !socialEnabled {
+                Section {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Label("Share your shelf so friends can follow you back", systemImage: "square.and.arrow.up")
+                            .font(.subheadline)
+                    }
+                }
+            }
+
             if !activityEvents.isEmpty {
                 ActivitySectionsView(
                     activityEvents: activityEvents,
