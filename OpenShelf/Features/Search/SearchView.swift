@@ -71,6 +71,7 @@ struct SearchView: View {
                     }
                     .font(.subheadline)
                     .foregroundStyle(.red)
+                    .accessibilityHint("Removes all saved searches")
                 }
             }
             .navigationDestination(for: SearchResult.self) { result in
