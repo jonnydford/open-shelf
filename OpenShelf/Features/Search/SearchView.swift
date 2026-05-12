@@ -215,14 +215,29 @@ struct SearchView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 12) {
-                    if let year = result.firstPublishYear {
-                        Text(String(year))
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
+                    if let rating = result.ratingsAverage,
+                       let ratingCount = result.ratingsCount,
+                       ratingCount >= 5 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "star.fill")
+                            Text(String(format: "%.1f", rating))
+                            Text("(\(ratingCount))")
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("Rated \(String(format: "%.1f", rating)) from \(ratingCount) ratings")
                     }
 
-                    if let editions = result.editionCount {
-                        Text("\(editions) editions")
+                    if let count = result.readinglogCount, count > 0 {
+                        Text("\(DiscoverSection.formatCount(count)) readers")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let year = result.firstPublishYear {
+                        Text(String(year))
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
