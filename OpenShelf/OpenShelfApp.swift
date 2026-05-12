@@ -11,6 +11,7 @@ struct OpenShelfApp: App {
     private let sharingService = CloudSharingService()
     private let publicShelfUpdater: PublicShelfUpdater
     @State private var discoverRecommendationService = DiscoverRecommendationService()
+    @State private var popularBooksService = PopularBooksService()
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -41,6 +42,7 @@ struct OpenShelfApp: App {
                 .environment(sharingService)
                 .environment(publicShelfUpdater)
                 .environment(discoverRecommendationService)
+                .environment(popularBooksService)
                 .task {
                     SpotlightIndexer.indexAllBooks(from: modelContainer.mainContext)
                 }

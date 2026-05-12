@@ -205,7 +205,13 @@ struct ContentView: View {
                         editionCount: nil,
                         isbn: nil,
                         subject: detail.subjects,
-                        idGoodreads: nil
+                        idGoodreads: nil,
+                        ratingsAverage: nil,
+                        ratingsCount: nil,
+                        readinglogCount: nil,
+                        wantToReadCount: nil,
+                        currentlyReadingCount: nil,
+                        alreadyReadCount: nil
                     )
                     deepLinkSearchResult = searchResult
                 } catch {

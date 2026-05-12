@@ -564,6 +564,22 @@ final class BookRepository {
         try await apiClient.fetchSubject(slug, limit: limit)
     }
 
+    // MARK: - Popular by Subject
+
+    nonisolated func searchPopular(subject: String, limit: Int = 10) async throws -> [SearchResult] {
+        try await apiClient.searchPopular(subject: subject, limit: limit)
+    }
+
+    // MARK: - Ratings & Bookshelves
+
+    nonisolated func fetchRatings(workKey: String) async throws -> WorkRatings {
+        try await apiClient.fetchRatings(workKey: workKey)
+    }
+
+    nonisolated func fetchBookshelves(workKey: String) async throws -> WorkBookshelves {
+        try await apiClient.fetchBookshelves(workKey: workKey)
+    }
+
     // MARK: - Author Detail
 
     nonisolated func fetchAuthorDetail(key: String, forceRefresh: Bool = false) async throws -> AuthorDetail {

@@ -211,7 +211,13 @@ struct BarcodeScannerView: View {
                 editionCount: nil,
                 isbn: (edition.isbn13 ?? []) + (edition.isbn10 ?? []),
                 subject: nil,
-                idGoodreads: nil
+                idGoodreads: nil,
+                ratingsAverage: nil,
+                ratingsCount: nil,
+                readinglogCount: nil,
+                wantToReadCount: nil,
+                currentlyReadingCount: nil,
+                alreadyReadCount: nil
             )
 
             // Try to fetch work detail for richer data

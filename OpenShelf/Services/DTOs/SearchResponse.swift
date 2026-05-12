@@ -17,6 +17,12 @@ struct SearchResult: Codable, Sendable, Identifiable, Hashable {
     let isbn: [String]?
     let subject: [String]?
     let idGoodreads: [String]?
+    let ratingsAverage: Double?
+    let ratingsCount: Int?
+    let readinglogCount: Int?
+    let wantToReadCount: Int?
+    let currentlyReadingCount: Int?
+    let alreadyReadCount: Int?
 
     var id: String { key }
 
@@ -47,5 +53,11 @@ struct SearchResult: Codable, Sendable, Identifiable, Hashable {
         case isbn
         case subject
         case idGoodreads = "id_goodreads"
+        case ratingsAverage = "ratings_average"
+        case ratingsCount = "ratings_count"
+        case readinglogCount = "readinglog_count"
+        case wantToReadCount = "want_to_read_count"
+        case currentlyReadingCount = "currently_reading_count"
+        case alreadyReadCount = "already_read_count"
     }
 }

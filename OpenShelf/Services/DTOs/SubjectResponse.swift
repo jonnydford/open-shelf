@@ -40,7 +40,13 @@ struct SubjectWork: Codable, Sendable, Identifiable, Hashable {
             editionCount: editionCount,
             isbn: nil,
             subject: subject,
-            idGoodreads: nil
+            idGoodreads: nil,
+            ratingsAverage: nil,
+            ratingsCount: nil,
+            readinglogCount: nil,
+            wantToReadCount: nil,
+            currentlyReadingCount: nil,
+            alreadyReadCount: nil
         )
     }
 

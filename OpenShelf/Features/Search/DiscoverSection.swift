@@ -23,7 +23,13 @@ struct CuratedBookEntry: Codable, Identifiable, Hashable {
             editionCount: nil,
             isbn: nil,
             subject: subjects,
-            idGoodreads: nil
+            idGoodreads: nil,
+            ratingsAverage: nil,
+            ratingsCount: nil,
+            readinglogCount: nil,
+            wantToReadCount: nil,
+            currentlyReadingCount: nil,
+            alreadyReadCount: nil
         )
     }
 }
@@ -52,6 +58,7 @@ struct CuratedList: Codable, Identifiable {
 
 struct DiscoverSection: View {
     @Environment(DiscoverRecommendationService.self) private var recommendationService
+    @Environment(PopularBooksService.self) private var popularBooksService
     @Environment(BookRepository.self) private var repository
     @Environment(\.modelContext) private var modelContext
 
@@ -68,9 +75,19 @@ struct DiscoverSection: View {
         }
     }
 
+    private var libraryKeys: Set<String> {
+        Set(libraryBooks.map(\.olWorkKey))
+    }
+
+    private var dismissedKeySet: Set<String> {
+        Set(dismissedBooks.map(\.openLibraryWorkKey))
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             recommendationsSection
+
+            popularSection
 
             ForEach(groupedLists, id: \.category) { group in
                 VStack(alignment: .leading, spacing: 12) {
@@ -100,6 +117,11 @@ struct DiscoverSection: View {
             await recommendationService.refreshIfNeeded(
                 library: libraryBooks,
                 dismissed: dismissedBooks,
+                using: repository
+            )
+            await popularBooksService.refreshIfNeeded(
+                libraryKeys: libraryKeys,
+                dismissedKeys: dismissedKeySet,
                 using: repository
             )
         }
@@ -171,6 +193,94 @@ struct DiscoverSection: View {
                     .accessibilityLabel("Loading recommendations")
             }
         }
+    }
+
+    // MARK: - Popular
+
+    @ViewBuilder
+    private var popularSection: some View {
+        if !popularBooksService.sections.isEmpty {
+            ForEach(popularBooksService.sections) { section in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Most Read in \(section.genre)")
+                        .font(.headline)
+                        .padding(.horizontal)
+                        .accessibilityAddTraits(.isHeader)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 12) {
+                            ForEach(section.books) { book in
+                                Button {
+                                    selectedRecommendation = book
+                                } label: {
+                                    popularBookCard(book)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityHint("Double tap to view details")
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        dismissRecommendedBook(book)
+                                    } label: {
+                                        Label("Not Interested", systemImage: "hand.thumbsdown")
+                                    }
+                                }
+                            }
+                        }
+                        .scrollTargetLayout()
+                        .padding(.horizontal)
+                    }
+                    .scrollTargetBehavior(.viewAligned)
+                }
+            }
+        } else if popularBooksService.isLoading {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Popular Books")
+                    .font(.headline)
+                    .padding(.horizontal)
+                    .accessibilityAddTraits(.isHeader)
+
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                    .accessibilityLabel("Loading popular books")
+            }
+        }
+    }
+
+    private func popularBookCard(_ book: SearchResult) -> some View {
+        VStack(spacing: 6) {
+            CoverImage(coverID: book.coverI, size: .medium)
+                .frame(width: 100, height: 150)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+
+            Text(book.title)
+                .font(.caption)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(width: 100)
+
+            Text(book.primaryAuthor)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .frame(width: 100)
+
+            if let count = book.readinglogCount, count > 0 {
+                Text("\(Self.formatCount(count)) readers")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private static func formatCount(_ count: Int) -> String {
+        if count >= 1_000_000 {
+            return String(format: "%.1fM", Double(count) / 1_000_000)
+        } else if count >= 1_000 {
+            return String(format: "%.1fK", Double(count) / 1_000)
+        }
+        return "\(count)"
     }
 
     private func recommendedBookCard(_ book: SearchResult) -> some View {

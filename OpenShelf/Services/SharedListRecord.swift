@@ -20,7 +20,13 @@ struct SharedBookEntry: Codable, Sendable {
             editionCount: nil,
             isbn: isbn13.map { [$0] },
             subject: nil,
-            idGoodreads: nil
+            idGoodreads: nil,
+            ratingsAverage: nil,
+            ratingsCount: nil,
+            readinglogCount: nil,
+            wantToReadCount: nil,
+            currentlyReadingCount: nil,
+            alreadyReadCount: nil
         )
     }
 }
