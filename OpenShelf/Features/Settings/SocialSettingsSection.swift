@@ -75,6 +75,9 @@ struct SocialSettingsSection: View {
             Toggle("Notes & Reviews", isOn: $shareNotes)
                 .onChange(of: shareNotes) { _, _ in publishShelf() }
 
+            Toggle("Page & Chapter Progress", isOn: $shareProgress)
+                .onChange(of: shareProgress) { _, _ in publishShelf() }
+
             privacyNotes
         }
     }
