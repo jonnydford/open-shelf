@@ -156,7 +156,7 @@ actor MetadataCache {
 
 // MARK: - Cache Storage Types
 
-private final class CacheEntry: NSObject {
+private final class CacheEntry: NSObject, @unchecked Sendable {
     let data: Data
     let expiresAt: Date
 
