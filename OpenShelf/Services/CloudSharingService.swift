@@ -11,6 +11,7 @@ final class CloudSharingService {
 
     private(set) var sharedWithMe: [SharedListRecord] = []
     private(set) var isLoading = false
+    private(set) var sharedWithMeFetchFailed = false
     private(set) var publicShelfShareURL: URL?
 
     private var cachedShares: [String: CKShare] = [:]
@@ -167,8 +168,11 @@ final class CloudSharingService {
                 guard let record = try? result.get() else { return nil }
                 return parseRecord(record)
             }.filter { !hiddenListIDs.contains($0.id) }
+            sharedWithMeFetchFailed = false
         } catch {
-            sharedWithMe = []
+            if sharedWithMe.isEmpty {
+                sharedWithMeFetchFailed = true
+            }
         }
     }
 

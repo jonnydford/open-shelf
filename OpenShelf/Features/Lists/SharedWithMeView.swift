@@ -14,6 +14,16 @@ struct SharedWithMeView: View {
             if sharingService.isLoading && sharingService.sharedWithMe.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if sharingService.sharedWithMeFetchFailed && sharingService.sharedWithMe.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn't Load", systemImage: "icloud.slash")
+                } description: {
+                    Text("Check your internet connection and try again.")
+                } actions: {
+                    Button("Retry") {
+                        Task { await sharingService.fetchSharedWithMe() }
+                    }
+                }
             } else if sharingService.sharedWithMe.isEmpty {
                 ContentUnavailableView {
                     Label("No Shared Lists", systemImage: "person.2.slash")
