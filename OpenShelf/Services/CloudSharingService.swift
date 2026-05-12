@@ -14,6 +14,10 @@ final class CloudSharingService {
     private(set) var publicShelfShareURL: URL?
 
     private var cachedShares: [String: CKShare] = [:]
+    private(set) var hiddenListIDs: Set<String> = []
+
+    private static let seenBooksKey = "seenSharedListBooks"
+    private static let hiddenListsKey = "hiddenSharedListIDs"
 
     private var _container: CKContainer?
     private var container: CKContainer {
@@ -144,6 +148,7 @@ final class CloudSharingService {
 
     func fetchSharedWithMe() async {
         guard Self.isAvailable else { return }
+        loadHiddenListIDs()
         isLoading = true
         defer { isLoading = false }
 
@@ -159,7 +164,7 @@ final class CloudSharingService {
             sharedWithMe = results.compactMap { _, result in
                 guard let record = try? result.get() else { return nil }
                 return parseRecord(record)
-            }
+            }.filter { !hiddenListIDs.contains($0.id) }
         } catch {
             sharedWithMe = []
         }
@@ -193,6 +198,43 @@ final class CloudSharingService {
         }
 
         await fetchSharedWithMe()
+    }
+
+    // MARK: - Seen Books Tracking
+
+    func seenBookKeys(for listID: String) -> Set<String> {
+        let dict = UserDefaults.standard.dictionary(forKey: Self.seenBooksKey) as? [String: [String]] ?? [:]
+        return Set(dict[listID] ?? [])
+    }
+
+    func markBooksSeen(for listID: String, bookKeys: [String]) {
+        var dict = UserDefaults.standard.dictionary(forKey: Self.seenBooksKey) as? [String: [String]] ?? [:]
+        dict[listID] = bookKeys
+        UserDefaults.standard.set(dict, forKey: Self.seenBooksKey)
+    }
+
+    func newBookKeys(in list: SharedListRecord) -> Set<String> {
+        let seen = seenBookKeys(for: list.id)
+        guard !seen.isEmpty else { return [] }
+        let current = Set(list.books.map(\.olWorkKey))
+        return current.subtracting(seen)
+    }
+
+    // MARK: - Unsubscribe
+
+    func hideSharedList(_ listID: String) {
+        hiddenListIDs.insert(listID)
+        UserDefaults.standard.set(Array(hiddenListIDs), forKey: Self.hiddenListsKey)
+        sharedWithMe.removeAll { $0.id == listID }
+
+        var dict = UserDefaults.standard.dictionary(forKey: Self.seenBooksKey) as? [String: [String]] ?? [:]
+        dict.removeValue(forKey: listID)
+        UserDefaults.standard.set(dict, forKey: Self.seenBooksKey)
+    }
+
+    private func loadHiddenListIDs() {
+        let ids = UserDefaults.standard.stringArray(forKey: Self.hiddenListsKey) ?? []
+        hiddenListIDs = Set(ids)
     }
 
     // MARK: - Helpers
