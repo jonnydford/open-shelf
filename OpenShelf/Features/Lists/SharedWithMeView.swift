@@ -6,6 +6,10 @@ struct SharedWithMeView: View {
     @State private var listToUnsubscribe: SharedListRecord?
 
     var body: some View {
+        let newCounts = sharingService.sharedWithMe.reduce(into: [String: Int]()) { dict, list in
+            dict[list.id] = sharingService.newBookKeys(in: list).count
+        }
+
         Group {
             if sharingService.isLoading && sharingService.sharedWithMe.isEmpty {
                 ProgressView()
@@ -21,7 +25,7 @@ struct SharedWithMeView: View {
                     NavigationLink {
                         SharedListDetailView(listID: list.id)
                     } label: {
-                        sharedListRow(list)
+                        sharedListRow(list, newCount: newCounts[list.id] ?? 0)
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
@@ -58,7 +62,7 @@ struct SharedWithMeView: View {
         }
     }
 
-    private func sharedListRow(_ list: SharedListRecord) -> some View {
+    private func sharedListRow(_ list: SharedListRecord, newCount: Int) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(list.name)
@@ -77,7 +81,6 @@ struct SharedWithMeView: View {
 
             Spacer()
 
-            let newCount = sharingService.newBookKeys(in: list).count
             if newCount > 0 {
                 Text("\(newCount) new")
                     .font(.caption.weight(.semibold))
@@ -95,14 +98,15 @@ struct SharedListDetailView: View {
 
     @Environment(CloudSharingService.self) private var sharingService
 
+    @State private var newKeys: Set<String> = []
+    @State private var lastSeenBookKeys: [String] = []
+
     private var list: SharedListRecord? {
         sharingService.sharedWithMe.first { $0.id == listID }
     }
 
     var body: some View {
         if let list {
-            let newKeys = sharingService.newBookKeys(in: list)
-
             List(list.books, id: \.olWorkKey) { book in
                 HStack(spacing: 12) {
                     if let coverID = book.coverImageID {
@@ -183,11 +187,14 @@ struct SharedListDetailView: View {
                         .foregroundStyle(.tertiary)
                 }
             }
+            .task {
+                newKeys = sharingService.newBookKeys(in: list)
+                lastSeenBookKeys = list.books.map(\.olWorkKey)
+            }
             .onDisappear {
-                sharingService.markBooksSeen(
-                    for: listID,
-                    bookKeys: list.books.map(\.olWorkKey)
-                )
+                if !lastSeenBookKeys.isEmpty {
+                    sharingService.markBooksSeen(for: listID, bookKeys: lastSeenBookKeys)
+                }
             }
         } else {
             ContentUnavailableView {
