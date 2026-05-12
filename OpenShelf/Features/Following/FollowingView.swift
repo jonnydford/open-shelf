@@ -10,9 +10,11 @@ struct FollowingView: View {
     @AppStorage("lastViewedActivityTimestamp") private var lastViewedActivityTimestamp: Double = 0
     @AppStorage("socialEnabled") private var socialEnabled = false
 
+    @AppStorage("dismissedSharingPrompt") private var dismissedSharingPrompt = false
+
     @State private var shelfToUnfollow: FollowedShelf?
     @State private var showClearAllAlert = false
-    @State private var showSettings = false
+    @State private var showSocialSettings = false
 
     var body: some View {
         NavigationStack {
@@ -24,7 +26,7 @@ struct FollowingView: View {
                         Text("Follow friends who share their shelf link with you, and share yours so they can follow you back.")
                     } actions: {
                         Button("Share Your Shelf") {
-                            showSettings = true
+                            showSocialSettings = true
                         }
                     }
                 } else {
@@ -35,7 +37,7 @@ struct FollowingView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        showSettings = true
+                        showSocialSettings = true
                     } label: {
                         Label("Social Settings", systemImage: "gearshape")
                     }
@@ -75,21 +77,39 @@ struct FollowingView: View {
             } message: {
                 Text("This will remove all activity events from your feed.")
             }
-            .sheet(isPresented: $showSettings) {
-                SettingsView()
+            .sheet(isPresented: $showSocialSettings) {
+                NavigationStack {
+                    Form {
+                        SocialSettingsSection()
+                    }
+                    .navigationTitle("Social Settings")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { showSocialSettings = false }
+                        }
+                    }
+                }
             }
         }
     }
 
     private var list: some View {
         List {
-            if !socialEnabled {
+            if !socialEnabled && !dismissedSharingPrompt {
                 Section {
                     Button {
-                        showSettings = true
+                        showSocialSettings = true
                     } label: {
                         Label("Share your shelf so friends can follow you back", systemImage: "square.and.arrow.up")
                             .font(.subheadline)
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button {
+                            dismissedSharingPrompt = true
+                        } label: {
+                            Label("Dismiss", systemImage: "xmark")
+                        }
                     }
                 }
             }
