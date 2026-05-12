@@ -8,6 +8,21 @@ struct SharedBookEntry: Codable, Sendable {
     let coverImageID: Int?
     let rating: Double?
     let note: String?
+
+    var asSearchResult: SearchResult {
+        SearchResult(
+            key: olWorkKey,
+            title: title,
+            authorName: [authorName],
+            firstPublishYear: nil,
+            numberOfPagesMedian: nil,
+            coverI: coverImageID,
+            editionCount: nil,
+            isbn: isbn13.map { [$0] },
+            subject: nil,
+            idGoodreads: nil
+        )
+    }
 }
 
 struct SharedListRecord: Identifiable, Sendable {
