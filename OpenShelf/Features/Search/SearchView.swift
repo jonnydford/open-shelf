@@ -38,10 +38,6 @@ struct SearchView: View {
         searchHistoryData = "[]"
     }
 
-    private var showSuggestions: Bool {
-        searchText.isEmpty && !searchHistory.isEmpty && !hasSearched
-    }
-
     init(prefillQuery: Binding<String?> = .constant(nil)) {
         self._prefillQuery = prefillQuery
     }
@@ -49,9 +45,7 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if showSuggestions {
-                    searchHistoryList
-                } else if let errorMessage {
+                if let errorMessage {
                     errorState(message: errorMessage)
                 } else if results.isEmpty && !isSearching && !hasSearched {
                     initialState
@@ -65,6 +59,21 @@ struct SearchView: View {
             }
             .navigationTitle("Discover")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Title, author, or ISBN")
+            .searchSuggestions {
+                if searchText.isEmpty && !searchHistory.isEmpty {
+                    ForEach(searchHistory, id: \.self) { query in
+                        Label(query, systemImage: "clock")
+                            .searchCompletion(query)
+                    }
+
+                    Button("Clear History") {
+                        clearHistory()
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.red)
+                    .accessibilityHint("Removes all saved searches")
+                }
+            }
             .navigationDestination(for: SearchResult.self) { result in
                 if let existingBook = allLibraryBooks.first(where: { $0.olWorkKey == result.key }) {
                     BookDetailView(book: existingBook)
@@ -218,36 +227,6 @@ struct SearchView: View {
                             .foregroundStyle(.tertiary)
                     }
                 }
-            }
-        }
-    }
-
-    // MARK: - Search History
-
-    private var searchHistoryList: some View {
-        List {
-            Section {
-                ForEach(searchHistory, id: \.self) { query in
-                    Button {
-                        searchText = query
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "clock")
-                                .foregroundStyle(.secondary)
-                            Text(query)
-                                .foregroundStyle(.primary)
-                            Spacer()
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-            } footer: {
-                Button("Clear History") {
-                    clearHistory()
-                }
-                .font(.subheadline)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 8)
             }
         }
     }
