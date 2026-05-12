@@ -17,6 +17,7 @@ struct SettingsView: View {
     @State private var showLibraryPicker = false
     @State private var cacheSize: Int64?
     @State private var showClearCacheAlert = false
+    @State private var showCacheClearedToast = false
 
     @AppStorage("preferredLibraryService") private var preferredLibraryService: String = LibraryService.libby.rawValue
     @AppStorage("customLibraryURLTemplate") private var customLibraryURLTemplate: String = ""
@@ -64,6 +65,7 @@ struct SettingsView: View {
             .sheet(isPresented: $showLibraryPicker) {
                 LibraryPickerView()
             }
+            .toast(isPresented: $showCacheClearedToast, message: "Cache cleared")
         }
     }
 
@@ -430,6 +432,7 @@ struct SettingsView: View {
         await repository.imageCache.clearCache()
         await repository.metadataCache.clearCache()
         await computeCacheSize()
+        showCacheClearedToast = true
     }
 
     private func formattedCacheSize(_ bytes: Int64) -> String {
