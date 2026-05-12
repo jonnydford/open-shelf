@@ -66,36 +66,11 @@ struct FollowingView: View {
     private var list: some View {
         List {
             if !activityEvents.isEmpty {
-                Section {
-                    ForEach(Array(activityEvents.enumerated()), id: \.element.id) { index, event in
-                        if index > 0,
-                           lastViewedActivityTimestamp > 0,
-                           activityEvents[index - 1].timestamp > Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp),
-                           event.timestamp <= Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp) {
-                            newDivider
-                        }
-
-                        if let searchResult = event.asSearchResult {
-                            NavigationLink {
-                                SearchResultDetailView(searchResult: searchResult)
-                            } label: {
-                                ActivityEventRow(event: event)
-                            }
-                        } else {
-                            ActivityEventRow(event: event)
-                        }
-                    }
-                } header: {
-                    HStack {
-                        Text("Activity")
-                        Spacer()
-                        Button("Clear All") {
-                            showClearAllAlert = true
-                        }
-                        .font(.caption)
-                        .textCase(nil)
-                    }
-                }
+                ActivitySectionsView(
+                    activityEvents: activityEvents,
+                    lastViewedActivityTimestamp: lastViewedActivityTimestamp,
+                    onClearAll: { showClearAllAlert = true }
+                )
             }
 
             Section("Friends") {
@@ -115,19 +90,6 @@ struct FollowingView: View {
                 }
             }
         }
-    }
-
-    private var newDivider: some View {
-        HStack {
-            VStack { Divider() }
-            Text("New")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-            VStack { Divider() }
-        }
-        .listRowSeparator(.hidden)
-        .padding(.vertical, 4)
     }
 
     private func refreshAll() async {
@@ -180,6 +142,102 @@ struct FollowingView: View {
         if !expired.isEmpty {
             try? modelContext.save()
         }
+    }
+}
+
+// MARK: - Activity Sections
+
+private struct ActivitySectionsView: View {
+    let activityEvents: [ActivityEvent]
+    let lastViewedActivityTimestamp: Double
+    let onClearAll: () -> Void
+
+    private var groupedEvents: [(title: String, events: [ActivityEvent])] {
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: .now)
+        let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday)!
+        let startOfWeek = calendar.date(byAdding: .day, value: -7, to: startOfToday)!
+
+        var today: [ActivityEvent] = []
+        var yesterday: [ActivityEvent] = []
+        var thisWeek: [ActivityEvent] = []
+        var earlier: [ActivityEvent] = []
+
+        for event in activityEvents {
+            if event.timestamp >= startOfToday {
+                today.append(event)
+            } else if event.timestamp >= startOfYesterday {
+                yesterday.append(event)
+            } else if event.timestamp >= startOfWeek {
+                thisWeek.append(event)
+            } else {
+                earlier.append(event)
+            }
+        }
+
+        return [
+            ("Today", today),
+            ("Yesterday", yesterday),
+            ("Past 7 Days", thisWeek),
+            ("Earlier", earlier),
+        ].filter { !$0.1.isEmpty }
+    }
+
+    private var newDividerEventID: UUID? {
+        guard lastViewedActivityTimestamp > 0 else { return nil }
+        let threshold = Date(timeIntervalSinceReferenceDate: lastViewedActivityTimestamp)
+        return activityEvents.first(where: { $0.timestamp <= threshold })?.id
+    }
+
+    var body: some View {
+        ForEach(Array(groupedEvents.enumerated()), id: \.element.title) { groupIndex, group in
+            Section {
+                ForEach(group.events) { event in
+                    if event.id == newDividerEventID {
+                        newDivider
+                    }
+
+                    if let searchResult = event.asSearchResult {
+                        NavigationLink {
+                            SearchResultDetailView(searchResult: searchResult)
+                        } label: {
+                            ActivityEventRow(event: event)
+                        }
+                    } else {
+                        ActivityEventRow(event: event)
+                    }
+                }
+            } header: {
+                if groupIndex == 0 {
+                    HStack {
+                        Text(group.title)
+                        Spacer()
+                        Button("Clear All") {
+                            onClearAll()
+                        }
+                        .font(.caption)
+                        .textCase(nil)
+                        .accessibilityLabel("Clear all activity events")
+                    }
+                } else {
+                    Text(group.title)
+                }
+            }
+        }
+    }
+
+    private var newDivider: some View {
+        HStack {
+            VStack { Divider() }
+            Text("New")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            VStack { Divider() }
+        }
+        .listRowSeparator(.hidden)
+        .padding(.vertical, 4)
+        .accessibilityLabel("New activity")
     }
 }
 
