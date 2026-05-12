@@ -93,7 +93,8 @@ struct CuratedListDetailView: View {
     @Query private var dismissedBooks: [DismissedBook]
 
     @State private var fetchedBooks: [FetchedCuratedBook] = []
-    @State private var isLoading = true
+    @State private var isLoading = false
+    @State private var hasLoaded = false
 
     private let columns = [
         GridItem(.flexible()),
@@ -158,7 +159,11 @@ struct CuratedListDetailView: View {
             .padding(.bottom, 32)
         }
         .navigationTitle(list.name)
-        .task { await loadBooks() }
+        .task(id: list.id) {
+            guard !hasLoaded else { return }
+            await loadBooks()
+        }
+        .refreshable { await loadBooks() }
     }
 
     @ViewBuilder
@@ -218,8 +223,11 @@ struct CuratedListDetailView: View {
     }
 
     private func loadBooks() async {
-        isLoading = true
-        defer { isLoading = false }
+        if !hasLoaded { isLoading = true }
+        defer {
+            isLoading = false
+            hasLoaded = true
+        }
 
         let keys = list.bookKeys
         let repo = repository
