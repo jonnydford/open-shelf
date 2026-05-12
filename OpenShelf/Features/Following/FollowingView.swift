@@ -6,6 +6,8 @@ struct FollowingView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(CloudSharingService.self) private var sharingService
 
+    @State private var shelfToUnfollow: FollowedShelf?
+
     var body: some View {
         NavigationStack {
             Group {
@@ -13,7 +15,7 @@ struct FollowingView: View {
                     ContentUnavailableView {
                         Label("No Friends Yet", systemImage: "person.2")
                     } description: {
-                        Text("When a friend shares their shelf link with you, tap it to follow their reading activity.")
+                        Text("When a friend shares their shelf link with you, tap it to follow their reading activity.\n\nShare your own shelf from Settings to let friends follow you too.")
                     }
                 } else {
                     list
@@ -29,6 +31,22 @@ struct FollowingView: View {
                     await refreshAll()
                 }
             }
+            .alert("Unfollow?", isPresented: Binding(
+                get: { shelfToUnfollow != nil },
+                set: { if !$0 { shelfToUnfollow = nil } }
+            )) {
+                Button("Cancel", role: .cancel) {}
+                Button("Unfollow", role: .destructive) {
+                    if let shelf = shelfToUnfollow {
+                        modelContext.delete(shelf)
+                        try? modelContext.save()
+                    }
+                }
+            } message: {
+                if let shelf = shelfToUnfollow {
+                    Text("You'll need \(shelf.displayName) to share their link again to re-follow.")
+                }
+            }
         }
     }
 
@@ -40,16 +58,15 @@ struct FollowingView: View {
                 } label: {
                     FriendShelfRow(shelf: shelf)
                 }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
+                        shelfToUnfollow = shelf
+                    } label: {
+                        Label("Unfollow", systemImage: "person.badge.minus")
+                    }
+                }
             }
-            .onDelete(perform: unfollow)
         }
-    }
-
-    private func unfollow(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(followedShelves[index])
-        }
-        try? modelContext.save()
     }
 
     private func refreshAll() async {
@@ -126,8 +143,15 @@ struct FriendShelfRow: View {
 struct FriendShelfDetailView: View {
     let shelf: FollowedShelf
 
+    private var hasActivity: Bool {
+        guard let snapshot = shelf.decodedSnapshot else { return false }
+        return !snapshot.currentlyReading.isEmpty
+            || !snapshot.recentlyFinished.isEmpty
+            || snapshot.goalProgress != nil
+    }
+
     var body: some View {
-        if let snapshot = shelf.decodedSnapshot {
+        if let snapshot = shelf.decodedSnapshot, hasActivity {
             List {
                 if !snapshot.currentlyReading.isEmpty {
                     Section("Currently Reading") {
@@ -153,6 +177,14 @@ struct FriendShelfDetailView: View {
                 }
             }
             .navigationTitle("\(snapshot.displayName)'s Shelf")
+            .navigationBarTitleDisplayMode(.inline)
+        } else if shelf.decodedSnapshot != nil {
+            ContentUnavailableView {
+                Label("No Recent Activity", systemImage: "book.closed")
+            } description: {
+                Text("\(shelf.displayName) hasn't shared any reading activity yet.")
+            }
+            .navigationTitle(shelf.displayName)
             .navigationBarTitleDisplayMode(.inline)
         } else {
             ContentUnavailableView {
