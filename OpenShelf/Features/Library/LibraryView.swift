@@ -541,7 +541,23 @@ struct LibraryView: View {
                         }
                     }
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button {
+                        moveBook(book, to: .reading)
+                    } label: {
+                        Label("Start Reading", systemImage: "book.fill")
+                    }
+                    .tint(.green)
+                }
+                .sensoryFeedback(.success, trigger: book.shelf)
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    Button {
+                        repository.removeFromQueue(book)
+                    } label: {
+                        Label("Remove from Up Next", systemImage: "minus.circle")
+                    }
+                    .tint(.orange)
+
                     Button(role: .destructive) {
                         bookToDelete = book
                         showDeleteConfirmation = true
@@ -549,16 +565,11 @@ struct LibraryView: View {
                         Label("Delete", systemImage: "trash")
                     }
                 }
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    Button {
-                        repository.removeFromQueue(book)
-                    } label: {
-                        Label("Remove from Up Next", systemImage: "minus.circle")
-                    }
-                    .tint(.orange)
-                }
                 .contextMenu {
                     contextMenuItems(for: book)
+                }
+                .accessibilityAction(named: "Start Reading") {
+                    moveBook(book, to: .reading)
                 }
                 .accessibilityAction(named: "Remove from Up Next") {
                     repository.removeFromQueue(book)
@@ -638,16 +649,19 @@ struct LibraryView: View {
         } label: {
             BookRow(book: book)
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive) {
-                bookToDelete = book
-                showDeleteConfirmation = true
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
+        .swipeActions(edge: .trailing, allowsFullSwipe: book.shelf == .wantToRead) {
+            primarySwipeAction(for: book)
         }
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            shelfSwipeActions(for: book)
+        .sensoryFeedback(.success, trigger: book.shelf)
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            if book.shelf == .wantToRead || book.shelf == .reading {
+                Button(role: .destructive) {
+                    bookToDelete = book
+                    showDeleteConfirmation = true
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
         }
         .contextMenu {
             contextMenuItems(for: book)
@@ -673,23 +687,29 @@ struct LibraryView: View {
     // MARK: - Swipe Actions
 
     @ViewBuilder
-    private func shelfSwipeActions(for book: Book) -> some View {
-        ForEach(Shelf.allCases.filter { $0 != book.shelf }, id: \.self) { shelf in
+    private func primarySwipeAction(for book: Book) -> some View {
+        switch book.shelf {
+        case .wantToRead:
             Button {
-                moveBook(book, to: shelf)
+                moveBook(book, to: .reading)
             } label: {
-                Label(shelf.displayName, systemImage: shelf.systemImage)
+                Label("Start Reading", systemImage: "book.fill")
             }
-            .tint(shelfTint(shelf))
-        }
-    }
-
-    private func shelfTint(_ shelf: Shelf) -> Color {
-        switch shelf {
-        case .wantToRead: .blue
-        case .reading: .green
-        case .read: .gray
-        case .dnf: .orange
+            .tint(.green)
+        case .reading:
+            Button {
+                moveBook(book, to: .read)
+            } label: {
+                Label("Mark as Read", systemImage: "checkmark.circle.fill")
+            }
+            .tint(.blue)
+        case .read, .dnf:
+            Button(role: .destructive) {
+                bookToDelete = book
+                showDeleteConfirmation = true
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 
