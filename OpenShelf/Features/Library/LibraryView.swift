@@ -541,21 +541,28 @@ struct LibraryView: View {
                         }
                     }
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        bookToDelete = book
-                        showDeleteConfirmation = true
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button {
+                        moveBook(book, to: .reading)
                     } label: {
-                        Label("Delete", systemImage: "trash")
+                        Label("Start Reading", systemImage: "book.fill")
                     }
+                    .tint(.green)
                 }
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
                     Button {
                         repository.removeFromQueue(book)
                     } label: {
                         Label("Remove from Up Next", systemImage: "minus.circle")
                     }
                     .tint(.orange)
+
+                    Button(role: .destructive) {
+                        bookToDelete = book
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
                 .contextMenu {
                     contextMenuItems(for: book)
@@ -638,16 +645,18 @@ struct LibraryView: View {
         } label: {
             BookRow(book: book)
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive) {
-                bookToDelete = book
-                showDeleteConfirmation = true
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            primarySwipeAction(for: book)
         }
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            shelfSwipeActions(for: book)
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            if book.shelf == .wantToRead || book.shelf == .reading {
+                Button(role: .destructive) {
+                    bookToDelete = book
+                    showDeleteConfirmation = true
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
         }
         .contextMenu {
             contextMenuItems(for: book)
@@ -671,6 +680,33 @@ struct LibraryView: View {
     }
 
     // MARK: - Swipe Actions
+
+    @ViewBuilder
+    private func primarySwipeAction(for book: Book) -> some View {
+        switch book.shelf {
+        case .wantToRead:
+            Button {
+                moveBook(book, to: .reading)
+            } label: {
+                Label("Start Reading", systemImage: "book.fill")
+            }
+            .tint(.green)
+        case .reading:
+            Button {
+                moveBook(book, to: .read)
+            } label: {
+                Label("Mark as Read", systemImage: "checkmark.circle.fill")
+            }
+            .tint(.blue)
+        case .read, .dnf:
+            Button(role: .destructive) {
+                bookToDelete = book
+                showDeleteConfirmation = true
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+    }
 
     @ViewBuilder
     private func shelfSwipeActions(for book: Book) -> some View {
