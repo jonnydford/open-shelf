@@ -347,8 +347,8 @@ final class BookRepository {
 
     // MARK: - Author Search
 
-    nonisolated func searchByAuthor(name: String) async throws -> [SearchResult] {
-        try await apiClient.searchByAuthor(name: name)
+    nonisolated func searchByAuthor(name: String, languages: [String]? = nil) async throws -> [SearchResult] {
+        try await apiClient.searchByAuthor(name: name, languages: languages)
     }
 
     // MARK: - Import
@@ -588,8 +588,8 @@ final class BookRepository {
 
     // MARK: - Subjects
 
-    nonisolated func fetchSubject(_ slug: String, limit: Int = 20) async throws -> SubjectResponse {
-        try await apiClient.fetchSubject(slug, limit: limit)
+    nonisolated func fetchSubject(_ slug: String, limit: Int = 20, languages: [String]? = nil) async throws -> SubjectResponse {
+        try await apiClient.fetchSubject(slug, limit: limit, languages: languages)
     }
 
     // MARK: - Popular by Subject

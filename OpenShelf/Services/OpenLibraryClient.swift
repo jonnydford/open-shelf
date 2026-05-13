@@ -84,7 +84,7 @@ actor OpenLibraryClient {
 
     // MARK: - Author Search
 
-    func searchByAuthor(name: String) async throws -> [SearchResult] {
+    func searchByAuthor(name: String, languages: [String]? = nil) async throws -> [SearchResult] {
         guard var components = URLComponents(string: "\(baseURL)/search.json") else {
             throw OpenLibraryError.invalidURL
         }
@@ -95,6 +95,11 @@ actor OpenLibraryClient {
             URLQueryItem(name: "limit", value: "10"),
             URLQueryItem(name: "sort", value: "editions")
         ]
+        if let languages, !languages.isEmpty {
+            for lang in languages {
+                components.queryItems?.append(URLQueryItem(name: "language", value: lang))
+            }
+        }
 
         guard let url = components.url else {
             throw OpenLibraryError.invalidURL
@@ -204,7 +209,7 @@ actor OpenLibraryClient {
 
     // MARK: - Subjects
 
-    func fetchSubject(_ slug: String, limit: Int = 20) async throws -> SubjectResponse {
+    func fetchSubject(_ slug: String, limit: Int = 20, languages: [String]? = nil) async throws -> SubjectResponse {
         let sanitised = slug.lowercased()
             .replacingOccurrences(of: " ", with: "_")
             .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? slug
@@ -214,6 +219,11 @@ actor OpenLibraryClient {
         components.queryItems = [
             URLQueryItem(name: "limit", value: String(limit))
         ]
+        if let languages, !languages.isEmpty {
+            for lang in languages {
+                components.queryItems?.append(URLQueryItem(name: "language", value: lang))
+            }
+        }
         guard let url = components.url else {
             throw OpenLibraryError.invalidURL
         }

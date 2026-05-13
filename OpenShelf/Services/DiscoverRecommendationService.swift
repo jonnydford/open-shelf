@@ -15,16 +15,20 @@ final class DiscoverRecommendationService {
     private(set) var isLoading = false
 
     private var lastRefresh: Date?
+    private var lastLanguages: [String]?
     private static let cooldown: TimeInterval = 5 * 60
 
     func refreshIfNeeded(
         library: [Book],
         dismissed: [DismissedBook],
+        languages: [String],
         using repository: BookRepository
     ) async {
-        if let last = lastRefresh, Date.now.timeIntervalSince(last) < Self.cooldown {
+        let languagesChanged = lastLanguages != languages
+        if let last = lastRefresh, Date.now.timeIntervalSince(last) < Self.cooldown, !languagesChanged {
             return
         }
+        lastLanguages = languages
 
         let readBooks = library.filter { $0.shelf == .read }
         guard readBooks.count >= 3 else {
@@ -41,16 +45,19 @@ final class DiscoverRecommendationService {
         let authorRec = await generateAuthorRecommendation(
             readBooks: readBooks,
             excludeKeys: excludeKeys,
+            languages: languages,
             using: repository
         )
         let subjectRec = await generateSubjectRecommendation(
             readBooks: readBooks,
             excludeKeys: excludeKeys,
+            languages: languages,
             using: repository
         )
         let genreRec = await generateGenreRecommendation(
             readBooks: readBooks,
             excludeKeys: excludeKeys,
+            languages: languages,
             using: repository
         )
 
@@ -67,6 +74,7 @@ final class DiscoverRecommendationService {
     private func generateAuthorRecommendation(
         readBooks: [Book],
         excludeKeys: Set<String>,
+        languages: [String],
         using repository: BookRepository
     ) async -> DiscoverRecommendation? {
         var authorCounts: [String: Int] = [:]
@@ -81,7 +89,7 @@ final class DiscoverRecommendationService {
         }
 
         do {
-            let results = try await repository.searchByAuthor(name: top.key)
+            let results = try await repository.searchByAuthor(name: top.key, languages: languages)
             let filtered = results.filter { !excludeKeys.contains($0.key) }
             guard !filtered.isEmpty else { return nil }
             return DiscoverRecommendation(
@@ -104,6 +112,7 @@ final class DiscoverRecommendationService {
     private func generateSubjectRecommendation(
         readBooks: [Book],
         excludeKeys: Set<String>,
+        languages: [String],
         using repository: BookRepository
     ) async -> DiscoverRecommendation? {
         let dated = readBooks.filter { $0.dateFinished != nil }
@@ -122,7 +131,7 @@ final class DiscoverRecommendationService {
         guard let topSubject else { return nil }
 
         do {
-            let response = try await repository.fetchSubject(topSubject, limit: 20)
+            let response = try await repository.fetchSubject(topSubject, limit: 20, languages: languages)
             let filtered = response.works
                 .map(\.asSearchResult)
                 .filter { !excludeKeys.contains($0.key) }
@@ -142,6 +151,7 @@ final class DiscoverRecommendationService {
     private func generateGenreRecommendation(
         readBooks: [Book],
         excludeKeys: Set<String>,
+        languages: [String],
         using repository: BookRepository
     ) async -> DiscoverRecommendation? {
         var genreCounts: [String: Int] = [:]
@@ -157,7 +167,7 @@ final class DiscoverRecommendationService {
         }
 
         do {
-            let response = try await repository.fetchSubject(topGenre, limit: 20)
+            let response = try await repository.fetchSubject(topGenre, limit: 20, languages: languages)
             let filtered = response.works
                 .map(\.asSearchResult)
                 .filter { !excludeKeys.contains($0.key) }
