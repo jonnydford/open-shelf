@@ -24,7 +24,7 @@ enum BookFormat: String, Codable, CaseIterable, Sendable {
 final class Book {
     // MARK: - Identity
 
-    @Attribute(.unique) var olWorkKey: String
+    var olWorkKey: String = ""
     var olEditionKey: String?
     var isbn13: String?
     var isbn10: String?
@@ -32,33 +32,33 @@ final class Book {
 
     // MARK: - Cached metadata
 
-    var title: String
-    var authorName: String
+    var title: String = ""
+    var authorName: String = ""
     var coverImageID: Int?
-    var coverCached: Bool
+    var coverCached: Bool = false
     var pageCount: Int?
     var firstPublishYear: Int?
     var synopsis: String?
-    var subjects: [String]
+    var subjects: [String] = []
     var publisher: String?
     var language: String?
 
     // MARK: - User data
 
-    var shelf: Shelf
+    var shelf: Shelf = Shelf.wantToRead
     var userRating: Double?
-    var dateAdded: Date
+    var dateAdded: Date = Date.now
     var dateStarted: Date?
     var dateFinished: Date?
     var currentPage: Int?
-    var isFavourite: Bool
+    var isFavourite: Bool = false
     var notes: String?
-    var tags: [String]
+    var tags: [String] = []
     var queuePosition: Int?
 
     // MARK: - Privacy
 
-    var isPrivate: Bool
+    var isPrivate: Bool = false
 
     // MARK: - Series
 
@@ -67,7 +67,7 @@ final class Book {
 
     // MARK: - Format
 
-    var format: BookFormat
+    var format: BookFormat = BookFormat.book
 
     // MARK: - Audiobook metadata
 
@@ -77,7 +77,7 @@ final class Book {
     var currentChapter: Int?
 
     @Relationship(deleteRule: .cascade, inverse: \ReadEntry.book)
-    var reads: [ReadEntry]
+    var reads: [ReadEntry]?
 
     init(
         olWorkKey: String,

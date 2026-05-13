@@ -9,16 +9,16 @@ enum ActivityEventType: String, Codable {
 final class ActivityEvent {
     private static let expiryInterval: TimeInterval = 30 * 24 * 60 * 60
 
-    var id: UUID
-    var friendDisplayName: String
-    var friendRecordName: String
-    var eventType: ActivityEventType
-    var bookTitle: String
-    var bookAuthor: String
+    var id: UUID = UUID()
+    var friendDisplayName: String = ""
+    var friendRecordName: String = ""
+    var eventType: ActivityEventType = ActivityEventType.started
+    var bookTitle: String = ""
+    var bookAuthor: String = ""
     var bookCoverID: Int?
     var bookWorkKey: String?
     var rating: Double?
-    var timestamp: Date
+    var timestamp: Date = Date.now
 
     init(
         id: UUID = UUID(),

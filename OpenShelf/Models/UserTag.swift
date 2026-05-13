@@ -3,9 +3,9 @@ import SwiftData
 
 @Model
 final class UserTag {
-    var name: String
-    var colour: String
-    var sortOrder: Int
+    var name: String = ""
+    var colour: String = "#007AFF"
+    var sortOrder: Int = 0
 
     init(
         name: String,

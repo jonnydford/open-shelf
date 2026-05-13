@@ -82,7 +82,30 @@ final class BookRepository {
 
     // MARK: - Local operations
 
+    func existingBook(forWorkKey workKey: String) -> Book? {
+        let descriptor = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.olWorkKey == workKey }
+        )
+        return (try? modelContext.fetch(descriptor))?.first
+    }
+
+    func existingDismissedBook(forWorkKey workKey: String) -> DismissedBook? {
+        let descriptor = FetchDescriptor<DismissedBook>(
+            predicate: #Predicate { $0.openLibraryWorkKey == workKey }
+        )
+        return (try? modelContext.fetch(descriptor))?.first
+    }
+
+    func existingGoal(forYear year: Int) -> ReadingGoal? {
+        let descriptor = FetchDescriptor<ReadingGoal>(
+            predicate: #Predicate { $0.year == year }
+        )
+        return (try? modelContext.fetch(descriptor))?.first
+    }
+
     func addBook(from searchResult: SearchResult, detail: WorkDetail?, shelf: Shelf) {
+        guard existingBook(forWorkKey: searchResult.key) == nil else { return }
+
         let subjects = detail?.subjects ?? searchResult.subject ?? []
         let book = Book(
             olWorkKey: searchResult.key,
