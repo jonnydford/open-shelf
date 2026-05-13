@@ -619,7 +619,7 @@ struct LibraryView: View {
                 }
                 .scrollTargetLayout()
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, 12)
             }
             .scrollTargetBehavior(.viewAligned)
             .listRowInsets(EdgeInsets())
@@ -639,10 +639,17 @@ struct LibraryView: View {
                     .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
 
                 if let current = book.currentPage, let total = book.pageCount, total > 0 {
-                    ProgressView(value: Double(current), total: Double(total))
+                    ProgressView(value: min(Double(current), Double(total)), total: Double(total))
                         .tint(.white)
-                        .background(.black.opacity(0.3))
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+                        .padding(.horizontal, 2)
+                        .padding(.bottom, 4)
+                        .background(
+                            .ultraThinMaterial,
+                            in: UnevenRoundedRectangle(
+                                bottomLeadingRadius: CornerRadius.small,
+                                bottomTrailingRadius: CornerRadius.small
+                            )
+                        )
                 }
             }
 
@@ -653,15 +660,18 @@ struct LibraryView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
 
-                Text(book.authorName)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                if !book.authorName.isEmpty {
+                    Text(book.authorName)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
             }
             .frame(width: 100)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(book.title) by \(book.authorName)")
+        .accessibilityLabel(book.authorName.isEmpty ? book.title : "\(book.title) by \(book.authorName)")
+        .accessibilityValue(readingProgressLabel(for: book))
         .accessibilityHint("Double tap to view details")
         .accessibilityAction(named: "Mark as Read") {
             moveBook(book, to: .read)
@@ -669,6 +679,14 @@ struct LibraryView: View {
         .accessibilityAction(named: "Did Not Finish") {
             moveBook(book, to: .dnf)
         }
+    }
+
+    private func readingProgressLabel(for book: Book) -> String {
+        guard let current = book.currentPage, let total = book.pageCount, total > 0 else {
+            return ""
+        }
+        let percent = Int(min(Double(current) / Double(total), 1.0) * 100)
+        return "Page \(current) of \(total), \(percent) percent complete"
     }
 
     @ViewBuilder
