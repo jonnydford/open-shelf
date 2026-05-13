@@ -217,7 +217,8 @@ struct BarcodeScannerView: View {
                 readinglogCount: nil,
                 wantToReadCount: nil,
                 currentlyReadingCount: nil,
-                alreadyReadCount: nil
+                alreadyReadCount: nil,
+                language: nil
             )
 
             // Try to fetch work detail for richer data

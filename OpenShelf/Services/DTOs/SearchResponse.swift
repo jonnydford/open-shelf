@@ -23,6 +23,7 @@ struct SearchResult: Codable, Sendable, Identifiable, Hashable {
     let wantToReadCount: Int?
     let currentlyReadingCount: Int?
     let alreadyReadCount: Int?
+    let language: [String]?
 
     var id: String { key }
 
@@ -42,6 +43,10 @@ struct SearchResult: Codable, Sendable, Identifiable, Hashable {
         idGoodreads?.first
     }
 
+    var primaryLanguage: String? {
+        language?.first
+    }
+
     enum CodingKeys: String, CodingKey {
         case key
         case title
@@ -59,5 +64,6 @@ struct SearchResult: Codable, Sendable, Identifiable, Hashable {
         case wantToReadCount = "want_to_read_count"
         case currentlyReadingCount = "currently_reading_count"
         case alreadyReadCount = "already_read_count"
+        case language
     }
 }

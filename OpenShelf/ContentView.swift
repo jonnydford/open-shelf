@@ -211,7 +211,8 @@ struct ContentView: View {
                         readinglogCount: nil,
                         wantToReadCount: nil,
                         currentlyReadingCount: nil,
-                        alreadyReadCount: nil
+                        alreadyReadCount: nil,
+                        language: nil
                     )
                     deepLinkSearchResult = searchResult
                 } catch {

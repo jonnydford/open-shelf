@@ -119,6 +119,7 @@ final class BookRepository {
             firstPublishYear: searchResult.firstPublishYear,
             synopsis: detail?.synopsis,
             subjects: subjects,
+            language: searchResult.primaryLanguage,
             shelf: shelf,
             dateAdded: .now,
             format: BookFormat.detectFormat(subjects: subjects)
@@ -593,8 +594,8 @@ final class BookRepository {
 
     // MARK: - Popular by Subject
 
-    nonisolated func searchPopular(subject: String, limit: Int = 10) async throws -> [SearchResult] {
-        try await apiClient.searchPopular(subject: subject, limit: limit)
+    nonisolated func searchPopular(subject: String, limit: Int = 10, languages: [String]? = nil) async throws -> [SearchResult] {
+        try await apiClient.searchPopular(subject: subject, limit: limit, languages: languages)
     }
 
     // MARK: - Ratings & Bookshelves

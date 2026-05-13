@@ -30,6 +30,7 @@ final class PopularBooksService {
         libraryKeys: Set<String>,
         dismissedKeys: Set<String>,
         genreCounts: [String: Int],
+        languages: [String],
         using repository: BookRepository
     ) async {
         guard !isLoading else { return }
@@ -54,6 +55,7 @@ final class PopularBooksService {
                         slug: genre.slug,
                         displayName: genre.displayName,
                         excludeKeys: excludeKeys,
+                        languages: languages,
                         using: repository
                     )
                 }
@@ -123,10 +125,11 @@ final class PopularBooksService {
         slug: String,
         displayName: String,
         excludeKeys: Set<String>,
+        languages: [String],
         using repository: BookRepository
     ) async -> PopularGenreSection? {
         do {
-            let results = try await repository.searchPopular(subject: slug, limit: 15)
+            let results = try await repository.searchPopular(subject: slug, limit: 15, languages: languages)
             let filtered = results.filter { !excludeKeys.contains($0.key) && $0.coverI != nil }
             guard !filtered.isEmpty else { return nil }
             return PopularGenreSection(
