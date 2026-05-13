@@ -14,8 +14,9 @@ struct LanguagePickerSheet: View {
         let excluded = alreadySelected
         let unselected = LanguageCode.supported.filter { !excluded.contains($0.code) }
         if searchText.isEmpty { return unselected.map(\.code) }
-        let query = searchText.lowercased()
-        return unselected.filter { $0.name.lowercased().contains(query) }.map(\.code)
+        return unselected.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) || $0.nativeName.localizedCaseInsensitiveContains(searchText)
+        }.map(\.code)
     }
 
     var body: some View {
