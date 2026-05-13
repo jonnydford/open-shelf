@@ -185,6 +185,7 @@ struct DiscoverSection: View {
             await recommendationService.refreshIfNeeded(
                 library: libraryBooks,
                 dismissed: dismissedBooks,
+                languages: preferredLanguages,
                 using: repository
             )
             await popularBooksService.refreshIfNeeded(
