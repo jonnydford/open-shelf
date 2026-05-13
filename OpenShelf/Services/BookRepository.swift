@@ -82,7 +82,30 @@ final class BookRepository {
 
     // MARK: - Local operations
 
+    func existingBook(forWorkKey workKey: String) -> Book? {
+        let descriptor = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.olWorkKey == workKey }
+        )
+        return (try? modelContext.fetch(descriptor))?.first
+    }
+
+    func existingDismissedBook(forWorkKey workKey: String) -> DismissedBook? {
+        let descriptor = FetchDescriptor<DismissedBook>(
+            predicate: #Predicate { $0.openLibraryWorkKey == workKey }
+        )
+        return (try? modelContext.fetch(descriptor))?.first
+    }
+
+    func existingGoal(forYear year: Int) -> ReadingGoal? {
+        let descriptor = FetchDescriptor<ReadingGoal>(
+            predicate: #Predicate { $0.year == year }
+        )
+        return (try? modelContext.fetch(descriptor))?.first
+    }
+
     func addBook(from searchResult: SearchResult, detail: WorkDetail?, shelf: Shelf) {
+        guard existingBook(forWorkKey: searchResult.key) == nil else { return }
+
         let subjects = detail?.subjects ?? searchResult.subject ?? []
         let book = Book(
             olWorkKey: searchResult.key,
@@ -395,9 +418,11 @@ final class BookRepository {
                 // Insert book on MainActor (SwiftData requires it)
                 let matched = await MainActor.run { () -> Bool in
                     if let edition = matchedEdition {
+                        let workKey = edition.workKey ?? edition.key
+                        guard self.existingBook(forWorkKey: workKey) == nil else { return true }
                         let importSubjects = matchedWorkDetail?.subjects ?? []
                         let book = Book(
-                            olWorkKey: edition.workKey ?? edition.key,
+                            olWorkKey: workKey,
                             olEditionKey: edition.key,
                             isbn13: edition.primaryISBN13 ?? row.isbn13,
                             isbn10: edition.primaryISBN10 ?? row.isbn,
@@ -421,6 +446,7 @@ final class BookRepository {
                         try? self.modelContext.save()
                         return true
                     } else if let result = matchedResult {
+                        guard self.existingBook(forWorkKey: result.key) == nil else { return true }
                         let importSubjects2 = matchedWorkDetail?.subjects ?? result.subject ?? []
                         let book = Book(
                             olWorkKey: result.key,

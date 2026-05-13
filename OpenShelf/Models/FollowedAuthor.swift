@@ -3,11 +3,11 @@ import SwiftData
 
 @Model
 final class FollowedAuthor {
-    var authorName: String
+    var authorName: String = ""
     var olAuthorKey: String?
     var lastCheckedDate: Date?
     var lastKnownWorkKey: String?
-    var dateFollowed: Date
+    var dateFollowed: Date = Date.now
 
     init(
         authorName: String,

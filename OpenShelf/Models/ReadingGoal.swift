@@ -3,8 +3,8 @@ import SwiftData
 
 @Model
 final class ReadingGoal {
-    @Attribute(.unique) var year: Int
-    var target: Int
+    var year: Int = 0
+    var target: Int = 0
 
     init(year: Int, target: Int) {
         self.year = year

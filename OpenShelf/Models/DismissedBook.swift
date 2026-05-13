@@ -3,10 +3,10 @@ import SwiftData
 
 @Model
 final class DismissedBook {
-    @Attribute(.unique) var openLibraryWorkKey: String
-    var title: String
-    var author: String
-    var dateDismissed: Date
+    var openLibraryWorkKey: String = ""
+    var title: String = ""
+    var author: String = ""
+    var dateDismissed: Date = Date.now
 
     init(
         openLibraryWorkKey: String,

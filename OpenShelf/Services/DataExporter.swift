@@ -74,7 +74,7 @@ struct DataExporter {
             dict["olWorkKey"] = book.olWorkKey
 
             // Read history
-            let reads: [[String: Any]] = book.reads.map { entry in
+            let reads: [[String: Any]] = (book.reads ?? []).map { entry in
                 var entryDict: [String: Any] = [:]
                 if let start = entry.startDate { entryDict["startDate"] = dateFormatter.string(from: start) }
                 if let finish = entry.finishDate { entryDict["finishDate"] = dateFormatter.string(from: finish) }

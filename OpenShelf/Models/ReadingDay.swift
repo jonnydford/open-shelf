@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class ReadingDay {
-    var date: Date
+    var date: Date = Date.now
     var bookKey: String?
 
     init(date: Date = Calendar.current.startOfDay(for: .now), bookKey: String? = nil) {

@@ -66,7 +66,7 @@ enum SharedModelContainer {
         let configuration = ModelConfiguration(
             schema: schema,
             url: storeURL,
-            cloudKitDatabase: .none
+            cloudKitDatabase: .automatic
         )
         let container = try ModelContainer(
             for: schema,

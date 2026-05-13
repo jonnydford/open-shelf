@@ -3,10 +3,10 @@ import SwiftData
 
 @Model
 final class FollowedShelf {
-    var id: UUID
-    var ownerRecordName: String
-    var displayName: String
-    var lastFetched: Date
+    var id: UUID = UUID()
+    var ownerRecordName: String = ""
+    var displayName: String = ""
+    var lastFetched: Date = Date.now
     var cachedSnapshot: Data?
 
     init(

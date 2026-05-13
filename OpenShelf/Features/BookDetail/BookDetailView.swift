@@ -821,10 +821,10 @@ struct BookDetailView: View {
 
     @ViewBuilder
     private var collapsibleReadHistorySection: some View {
-        if !book.reads.isEmpty {
+        if !(book.reads ?? []).isEmpty {
             VStack(alignment: .leading, spacing: 12) {
                 DisclosureGroup(isExpanded: $isReadHistoryExpanded) {
-                    ReadHistorySection(entries: book.reads, showHeader: false)
+                    ReadHistorySection(entries: book.reads ?? [], showHeader: false)
                         .padding(.top, 8)
                 } label: {
                     Text("Reading History")
@@ -1149,7 +1149,7 @@ struct BookDetailView: View {
 
     @ViewBuilder
     private var dnfInfoSection: some View {
-        let latestDNF = book.reads
+        let latestDNF = (book.reads ?? [])
             .filter { $0.dnfPage != nil || $0.dnfReason != nil }
             .sorted { ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast) }
             .first
@@ -1311,7 +1311,7 @@ struct BookDetailView: View {
     private func startReread() {
         // Snapshot the current rating onto the most recent ReadEntry if it has none
         if let currentRating = book.userRating {
-            let latestEntry = book.reads
+            let latestEntry = (book.reads ?? [])
                 .sorted { ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast) }
                 .first
             if let entry = latestEntry, entry.rating == nil {

@@ -3,12 +3,12 @@ import SwiftData
 
 @Model
 final class ReadingList {
-    var id: UUID
-    var name: String
-    var bookKeys: [String]  // olWorkKey references
-    var dateCreated: Date
-    var includeRatings: Bool
-    var includeNotes: Bool
+    var id: UUID = UUID()
+    var name: String = ""
+    var bookKeys: [String] = []
+    var dateCreated: Date = Date.now
+    var includeRatings: Bool = true
+    var includeNotes: Bool = false
     var ckRecordName: String?
 
     init(

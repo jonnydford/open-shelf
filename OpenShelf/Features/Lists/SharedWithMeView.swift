@@ -247,6 +247,7 @@ struct SharedListDetailView: View {
     }
 
     private func addToShelf(_ book: SharedBookEntry) {
+        guard !isInLibrary(book) else { return }
         let newBook = Book(
             olWorkKey: book.olWorkKey,
             isbn13: book.isbn13,

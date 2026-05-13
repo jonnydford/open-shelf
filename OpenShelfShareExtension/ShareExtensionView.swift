@@ -507,6 +507,16 @@ struct ShareExtensionView: View {
 
         isSaving = true
 
+        let workKey = info.olWorkKey
+        let descriptor = FetchDescriptor<Book>(
+            predicate: #Predicate { $0.olWorkKey == workKey }
+        )
+        guard (try? context.fetch(descriptor))?.first == nil else {
+            isSaving = false
+            dismissAction()
+            return
+        }
+
         let subjects = info.subjects
         let book = Book(
             olWorkKey: info.olWorkKey,
