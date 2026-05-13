@@ -717,7 +717,7 @@ struct BookDetailView: View {
                 detailItem(label: "Publisher", value: publisher)
             }
             if let language = book.language {
-                detailItem(label: "Language", value: language)
+                detailItem(label: "Language", value: LanguageCode.displayName(for: language))
             }
             if let year = book.firstPublishYear {
                 detailItem(label: "First Published", value: String(year))
