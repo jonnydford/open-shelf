@@ -30,6 +30,41 @@ actor CoverImageCache {
         Self.ensureDirectoryExists(at: coverDir)
     }
 
+    private static let localCoverDirectory: URL = {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let dir = appSupport.appendingPathComponent("Covers", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }()
+
+    // MARK: - Local (user-provided) covers
+
+    private static func localCoverURL(for bookKey: String) -> URL {
+        let sanitised = bookKey.replacingOccurrences(of: "/", with: "_")
+        return localCoverDirectory.appendingPathComponent("\(sanitised).jpg")
+    }
+
+    func localCover(for bookKey: String) async -> UIImage? {
+        let fileURL = Self.localCoverURL(for: bookKey)
+        guard let data = try? Data(contentsOf: fileURL) else { return nil }
+        return UIImage(data: data)
+    }
+
+    nonisolated func saveLocalCover(_ imageData: Data, for bookKey: String) {
+        let fileURL = Self.localCoverURL(for: bookKey)
+        try? imageData.write(to: fileURL, options: .atomic)
+    }
+
+    nonisolated func removeLocalCover(for bookKey: String) {
+        let fileURL = Self.localCoverURL(for: bookKey)
+        try? FileManager.default.removeItem(at: fileURL)
+    }
+
+    nonisolated func hasLocalCover(for bookKey: String) -> Bool {
+        let fileURL = Self.localCoverURL(for: bookKey)
+        return FileManager.default.fileExists(atPath: fileURL.path)
+    }
+
     // MARK: - Public API
 
     func image(for coverID: Int, size: CoverSize) async -> UIImage? {
