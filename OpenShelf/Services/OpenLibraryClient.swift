@@ -39,7 +39,7 @@ actor OpenLibraryClient {
     private let session: URLSession
     private let baseURL = "https://openlibrary.org"
     private let coversBaseURL = "https://covers.openlibrary.org"
-    private let searchFields = "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,edition_count,isbn,subject,id_goodreads,ratings_average,ratings_count,readinglog_count,want_to_read_count,currently_reading_count,already_read_count"
+    private let searchFields = "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,edition_count,isbn,subject,id_goodreads,ratings_average,ratings_count,readinglog_count,want_to_read_count,currently_reading_count,already_read_count,language"
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
@@ -106,7 +106,7 @@ actor OpenLibraryClient {
 
     // MARK: - Popular by Subject
 
-    func searchPopular(subject: String, limit: Int = 10) async throws -> [SearchResult] {
+    func searchPopular(subject: String, limit: Int = 10, languages: [String]? = nil) async throws -> [SearchResult] {
         guard var components = URLComponents(string: "\(baseURL)/search.json") else {
             throw OpenLibraryError.invalidURL
         }
@@ -117,6 +117,11 @@ actor OpenLibraryClient {
             URLQueryItem(name: "sort", value: "readinglog"),
             URLQueryItem(name: "limit", value: "\(limit)")
         ]
+        if let languages, !languages.isEmpty {
+            for lang in languages {
+                components.queryItems?.append(URLQueryItem(name: "language", value: lang))
+            }
+        }
 
         guard let url = components.url else {
             throw OpenLibraryError.invalidURL

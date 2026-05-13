@@ -26,7 +26,8 @@ struct SharedBookEntry: Codable, Sendable {
             readinglogCount: nil,
             wantToReadCount: nil,
             currentlyReadingCount: nil,
-            alreadyReadCount: nil
+            alreadyReadCount: nil,
+            language: nil
         )
     }
 }

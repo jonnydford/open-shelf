@@ -29,7 +29,8 @@ struct SeriesBookEntry: Codable, Identifiable, Hashable {
             readinglogCount: nil,
             wantToReadCount: nil,
             currentlyReadingCount: nil,
-            alreadyReadCount: nil
+            alreadyReadCount: nil,
+            language: nil
         )
     }
 }
@@ -69,7 +70,8 @@ struct CuratedBookEntry: Codable, Identifiable, Hashable {
             readinglogCount: nil,
             wantToReadCount: nil,
             currentlyReadingCount: nil,
-            alreadyReadCount: nil
+            alreadyReadCount: nil,
+            language: nil
         )
     }
 }
@@ -106,9 +108,19 @@ struct DiscoverSection: View {
     @Query private var libraryBooks: [Book]
     @Query private var dismissedBooks: [DismissedBook]
 
+    @AppStorage("preferredLanguages") private var preferredLanguagesJSON: String = "[\"eng\"]"
+
     @State private var lists: [CuratedList] = []
     @State private var seriesList: [FamousSeries] = []
     @State private var selectedRecommendation: SearchResult?
+
+    private var preferredLanguages: [String] {
+        guard let data = preferredLanguagesJSON.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+            return ["eng"]
+        }
+        return decoded
+    }
 
     private var groupedLists: [(category: CuratedListCategory, lists: [CuratedList])] {
         CuratedListCategory.allCases.compactMap { category in
@@ -183,6 +195,7 @@ struct DiscoverSection: View {
                 libraryKeys: libKeys,
                 dismissedKeys: disKeys,
                 genreCounts: genreCounts,
+                languages: preferredLanguages,
                 using: repository
             )
         }
