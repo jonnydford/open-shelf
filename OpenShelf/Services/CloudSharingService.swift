@@ -460,8 +460,8 @@ final class CloudSharingService {
         do {
             let ckContainer = try container
             let recordID = try await ckContainer.userRecordID()
-            let identity = try await ckContainer.userIdentity(forUserRecordID: recordID)
-            guard let components = identity?.nameComponents else { return nil }
+            let participant = try await ckContainer.shareParticipant(forUserRecordID: recordID)
+            guard let components = participant.userIdentity.nameComponents else { return nil }
             let formatted = PersonNameComponentsFormatter().string(from: components)
             return formatted.isEmpty ? nil : formatted
         } catch {
