@@ -115,11 +115,7 @@ struct DiscoverSection: View {
     @State private var selectedRecommendation: SearchResult?
 
     private var preferredLanguages: [String] {
-        guard let data = preferredLanguagesJSON.data(using: .utf8),
-              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
-            return ["eng"]
-        }
-        return decoded
+        LanguageCode.decode(json: preferredLanguagesJSON)
     }
 
     private var groupedLists: [(category: CuratedListCategory, lists: [CuratedList])] {
@@ -182,7 +178,7 @@ struct DiscoverSection: View {
                 }
             }
         }
-        .task {
+        .task(id: preferredLanguagesJSON) {
             let libKeys = libraryKeys
             let disKeys = dismissedKeySet
             let genreCounts = libraryGenreCounts

@@ -45,4 +45,22 @@ enum LanguageCode {
     static func displayName(for code: String) -> String {
         codeToName[code] ?? code
     }
+
+    static func decode(json: String) -> [String] {
+        guard let data = json.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([String].self, from: data),
+              !decoded.isEmpty else {
+            return ["eng"]
+        }
+        return decoded
+    }
+
+    static func encode(_ codes: [String]) -> String {
+        let safeCodes = codes.isEmpty ? ["eng"] : codes
+        guard let data = try? JSONEncoder().encode(safeCodes),
+              let json = String(data: data, encoding: .utf8) else {
+            return "[\"eng\"]"
+        }
+        return json
+    }
 }

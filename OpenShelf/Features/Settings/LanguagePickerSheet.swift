@@ -4,58 +4,71 @@ struct LanguagePickerSheet: View {
     @Binding var preferredLanguagesJSON: String
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
+    @State private var pendingCodes: Set<String> = []
 
-    private var selectedCodes: Set<String> {
-        guard let data = preferredLanguagesJSON.data(using: .utf8),
-              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
-            return ["eng"]
-        }
-        return Set(decoded)
+    private var alreadySelected: Set<String> {
+        Set(LanguageCode.decode(json: preferredLanguagesJSON))
     }
 
-    private var availableLanguages: [(code: String, name: String)] {
-        let selected = selectedCodes
-        let unselected = LanguageCode.supported.filter { !selected.contains($0.code) }
-        if searchText.isEmpty { return unselected }
+    private var availableCodes: [String] {
+        let excluded = alreadySelected
+        let unselected = LanguageCode.supported.filter { !excluded.contains($0.code) }
+        if searchText.isEmpty { return unselected.map(\.code) }
         let query = searchText.lowercased()
-        return unselected.filter { $0.name.lowercased().contains(query) }
+        return unselected.filter { $0.name.lowercased().contains(query) }.map(\.code)
     }
 
     var body: some View {
         NavigationStack {
-            List(availableLanguages, id: \.code) { language in
-                Button {
-                    addLanguage(language.code)
-                    dismiss()
-                } label: {
-                    Text(language.name)
-                        .foregroundStyle(.primary)
+            List {
+                ForEach(Array(availableCodes.enumerated()), id: \.element) { _, code in
+                    Button {
+                        togglePending(code)
+                    } label: {
+                        HStack {
+                            Text(LanguageCode.displayName(for: code))
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            if pendingCodes.contains(code) {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(Color.accentColor)
+                            }
+                        }
+                    }
+                    .accessibilityHint("Adds this language to your Discover preferences")
                 }
             }
             .searchable(text: $searchText, prompt: "Search languages")
-            .navigationTitle("Add Language")
+            .navigationTitle("Add Languages")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        commitSelection()
+                        dismiss()
+                    }
+                    .disabled(pendingCodes.isEmpty)
+                }
             }
         }
     }
 
-    private func addLanguage(_ code: String) {
-        var codes: [String]
-        if let data = preferredLanguagesJSON.data(using: .utf8),
-           let decoded = try? JSONDecoder().decode([String].self, from: data) {
-            codes = decoded
+    private func togglePending(_ code: String) {
+        if pendingCodes.contains(code) {
+            pendingCodes.remove(code)
         } else {
-            codes = ["eng"]
+            pendingCodes.insert(code)
         }
-        guard !codes.contains(code) else { return }
-        codes.append(code)
-        if let data = try? JSONEncoder().encode(codes),
-           let json = String(data: data, encoding: .utf8) {
-            preferredLanguagesJSON = json
+    }
+
+    private func commitSelection() {
+        var codes = LanguageCode.decode(json: preferredLanguagesJSON)
+        for code in pendingCodes where !codes.contains(code) {
+            codes.append(code)
         }
+        preferredLanguagesJSON = LanguageCode.encode(codes)
     }
 }
