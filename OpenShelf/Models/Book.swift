@@ -79,6 +79,12 @@ final class Book {
     @Relationship(deleteRule: .cascade, inverse: \ReadEntry.book)
     var reads: [ReadEntry]?
 
+    var latestRead: ReadEntry? {
+        (reads ?? [])
+            .sorted { ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast) }
+            .first
+    }
+
     init(
         olWorkKey: String,
         olEditionKey: String? = nil,

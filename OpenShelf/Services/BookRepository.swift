@@ -192,6 +192,7 @@ final class BookRepository {
 
     func updateRating(_ book: Book, rating: Double?) {
         book.userRating = rating
+        book.latestRead?.rating = rating
         try? modelContext.save()
         NotificationCenter.default.post(name: .publicShelfNeedsUpdate, object: nil)
     }

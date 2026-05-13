@@ -3,6 +3,7 @@ import SwiftData
 
 struct ReadHistorySection: View {
     let entries: [ReadEntry]
+    var book: Book?
     var showHeader: Bool = true
 
     @Environment(\.modelContext) private var modelContext
@@ -55,7 +56,7 @@ struct ReadHistorySection: View {
 
                     Spacer()
 
-                    if let rating = entry.rating {
+                    if !isExpanded, let rating = entry.rating {
                         compactRatingDisplay(rating)
                     }
 
@@ -141,20 +142,7 @@ struct ReadHistorySection: View {
         VStack(alignment: .leading, spacing: 6) {
             Divider()
 
-            if let rating = entry.rating {
-                HStack {
-                    Text("Rating:")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    if rating == floor(rating) {
-                        Text("\(Int(rating)) / 5")
-                            .font(.caption)
-                    } else {
-                        Text(String(format: "%.1f / 5", rating))
-                            .font(.caption)
-                    }
-                }
-            }
+            ReadEntryRatingEditor(entry: entry, book: book)
 
             if let dnfReason = entry.dnfReason, !dnfReason.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
@@ -166,8 +154,50 @@ struct ReadHistorySection: View {
                 }
             }
 
-            // Editable per-read notes
             ReadEntryNotesEditor(entry: entry)
+        }
+    }
+}
+
+// MARK: - Read Entry Rating Editor
+
+private struct ReadEntryRatingEditor: View {
+    let entry: ReadEntry
+    let book: Book?
+
+    @Environment(\.modelContext) private var modelContext
+
+    private var isLatestRead: Bool {
+        book?.latestRead?.persistentModelID == entry.persistentModelID
+    }
+
+    private var ratingBinding: Binding<Double?> {
+        Binding(
+            get: { entry.rating },
+            set: { newValue in
+                entry.rating = newValue
+                if isLatestRead {
+                    book?.userRating = newValue
+                }
+                try? modelContext.save()
+            }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Rating:")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            RatingPicker(rating: ratingBinding, mode: .compactInteractive)
+                .accessibilityLabel("Rating for this read")
+
+            if isLatestRead {
+                Text("Also shown as your book rating")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
         }
     }
 }

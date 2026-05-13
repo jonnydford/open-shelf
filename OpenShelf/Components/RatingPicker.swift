@@ -1,8 +1,9 @@
 import SwiftUI
 
 enum RatingPickerMode {
-    case interactive  // Large stars, tappable/draggable (detail view)
-    case compact      // Small stars, display-only (list row)
+    case interactive       // Large stars, tappable/draggable (detail view)
+    case compactInteractive // Medium stars, tappable only (reading history)
+    case compact           // Small stars, display-only (list row)
 }
 
 struct RatingPicker: View {
@@ -10,6 +11,7 @@ struct RatingPicker: View {
     var mode: RatingPickerMode = .interactive
 
     @ScaledMetric(relativeTo: .body) private var interactiveSize: CGFloat = 28
+    @ScaledMetric(relativeTo: .subheadline) private var compactInteractiveSize: CGFloat = 18
     @ScaledMetric(relativeTo: .caption2) private var compactSize: CGFloat = 12
 
     @State private var dragRating: Double?
@@ -17,6 +19,7 @@ struct RatingPicker: View {
     private var starSize: CGFloat {
         switch mode {
         case .interactive: interactiveSize
+        case .compactInteractive: compactInteractiveSize
         case .compact: compactSize
         }
     }
@@ -24,8 +27,13 @@ struct RatingPicker: View {
     private var starSpacing: CGFloat {
         switch mode {
         case .interactive: 6
+        case .compactInteractive: 3
         case .compact: 1
         }
+    }
+
+    private var isInteractive: Bool {
+        mode == .interactive || mode == .compactInteractive
     }
 
     private var displayRating: Double {
@@ -40,23 +48,25 @@ struct RatingPicker: View {
                     .foregroundStyle(.yellow)
             }
         }
-        .if(mode == .interactive) { view in
+        .if(isInteractive) { view in
             view
                 .contentShape(Rectangle())
-                .gesture(dragGesture)
                 .onTapGesture { location in
                     handleTap(at: location)
                 }
         }
+        .if(mode == .interactive) { view in
+            view.gesture(dragGesture)
+        }
         .accessibilityElement()
         .accessibilityLabel("Rating")
         .accessibilityValue(accessibilityValueText)
-        .if(mode == .interactive) { view in
+        .if(isInteractive) { view in
             view.accessibilityAdjustableAction { direction in
                 handleAccessibilityAdjust(direction)
             }
         }
-        .if(mode == .interactive) { view in
+        .if(isInteractive) { view in
             view.sensoryFeedback(.selection, trigger: rating)
         }
     }
