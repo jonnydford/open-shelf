@@ -67,10 +67,10 @@ enum LanguageCode {
         if let name = codeToName[code] { return name }
         if let iso1 = iso639BtoISO639_1[code],
            let name = Locale.current.localizedString(forLanguageCode: iso1) {
-            return name.capitalized
+            return name
         }
         if let name = Locale.current.localizedString(forLanguageCode: code) {
-            return name.capitalized
+            return name
         }
         return code
     }
