@@ -194,8 +194,16 @@ struct SetReadingGoalSheet: View {
         if let existingGoal {
             existingGoal.target = target
         } else {
-            let goal = ReadingGoal(year: year, target: target)
-            modelContext.insert(goal)
+            let targetYear = year
+            let descriptor = FetchDescriptor<ReadingGoal>(
+                predicate: #Predicate { $0.year == targetYear }
+            )
+            if let found = try? modelContext.fetch(descriptor).first {
+                found.target = target
+            } else {
+                let goal = ReadingGoal(year: year, target: target)
+                modelContext.insert(goal)
+            }
         }
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
