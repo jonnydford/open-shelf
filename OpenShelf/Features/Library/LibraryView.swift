@@ -602,17 +602,7 @@ struct LibraryView: View {
                         }
                         .buttonStyle(.plain)
                         .contextMenu {
-                            Button {
-                                moveBook(book, to: .read)
-                            } label: {
-                                Label("Mark as Read", systemImage: "checkmark.circle.fill")
-                            }
-
-                            Button {
-                                moveBook(book, to: .dnf)
-                            } label: {
-                                Label("Did Not Finish", systemImage: "xmark.circle")
-                            }
+                            contextMenuItems(for: book)
                         }
                     }
                 }
@@ -623,7 +613,7 @@ struct LibraryView: View {
             .scrollTargetBehavior(.viewAligned)
             .listRowInsets(EdgeInsets())
         } header: {
-            Label("Currently Reading", systemImage: "book.fill")
+            Label("Currently Reading (\(currentlyReadingBooks.count))", systemImage: "book.fill")
                 .font(.subheadline)
                 .fontWeight(.semibold)
         }
@@ -644,6 +634,12 @@ struct LibraryView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(book.title)
         .accessibilityHint("Double tap to view details")
+        .accessibilityAction(named: "Mark as Read") {
+            moveBook(book, to: .read)
+        }
+        .accessibilityAction(named: "Did Not Finish") {
+            moveBook(book, to: .dnf)
+        }
     }
 
     @ViewBuilder
