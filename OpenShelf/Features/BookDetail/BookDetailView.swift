@@ -75,9 +75,11 @@ struct BookDetailView: View {
 
     // Cover editing
     @State private var showCoverOptions = false
+    @State private var showPhotoPicker = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showCamera = false
     @State private var coverRefreshToken = UUID()
+    @State private var showCoverSavedToast = false
 
     @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 200
     @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 300
@@ -122,7 +124,7 @@ struct BookDetailView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task {
-                            if let local = repository.imageCache.localCover(for: book.olWorkKey) {
+                            if let local = await repository.imageCache.localCover(for: book.olWorkKey) {
                                 coverImageForShare = local
                             } else if let coverID = book.coverImageID {
                                 coverImageForShare = await repository.imageCache.image(for: coverID, size: .large)
@@ -176,42 +178,55 @@ struct BookDetailView: View {
         .task {
             await loadAuthorBooks()
         }
+        .toast(isPresented: $showCoverSavedToast, message: "Cover updated")
     }
 
     // MARK: - Header Section
 
     private var headerSection: some View {
         VStack(spacing: 12) {
-            CoverImage(coverID: book.coverImageID, bookKey: book.olWorkKey, size: .large, accessibilityTitle: book.title)
-                .id(coverRefreshToken)
-                .frame(width: coverWidth, height: coverHeight)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
-                .shadow(radius: 4)
-                .padding(.top, 16)
-                .onTapGesture { showCoverOptions = true }
-                .accessibilityAction(named: "Change Cover") { showCoverOptions = true }
-                .confirmationDialog("Book Cover", isPresented: $showCoverOptions) {
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Text("Choose from Photo Library")
-                    }
-                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                        Button("Take Photo") { showCamera = true }
-                    }
-                    if repository.imageCache.hasLocalCover(for: book.olWorkKey) {
-                        Button("Remove Custom Cover", role: .destructive) {
-                            repository.imageCache.removeLocalCover(for: book.olWorkKey)
-                            coverRefreshToken = UUID()
-                        }
+            ZStack(alignment: .bottomTrailing) {
+                CoverImage(coverID: book.coverImageID, bookKey: book.olWorkKey, size: .large, accessibilityTitle: book.title)
+                    .id(coverRefreshToken)
+                    .frame(width: coverWidth, height: coverHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
+                    .shadow(radius: 4)
+
+                Image(systemName: "camera.fill")
+                    .font(.caption)
+                    .foregroundStyle(.white)
+                    .padding(6)
+                    .background(.black.opacity(0.5), in: Circle())
+                    .padding(8)
+            }
+            .padding(.top, 16)
+            .onTapGesture { showCoverOptions = true }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint("Double tap to change cover image")
+            .accessibilityAction(named: "Change Cover") { showCoverOptions = true }
+            .confirmationDialog("Change Cover", isPresented: $showCoverOptions) {
+                Button("Choose from Photo Library") { showPhotoPicker = true }
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    Button("Take Photo") { showCamera = true }
+                }
+                if repository.imageCache.hasLocalCover(for: book.olWorkKey) {
+                    Button("Remove Custom Cover", role: .destructive) {
+                        repository.imageCache.removeLocalCover(for: book.olWorkKey)
+                        coverRefreshToken = UUID()
+                        showCoverSavedToast = true
                     }
                 }
-                .onChange(of: selectedPhotoItem) { _, item in
-                    Task { await loadAndSaveCover(from: item) }
+            }
+            .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
+            .onChange(of: selectedPhotoItem) { _, item in
+                Task { await loadAndSaveCover(from: item) }
+            }
+            .fullScreenCover(isPresented: $showCamera) {
+                CameraCaptureView { image in
+                    saveCoverImage(image)
                 }
-                .fullScreenCover(isPresented: $showCamera) {
-                    CameraCaptureView { image in
-                        saveCoverImage(image)
-                    }
-                }
+            }
 
             Text(book.title)
                 .font(.title2)
@@ -1498,6 +1513,7 @@ struct BookDetailView: View {
         guard let data = try? await item.loadTransferable(type: Data.self),
               let image = UIImage(data: data) else { return }
         saveCoverImage(image)
+        selectedPhotoItem = nil
     }
 
     private func saveCoverImage(_ image: UIImage) {
@@ -1505,6 +1521,7 @@ struct BookDetailView: View {
         guard let data = resized.jpegData(compressionQuality: 0.85) else { return }
         repository.imageCache.saveLocalCover(data, for: book.olWorkKey)
         coverRefreshToken = UUID()
+        showCoverSavedToast = true
     }
 
     private func resizeImage(_ image: UIImage, maxWidth: CGFloat) -> UIImage {

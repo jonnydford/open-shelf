@@ -39,24 +39,29 @@ actor CoverImageCache {
 
     // MARK: - Local (user-provided) covers
 
-    nonisolated func localCover(for bookKey: String) -> UIImage? {
-        let fileURL = Self.localCoverDirectory.appendingPathComponent("\(bookKey).jpg")
+    private static func localCoverURL(for bookKey: String) -> URL {
+        let sanitised = bookKey.replacingOccurrences(of: "/", with: "_")
+        return localCoverDirectory.appendingPathComponent("\(sanitised).jpg")
+    }
+
+    func localCover(for bookKey: String) async -> UIImage? {
+        let fileURL = Self.localCoverURL(for: bookKey)
         guard let data = try? Data(contentsOf: fileURL) else { return nil }
         return UIImage(data: data)
     }
 
     nonisolated func saveLocalCover(_ imageData: Data, for bookKey: String) {
-        let fileURL = Self.localCoverDirectory.appendingPathComponent("\(bookKey).jpg")
+        let fileURL = Self.localCoverURL(for: bookKey)
         try? imageData.write(to: fileURL, options: .atomic)
     }
 
     nonisolated func removeLocalCover(for bookKey: String) {
-        let fileURL = Self.localCoverDirectory.appendingPathComponent("\(bookKey).jpg")
+        let fileURL = Self.localCoverURL(for: bookKey)
         try? FileManager.default.removeItem(at: fileURL)
     }
 
     nonisolated func hasLocalCover(for bookKey: String) -> Bool {
-        let fileURL = Self.localCoverDirectory.appendingPathComponent("\(bookKey).jpg")
+        let fileURL = Self.localCoverURL(for: bookKey)
         return FileManager.default.fileExists(atPath: fileURL.path)
     }
 
