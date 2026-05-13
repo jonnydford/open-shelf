@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CoverImage: View {
     let coverID: Int?
+    var bookKey: String? = nil
     var size: CoverSize = .medium
     var accessibilityTitle: String? = nil
     @State private var image: UIImage?
@@ -25,6 +26,9 @@ struct CoverImage: View {
         .task(id: coverID) {
             await loadImage()
         }
+        .task(id: bookKey) {
+            await loadImage()
+        }
     }
 
     private var placeholder: some View {
@@ -38,6 +42,11 @@ struct CoverImage: View {
     }
 
     private func loadImage() async {
+        if let bookKey, let local = repository.imageCache.localCover(for: bookKey) {
+            image = local
+            return
+        }
+
         guard let coverID else { return }
 
         isLoading = true

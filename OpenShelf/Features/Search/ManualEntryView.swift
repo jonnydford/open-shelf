@@ -346,23 +346,12 @@ struct ManualEntryView: View {
 
         modelContext.insert(book)
 
-        // Save cover image to cache if provided
         if let coverImageData {
-            saveCoverLocally(data: coverImageData, bookKey: manualKey)
+            repository.imageCache.saveLocalCover(coverImageData, for: manualKey)
         }
 
         try? modelContext.save()
         dismiss()
     }
 
-    /// Save a user-provided cover image to Application Support (persistent, backed up).
-    /// API-fetched covers stay in Caches (re-fetchable), but manual covers cannot be
-    /// re-downloaded, so they must not be in a purgeable directory.
-    private func saveCoverLocally(data: Data, bookKey: String) {
-        let appSupportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let coverDir = appSupportDir.appendingPathComponent("Covers", isDirectory: true)
-        try? FileManager.default.createDirectory(at: coverDir, withIntermediateDirectories: true)
-        let fileURL = coverDir.appendingPathComponent("\(bookKey).jpg")
-        try? data.write(to: fileURL, options: .atomic)
-    }
 }

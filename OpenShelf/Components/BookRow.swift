@@ -12,7 +12,7 @@ struct BookRow: View {
     var body: some View {
         HStack(spacing: 12) {
             ZStack(alignment: .bottomTrailing) {
-                CoverImage(coverID: book.coverImageID, size: .small)
+                CoverImage(coverID: book.coverImageID, bookKey: book.olWorkKey, size: .small)
                     .frame(width: coverWidth, height: coverHeight)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
 

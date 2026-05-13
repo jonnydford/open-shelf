@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import ActivityKit
+import PhotosUI
 
 struct BookDetailView: View {
     let book: Book
@@ -72,6 +73,12 @@ struct BookDetailView: View {
     // Reading session (Live Activity)
     @State private var readingSessionActivity: Activity<ReadingSessionAttributes>?
 
+    // Cover editing
+    @State private var showCoverOptions = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var showCamera = false
+    @State private var coverRefreshToken = UUID()
+
     @ScaledMetric(relativeTo: .body) private var coverWidth: CGFloat = 200
     @ScaledMetric(relativeTo: .body) private var coverHeight: CGFloat = 300
     @ScaledMetric(relativeTo: .caption) private var thumbWidth: CGFloat = 80
@@ -115,7 +122,9 @@ struct BookDetailView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task {
-                            if let coverID = book.coverImageID {
+                            if let local = repository.imageCache.localCover(for: book.olWorkKey) {
+                                coverImageForShare = local
+                            } else if let coverID = book.coverImageID {
                                 coverImageForShare = await repository.imageCache.image(for: coverID, size: .large)
                             }
                             showShareCardSheet = true
@@ -173,11 +182,36 @@ struct BookDetailView: View {
 
     private var headerSection: some View {
         VStack(spacing: 12) {
-            CoverImage(coverID: book.coverImageID, size: .large, accessibilityTitle: book.title)
+            CoverImage(coverID: book.coverImageID, bookKey: book.olWorkKey, size: .large, accessibilityTitle: book.title)
+                .id(coverRefreshToken)
                 .frame(width: coverWidth, height: coverHeight)
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.medium))
                 .shadow(radius: 4)
                 .padding(.top, 16)
+                .onTapGesture { showCoverOptions = true }
+                .accessibilityAction(named: "Change Cover") { showCoverOptions = true }
+                .confirmationDialog("Book Cover", isPresented: $showCoverOptions) {
+                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                        Text("Choose from Photo Library")
+                    }
+                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                        Button("Take Photo") { showCamera = true }
+                    }
+                    if repository.imageCache.hasLocalCover(for: book.olWorkKey) {
+                        Button("Remove Custom Cover", role: .destructive) {
+                            repository.imageCache.removeLocalCover(for: book.olWorkKey)
+                            coverRefreshToken = UUID()
+                        }
+                    }
+                }
+                .onChange(of: selectedPhotoItem) { _, item in
+                    Task { await loadAndSaveCover(from: item) }
+                }
+                .fullScreenCover(isPresented: $showCamera) {
+                    CameraCaptureView { image in
+                        saveCoverImage(image)
+                    }
+                }
 
             Text(book.title)
                 .font(.title2)
@@ -1454,6 +1488,32 @@ struct BookDetailView: View {
             showDNFSheet = true
         default:
             repository.updateShelf(book, to: shelf)
+        }
+    }
+
+    // MARK: - Cover Editing
+
+    private func loadAndSaveCover(from item: PhotosPickerItem?) async {
+        guard let item else { return }
+        guard let data = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: data) else { return }
+        saveCoverImage(image)
+    }
+
+    private func saveCoverImage(_ image: UIImage) {
+        let resized = resizeImage(image, maxWidth: 600)
+        guard let data = resized.jpegData(compressionQuality: 0.85) else { return }
+        repository.imageCache.saveLocalCover(data, for: book.olWorkKey)
+        coverRefreshToken = UUID()
+    }
+
+    private func resizeImage(_ image: UIImage, maxWidth: CGFloat) -> UIImage {
+        let scale = maxWidth / image.size.width
+        guard scale < 1 else { return image }
+        let newSize = CGSize(width: maxWidth, height: image.size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
         }
     }
 }

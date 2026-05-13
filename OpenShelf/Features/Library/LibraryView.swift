@@ -633,7 +633,7 @@ struct LibraryView: View {
     private func currentlyReadingCover(_ book: Book) -> some View {
         VStack(spacing: 8) {
             ZStack(alignment: .bottom) {
-                CoverImage(coverID: book.coverImageID, size: .medium)
+                CoverImage(coverID: book.coverImageID, bookKey: book.olWorkKey, size: .medium)
                     .frame(width: 100, height: 150)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
                     .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
