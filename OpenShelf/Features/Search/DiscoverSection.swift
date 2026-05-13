@@ -332,6 +332,7 @@ struct DiscoverSection: View {
     }
 
     private func dismissRecommendedBook(_ book: SearchResult) {
+        guard repository.existingDismissedBook(forWorkKey: book.key) == nil else { return }
         let dismissed = DismissedBook(
             openLibraryWorkKey: book.key,
             title: book.title,
@@ -535,6 +536,11 @@ struct CuratedListDetailView: View {
     }
 
     private func dismissBook(_ book: CuratedBookEntry) {
+        let key = book.workKey
+        let descriptor = FetchDescriptor<DismissedBook>(
+            predicate: #Predicate { $0.openLibraryWorkKey == key }
+        )
+        guard (try? modelContext.fetch(descriptor))?.first == nil else { return }
         let dismissed = DismissedBook(
             openLibraryWorkKey: book.workKey,
             title: book.title,

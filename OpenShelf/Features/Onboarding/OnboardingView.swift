@@ -252,8 +252,15 @@ struct OnboardingView: View {
     }
 
     private func saveGoalAndComplete() {
-        let goal = ReadingGoal(year: currentYear, target: goalTarget)
-        modelContext.insert(goal)
+        let descriptor = FetchDescriptor<ReadingGoal>(
+            predicate: #Predicate { $0.year == currentYear }
+        )
+        if let existing = (try? modelContext.fetch(descriptor))?.first {
+            existing.target = goalTarget
+        } else {
+            let goal = ReadingGoal(year: currentYear, target: goalTarget)
+            modelContext.insert(goal)
+        }
         try? modelContext.save()
         hasCompletedOnboarding = true
     }
