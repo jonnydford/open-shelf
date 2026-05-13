@@ -266,8 +266,22 @@ struct BookDetailView: View {
     private var userSection: some View {
         VStack(spacing: 12) {
             HStack(spacing: 16) {
-                // Shelf badge
-                Label(book.shelf.displayName, systemImage: book.shelf.systemImage)
+                // Shelf badge — tappable to change shelf
+                Menu {
+                    ForEach(Shelf.allCases.filter { $0 != book.shelf }, id: \.self) { shelf in
+                        Button {
+                            handleShelfMove(to: shelf)
+                        } label: {
+                            Label(shelf.displayName, systemImage: shelf.systemImage)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Label(book.shelf.displayName, systemImage: book.shelf.systemImage)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                    }
                     .font(.caption)
                     .fontWeight(.medium)
                     .padding(.horizontal, 10)
@@ -275,7 +289,9 @@ struct BookDetailView: View {
                     .background(shelfColor.opacity(0.15))
                     .foregroundStyle(shelfColor)
                     .clipShape(Capsule())
-                    .accessibilityLabel("Shelf: \(book.shelf.displayName)")
+                }
+                .accessibilityLabel("Shelf: \(book.shelf.displayName)")
+                .accessibilityHint("Double tap to change shelf")
 
                 Spacer()
 
