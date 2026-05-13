@@ -604,7 +604,7 @@ struct LibraryView: View {
     private var currentlyReadingStrip: some View {
         Section {
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 12) {
+                LazyHStack(spacing: 16) {
                     ForEach(currentlyReadingBooks) { book in
                         NavigationLink {
                             BookDetailView(book: book)
@@ -619,7 +619,7 @@ struct LibraryView: View {
                 }
                 .scrollTargetLayout()
                 .padding(.horizontal)
-                .padding(.vertical, 4)
+                .padding(.vertical, 12)
             }
             .scrollTargetBehavior(.viewAligned)
             .listRowInsets(EdgeInsets())
@@ -631,19 +631,47 @@ struct LibraryView: View {
     }
 
     private func currentlyReadingCover(_ book: Book) -> some View {
-        VStack(spacing: 4) {
-            CoverImage(coverID: book.coverImageID, size: .small)
-                .frame(width: 60, height: 90)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+        VStack(spacing: 8) {
+            ZStack(alignment: .bottom) {
+                CoverImage(coverID: book.coverImageID, size: .medium)
+                    .frame(width: 100, height: 150)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+                    .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
 
-            Text(book.title)
-                .font(.caption2)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .frame(width: 60)
+                if let current = book.currentPage, let total = book.pageCount, total > 0 {
+                    ProgressView(value: min(Double(current), Double(total)), total: Double(total))
+                        .tint(.white)
+                        .padding(.horizontal, 2)
+                        .padding(.bottom, 4)
+                        .background(
+                            .ultraThinMaterial,
+                            in: UnevenRoundedRectangle(
+                                bottomLeadingRadius: CornerRadius.small,
+                                bottomTrailingRadius: CornerRadius.small
+                            )
+                        )
+                }
+            }
+
+            VStack(spacing: 2) {
+                Text(book.title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+
+                if !book.authorName.isEmpty {
+                    Text(book.authorName)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(width: 100)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(book.title)
+        .accessibilityLabel(book.authorName.isEmpty ? book.title : "\(book.title) by \(book.authorName)")
+        .accessibilityValue(readingProgressLabel(for: book))
         .accessibilityHint("Double tap to view details")
         .accessibilityAction(named: "Mark as Read") {
             moveBook(book, to: .read)
@@ -651,6 +679,14 @@ struct LibraryView: View {
         .accessibilityAction(named: "Did Not Finish") {
             moveBook(book, to: .dnf)
         }
+    }
+
+    private func readingProgressLabel(for book: Book) -> String {
+        guard let current = book.currentPage, let total = book.pageCount, total > 0 else {
+            return ""
+        }
+        let percent = Int(min(Double(current) / Double(total), 1.0) * 100)
+        return "Page \(current) of \(total), \(percent) percent complete"
     }
 
     @ViewBuilder
