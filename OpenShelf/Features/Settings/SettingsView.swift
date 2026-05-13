@@ -26,6 +26,9 @@ struct SettingsView: View {
     @AppStorage("streakReminderEnabled") private var streakReminderEnabled: Bool = false
     @AppStorage("preferredBookshop") private var preferredBookshop: String = BookshopPreference.bookshopOrg.rawValue
     @AppStorage("preferredAudiobook") private var preferredAudiobook: String = AudiobookPreference.libroFm.rawValue
+    @AppStorage("preferredLanguages") private var preferredLanguagesJSON: String = "[\"eng\"]"
+
+    @State private var showLanguagePicker = false
 
     private var currentYear: Int {
         Calendar.current.component(.year, from: .now)
@@ -36,6 +39,7 @@ struct SettingsView: View {
             List {
                 readingGoalSection
                 SocialSettingsSection()
+                preferredLanguagesSection
                 notificationsSection
                 privacySection
                 followedAuthorsSection
@@ -65,6 +69,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showLibraryPicker) {
                 LibraryPickerView()
+            }
+            .sheet(isPresented: $showLanguagePicker) {
+                LanguagePickerSheet(preferredLanguagesJSON: $preferredLanguagesJSON)
             }
             .toast(isPresented: $showCacheClearedToast, message: "Cache cleared")
         }
@@ -181,6 +188,54 @@ struct SettingsView: View {
             Text("When enabled, private books are included in your reading stats and Books Unwrapped. They are never included in shared content.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Preferred Languages Section
+
+    private var selectedLanguageCodes: [String] {
+        LanguageCode.decode(json: preferredLanguagesJSON)
+    }
+
+    private func removeLanguage(_ code: String) {
+        var codes = selectedLanguageCodes
+        codes.removeAll { $0 == code }
+        preferredLanguagesJSON = LanguageCode.encode(codes)
+    }
+
+    private var preferredLanguagesSection: some View {
+        Section {
+            ForEach(Array(selectedLanguageCodes.enumerated()), id: \.offset) { _, code in
+                HStack {
+                    Text(LanguageCode.displayName(for: code))
+                    Spacer()
+                    if selectedLanguageCodes.count > 1 {
+                        Button {
+                            removeLanguage(code)
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundStyle(.red)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityAction(named: "Remove") {
+                    removeLanguage(code)
+                }
+            }
+
+            if selectedLanguageCodes.count < LanguageCode.supported.count {
+                Button {
+                    showLanguagePicker = true
+                } label: {
+                    Label("Add Language", systemImage: "plus.circle")
+                }
+            }
+        } header: {
+            Text("Discover Languages")
+        } footer: {
+            Text("Discover recommendations show books in these languages. Search results are not filtered.")
         }
     }
 
