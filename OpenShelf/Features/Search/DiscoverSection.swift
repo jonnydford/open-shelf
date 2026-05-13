@@ -490,7 +490,8 @@ struct DiscoverSection: View {
     }
 
     private func seriesCard(_ series: FamousSeries) -> some View {
-        let readCount = series.books.filter { libraryKeys.contains($0.workKey) }.count
+        let readKeys = Set(libraryBooks.filter { $0.shelf == .read }.map(\.olWorkKey))
+        let readCount = series.books.filter { readKeys.contains($0.workKey) }.count
 
         return VStack(alignment: .leading, spacing: 8) {
             seriesCoverGrid(series.books)
@@ -506,9 +507,15 @@ struct DiscoverSection: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
-            Text("\(readCount) of \(series.books.count) read")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            if readCount > 0 {
+                Text("\(readCount) of \(series.books.count) read")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            } else {
+                Text("^[\(series.books.count) book](inflect: true)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
         }
         .frame(width: 160)
         .accessibilityElement(children: .ignore)
@@ -711,20 +718,21 @@ struct SeriesDetailView: View {
     var body: some View {
         List {
             ForEach(sortedBooks) { book in
-                let isOwned = libraryKeys.contains(book.workKey)
                 Group {
                     if let libraryBook = libraryBooks.first(where: { $0.olWorkKey == book.workKey }) {
                         NavigationLink {
                             BookDetailView(book: libraryBook)
                         } label: {
-                            seriesBookRow(book, isOwned: isOwned)
+                            seriesBookRow(book)
                         }
+                        .accessibilityHint("Double tap to view in library")
                     } else {
                         Button {
                             selectedBook = book
                         } label: {
-                            seriesBookRow(book, isOwned: isOwned)
+                            seriesBookRow(book)
                         }
+                        .accessibilityHint("Double tap to view details")
                     }
                 }
                 .buttonStyle(.plain)
@@ -739,7 +747,7 @@ struct SeriesDetailView: View {
         }
     }
 
-    private func seriesBookRow(_ book: SeriesBookEntry, isOwned: Bool) -> some View {
+    private func seriesBookRow(_ book: SeriesBookEntry) -> some View {
         HStack(spacing: 12) {
             Text("\(book.seriesPosition)")
                 .font(.subheadline)
