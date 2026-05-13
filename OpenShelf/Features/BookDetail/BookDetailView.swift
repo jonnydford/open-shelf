@@ -327,6 +327,10 @@ struct BookDetailView: View {
             get: { book.userRating },
             set: { newValue in
                 repository.updateRating(book, rating: newValue)
+                let latest = (book.reads ?? [])
+                    .sorted { ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast) }
+                    .first
+                latest?.rating = newValue
             }
         )
     }
@@ -840,7 +844,7 @@ struct BookDetailView: View {
         if !(book.reads ?? []).isEmpty {
             VStack(alignment: .leading, spacing: 12) {
                 DisclosureGroup(isExpanded: $isReadHistoryExpanded) {
-                    ReadHistorySection(entries: book.reads ?? [], showHeader: false)
+                    ReadHistorySection(entries: book.reads ?? [], book: book, showHeader: false)
                         .padding(.top, 8)
                 } label: {
                     Text("Reading History")

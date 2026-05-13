@@ -3,6 +3,7 @@ import SwiftData
 
 struct ReadHistorySection: View {
     let entries: [ReadEntry]
+    var book: Book?
     var showHeader: Bool = true
 
     @Environment(\.modelContext) private var modelContext
@@ -141,20 +142,7 @@ struct ReadHistorySection: View {
         VStack(alignment: .leading, spacing: 6) {
             Divider()
 
-            if let rating = entry.rating {
-                HStack {
-                    Text("Rating:")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    if rating == floor(rating) {
-                        Text("\(Int(rating)) / 5")
-                            .font(.caption)
-                    } else {
-                        Text(String(format: "%.1f / 5", rating))
-                            .font(.caption)
-                    }
-                }
-            }
+            ReadEntryRatingEditor(entry: entry, book: book, modelContext: modelContext)
 
             if let dnfReason = entry.dnfReason, !dnfReason.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
@@ -166,8 +154,47 @@ struct ReadHistorySection: View {
                 }
             }
 
-            // Editable per-read notes
             ReadEntryNotesEditor(entry: entry)
+        }
+    }
+}
+
+// MARK: - Read Entry Rating Editor
+
+private struct ReadEntryRatingEditor: View {
+    let entry: ReadEntry
+    let book: Book?
+    let modelContext: ModelContext
+
+    private var ratingBinding: Binding<Double?> {
+        Binding(
+            get: { entry.rating },
+            set: { newValue in
+                entry.rating = newValue
+                syncToBook(newValue)
+                try? modelContext.save()
+            }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Rating:")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            RatingPicker(rating: ratingBinding, mode: .interactive)
+                .accessibilityLabel("Rating for this read")
+        }
+    }
+
+    private func syncToBook(_ rating: Double?) {
+        guard let book else { return }
+        let sorted = (book.reads ?? []).sorted {
+            ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast)
+        }
+        if sorted.first?.persistentModelID == entry.persistentModelID {
+            book.userRating = rating
         }
     }
 }
