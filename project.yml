@@ -24,9 +24,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.forddevinc.OpenShelf
-        CODE_SIGN_IDENTITY: ""
-        CODE_SIGNING_REQUIRED: "NO"
-        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: GSZYHJLGV8
         CODE_SIGN_ENTITLEMENTS: OpenShelf/OpenShelf.entitlements
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
@@ -61,9 +61,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.forddevinc.OpenShelf.widget
-        CODE_SIGN_IDENTITY: ""
-        CODE_SIGNING_REQUIRED: "NO"
-        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: GSZYHJLGV8
         INFOPLIST_KEY_CFBundleDisplayName: OpenShelf Widget
         INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: com.apple.widgetkit-extension
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
@@ -83,9 +83,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.forddevinc.OpenShelf.share-extension
-        CODE_SIGN_IDENTITY: ""
-        CODE_SIGNING_REQUIRED: "NO"
-        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: GSZYHJLGV8
         CODE_SIGN_ENTITLEMENTS: OpenShelfShareExtension/OpenShelfShareExtension.entitlements
         INFOPLIST_KEY_CFBundleDisplayName: Open Shelf
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
