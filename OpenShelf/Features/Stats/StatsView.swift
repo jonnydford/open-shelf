@@ -464,9 +464,7 @@ struct StatsView: View {
                             }
                             Task {
                                 try? await Task.sleep(for: .milliseconds(400))
-                                await MainActor.run {
-                                    withAnimation { toggledDates.remove(day) }
-                                }
+                                _ = withAnimation { toggledDates.remove(day) }
                             }
                         }
                         .opacity(editable ? 1.0 : 0.6)

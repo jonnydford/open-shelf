@@ -6,7 +6,7 @@ final class PublicShelfUpdater {
     private let repository: BookRepository
     private let sharingService: CloudSharingService
     private var debounceTask: Task<Void, Never>?
-    nonisolated(unsafe) private var observation: Any?
+    @ObservationIgnored nonisolated(unsafe) private var observation: Any?
 
     init(repository: BookRepository, sharingService: CloudSharingService) {
         self.repository = repository

@@ -182,7 +182,8 @@ final class CloudSharingService {
         _ = try await ckContainer.accept(metadata)
 
         do {
-            let record = try await ckContainer.sharedCloudDatabase.record(for: metadata.rootRecordID)
+            let rootRecordID = Self._rootRecordID(from: metadata)
+            let record = try await ckContainer.sharedCloudDatabase.record(for: rootRecordID)
             if record.recordType == publicShelfRecordType {
                 if let json = record["snapshotJSON"] as? String,
                    let data = json.data(using: .utf8) {
@@ -206,7 +207,7 @@ final class CloudSharingService {
 
         await fetchSharedWithMe()
 
-        let recordName = metadata.rootRecordID.recordName
+        let recordName = Self._rootRecordID(from: metadata).recordName
         if let list = sharedWithMe.first(where: { $0.id == recordName }) {
             markBooksSeen(for: list.id, bookKeys: list.books.map(\.olWorkKey))
         }
@@ -458,30 +459,18 @@ final class CloudSharingService {
         guard Self.isAvailable else { return nil }
         do {
             let ckContainer = try container
-            let recordID = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CKRecord.ID, Error>) in
-                ckContainer.fetchUserRecordID { recordID, error in
-                    if let error {
-                        continuation.resume(throwing: error)
-                    } else if let recordID {
-                        continuation.resume(returning: recordID)
-                    }
-                }
-            }
-            let identity = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CKUserIdentity?, Error>) in
-                ckContainer.discoverUserIdentity(withUserRecordID: recordID) { identity, error in
-                    if let error {
-                        continuation.resume(throwing: error)
-                    } else {
-                        continuation.resume(returning: identity)
-                    }
-                }
-            }
+            let recordID = try await ckContainer.userRecordID()
+            let identity = try await ckContainer.userIdentity(forUserRecordID: recordID)
             guard let components = identity?.nameComponents else { return nil }
             let formatted = PersonNameComponentsFormatter().string(from: components)
             return formatted.isEmpty ? nil : formatted
         } catch {
             return nil
         }
+    }
+
+    private nonisolated static func _rootRecordID(from metadata: CKShare.Metadata) -> CKRecord.ID {
+        metadata.hierarchicalRootRecordID ?? metadata.rootRecordID
     }
 
     // MARK: - Following

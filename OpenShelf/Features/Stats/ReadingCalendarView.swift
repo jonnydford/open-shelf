@@ -153,14 +153,12 @@ private struct MonthGridView: View {
                         .onTapGesture {
                             guard editable else { return }
                             onToggle(date)
-                            withAnimation(.spring(duration: 0.3, bounce: 0.5)) {
+                            _ = withAnimation(.spring(duration: 0.3, bounce: 0.5)) {
                                 toggledDates.insert(date)
                             }
                             Task {
                                 try? await Task.sleep(for: .milliseconds(400))
-                                await MainActor.run {
-                                    withAnimation { toggledDates.remove(date) }
-                                }
+                                _ = withAnimation { toggledDates.remove(date) }
                             }
                         }
                         .opacity(editable ? 1.0 : (didRead ? 0.8 : 0.3))
