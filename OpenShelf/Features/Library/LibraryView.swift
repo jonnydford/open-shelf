@@ -549,6 +549,7 @@ struct LibraryView: View {
                     }
                     .tint(.green)
                 }
+                .sensoryFeedback(.success, trigger: book.shelf)
                 .swipeActions(edge: .leading, allowsFullSwipe: false) {
                     Button {
                         repository.removeFromQueue(book)
@@ -566,6 +567,9 @@ struct LibraryView: View {
                 }
                 .contextMenu {
                     contextMenuItems(for: book)
+                }
+                .accessibilityAction(named: "Start Reading") {
+                    moveBook(book, to: .reading)
                 }
                 .accessibilityAction(named: "Remove from Up Next") {
                     repository.removeFromQueue(book)
@@ -645,9 +649,10 @@ struct LibraryView: View {
         } label: {
             BookRow(book: book)
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+        .swipeActions(edge: .trailing, allowsFullSwipe: book.shelf == .wantToRead) {
             primarySwipeAction(for: book)
         }
+        .sensoryFeedback(.success, trigger: book.shelf)
         .swipeActions(edge: .leading, allowsFullSwipe: false) {
             if book.shelf == .wantToRead || book.shelf == .reading {
                 Button(role: .destructive) {
@@ -705,27 +710,6 @@ struct LibraryView: View {
             } label: {
                 Label("Delete", systemImage: "trash")
             }
-        }
-    }
-
-    @ViewBuilder
-    private func shelfSwipeActions(for book: Book) -> some View {
-        ForEach(Shelf.allCases.filter { $0 != book.shelf }, id: \.self) { shelf in
-            Button {
-                moveBook(book, to: shelf)
-            } label: {
-                Label(shelf.displayName, systemImage: shelf.systemImage)
-            }
-            .tint(shelfTint(shelf))
-        }
-    }
-
-    private func shelfTint(_ shelf: Shelf) -> Color {
-        switch shelf {
-        case .wantToRead: .blue
-        case .reading: .green
-        case .read: .gray
-        case .dnf: .orange
         }
     }
 
