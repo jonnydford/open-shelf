@@ -22,6 +22,7 @@
 		1702F77473857BF9ED814861 /* AppBookEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74378F7678990FE526D9C63 /* AppBookEntity.swift */; };
 		178DA83BFD9DBDC11B19ECCB /* TipJarStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233EA965FFC6906A47C0B8B4 /* TipJarStore.swift */; };
 		1979FCC8356BE9981CCC8E36 /* ReadingGoalWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68ED87EBB97E18EBB69525BC /* ReadingGoalWidget.swift */; };
+		19EE39FC63B16D9D392874CD /* FamousSeries.json in Resources */ = {isa = PBXBuildFile; fileRef = CDB27976850F3DCC4C217219 /* FamousSeries.json */; };
 		1A5C0CA643C5A88E4AB1A9EE /* CurrentlyReadingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E2583EF322A1B392709B58 /* CurrentlyReadingWidget.swift */; };
 		1D4F9E6ECF1BE0FB5E0D8E59 /* FollowedShelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = 714E282E713591F74050FBC6 /* FollowedShelf.swift */; };
 		1FD86C954EA4BB4F935B4B6F /* GetReadingStatsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969CDF9CA52A417626889714 /* GetReadingStatsIntent.swift */; };
@@ -306,6 +307,7 @@
 		CC439435446D019B8395BD0B /* ShareCardSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardSheet.swift; sourceTree = "<group>"; };
 		CC7E66D831AE455D205850AD /* CelebrationOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CelebrationOverlay.swift; sourceTree = "<group>"; };
 		CD546B4D4B18C9C159C3B933 /* ShareExtensionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareExtensionView.swift; sourceTree = "<group>"; };
+		CDB27976850F3DCC4C217219 /* FamousSeries.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = FamousSeries.json; sourceTree = "<group>"; };
 		D85962E7C8FDF59A5EA1AFFA /* OpenShelfWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = OpenShelfWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE039A8047E88C98BF02DBCF /* RateBookIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateBookIntent.swift; sourceTree = "<group>"; };
 		DEE810B2DB084355FF0A33AA /* CoverImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverImage.swift; sourceTree = "<group>"; };
@@ -462,6 +464,7 @@
 			isa = PBXGroup;
 			children = (
 				8A89D7E0CC34150B86389E6E /* CuratedLists.json */,
+				CDB27976850F3DCC4C217219 /* FamousSeries.json */,
 				7E6FECAD15892722C2668F44 /* ReadingPrompts.json */,
 				7A10E3B7B158390FE1749FE6 /* UKLibraryAuthorities.json */,
 			);
@@ -738,6 +741,7 @@
 			files = (
 				FF0F13753C408E69E9CB7D80 /* Assets.xcassets in Resources */,
 				8C18F93297229F1306E1B6DE /* CuratedLists.json in Resources */,
+				19EE39FC63B16D9D392874CD /* FamousSeries.json in Resources */,
 				D1B27BFC3C45A19DE2278AD1 /* ReadingPrompts.json in Resources */,
 				9A7650A47E91AE3B472839C0 /* UKLibraryAuthorities.json in Resources */,
 			);

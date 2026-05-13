@@ -1,6 +1,46 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Series Models
+
+struct SeriesBookEntry: Codable, Identifiable, Hashable {
+    let workKey: String
+    let title: String
+    let author: String
+    let coverID: Int?
+    let seriesPosition: Int
+
+    var id: String { workKey }
+
+    var asSearchResult: SearchResult {
+        SearchResult(
+            key: workKey,
+            title: title,
+            authorName: [author],
+            firstPublishYear: nil,
+            numberOfPagesMedian: nil,
+            coverI: coverID,
+            editionCount: nil,
+            isbn: nil,
+            subject: nil,
+            idGoodreads: nil,
+            ratingsAverage: nil,
+            ratingsCount: nil,
+            readinglogCount: nil,
+            wantToReadCount: nil,
+            currentlyReadingCount: nil,
+            alreadyReadCount: nil
+        )
+    }
+}
+
+struct FamousSeries: Codable, Identifiable {
+    let id: String
+    let name: String
+    let author: String
+    let books: [SeriesBookEntry]
+}
+
 // MARK: - Curated List Models
 
 struct CuratedBookEntry: Codable, Identifiable, Hashable {
@@ -67,6 +107,7 @@ struct DiscoverSection: View {
     @Query private var dismissedBooks: [DismissedBook]
 
     @State private var lists: [CuratedList] = []
+    @State private var seriesList: [FamousSeries] = []
     @State private var selectedRecommendation: SearchResult?
 
     private var groupedLists: [(category: CuratedListCategory, lists: [CuratedList])] {
@@ -102,6 +143,8 @@ struct DiscoverSection: View {
             recommendationsSection
 
             popularSection
+
+            famousSeriesSection
 
             ForEach(groupedLists, id: \.category) { group in
                 VStack(alignment: .leading, spacing: 12) {
@@ -396,6 +439,7 @@ struct DiscoverSection: View {
 
     init() {
         _lists = State(initialValue: Self.loadLists())
+        _seriesList = State(initialValue: Self.loadSeries())
     }
 
     private static func loadLists() -> [CuratedList] {
@@ -405,6 +449,109 @@ struct DiscoverSection: View {
             return []
         }
         return lists
+    }
+
+    private static func loadSeries() -> [FamousSeries] {
+        guard let url = Bundle.main.url(forResource: "FamousSeries", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let series = try? JSONDecoder().decode([FamousSeries].self, from: data) else {
+            return []
+        }
+        return series
+    }
+
+    // MARK: - Famous Series
+
+    @ViewBuilder
+    private var famousSeriesSection: some View {
+        if !seriesList.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Famous Series")
+                    .font(.headline)
+                    .padding(.horizontal)
+                    .accessibilityAddTraits(.isHeader)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 12) {
+                        ForEach(seriesList) { series in
+                            NavigationLink {
+                                SeriesDetailView(series: series)
+                            } label: {
+                                seriesCard(series)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .scrollTargetLayout()
+                    .padding(.horizontal)
+                }
+                .scrollTargetBehavior(.viewAligned)
+            }
+        }
+    }
+
+    private func seriesCard(_ series: FamousSeries) -> some View {
+        let readKeys = Set(libraryBooks.filter { $0.shelf == .read }.map(\.olWorkKey))
+        let readCount = series.books.filter { readKeys.contains($0.workKey) }.count
+
+        return VStack(alignment: .leading, spacing: 8) {
+            seriesCoverGrid(series.books)
+
+            Text(series.name)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(series.author)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            if readCount > 0 {
+                Text("\(readCount) of \(series.books.count) read")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            } else {
+                Text("^[\(series.books.count) book](inflect: true)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .frame(width: 160)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(series.name) by \(series.author), \(readCount) of \(series.books.count) read")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Double tap to view series")
+    }
+
+    private func seriesCoverGrid(_ books: [SeriesBookEntry]) -> some View {
+        let covers = Array(books.prefix(4))
+        return VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                seriesCoverCell(covers.indices.contains(0) ? covers[0] : nil)
+                seriesCoverCell(covers.indices.contains(1) ? covers[1] : nil)
+            }
+            HStack(spacing: 4) {
+                seriesCoverCell(covers.indices.contains(2) ? covers[2] : nil)
+                seriesCoverCell(covers.indices.contains(3) ? covers[3] : nil)
+            }
+        }
+        .padding(2)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CornerRadius.medium))
+    }
+
+    @ViewBuilder
+    private func seriesCoverCell(_ book: SeriesBookEntry?) -> some View {
+        if let book {
+            CoverImage(coverID: book.coverID, size: .medium)
+                .frame(width: 76, height: 114)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xSmall))
+        } else {
+            RoundedRectangle(cornerRadius: CornerRadius.xSmall)
+                .fill(.quaternary)
+                .frame(width: 76, height: 114)
+        }
     }
 }
 
@@ -550,6 +697,95 @@ struct CuratedListDetailView: View {
             modelContext.insert(dismissed)
             try? modelContext.save()
         }
+    }
+}
+
+// MARK: - Series Detail View
+
+struct SeriesDetailView: View {
+    let series: FamousSeries
+
+    @Query private var libraryBooks: [Book]
+
+    @State private var selectedBook: SeriesBookEntry?
+
+    private var libraryKeys: Set<String> {
+        Set(libraryBooks.map(\.olWorkKey))
+    }
+
+    private var nonPrivateLibraryKeys: Set<String> {
+        Set(libraryBooks.filter { !$0.isPrivate }.map(\.olWorkKey))
+    }
+
+    private var sortedBooks: [SeriesBookEntry] {
+        series.books.sorted { $0.seriesPosition < $1.seriesPosition }
+    }
+
+    var body: some View {
+        List {
+            ForEach(sortedBooks) { book in
+                Group {
+                    if let libraryBook = libraryBooks.first(where: { $0.olWorkKey == book.workKey }) {
+                        NavigationLink {
+                            BookDetailView(book: libraryBook)
+                        } label: {
+                            seriesBookRow(book)
+                        }
+                        .accessibilityHint("Double tap to view in library")
+                    } else {
+                        Button {
+                            selectedBook = book
+                        } label: {
+                            seriesBookRow(book)
+                        }
+                        .accessibilityHint("Double tap to view details")
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .navigationTitle(series.name)
+        .sheet(item: $selectedBook) { book in
+            BookDetailSheet(
+                searchResult: book.asSearchResult,
+                onAdded: {}
+            )
+        }
+    }
+
+    private func seriesBookRow(_ book: SeriesBookEntry) -> some View {
+        HStack(spacing: 12) {
+            Text("\(book.seriesPosition)")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+
+            CoverImage(coverID: book.coverID, size: .small)
+                .frame(width: 40, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(book.title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .lineLimit(2)
+
+                Text(book.author)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            if nonPrivateLibraryKeys.contains(book.workKey) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.white, .green)
+                    .accessibilityLabel("In library")
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

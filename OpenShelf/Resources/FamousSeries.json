@@ -1,0 +1,202 @@
+[
+  {
+    "id": "lord-of-the-rings",
+    "name": "The Lord of the Rings",
+    "author": "J.R.R. Tolkien",
+    "books": [
+      { "workKey": "/works/OL27513W", "title": "The Fellowship of the Ring", "author": "J.R.R. Tolkien", "coverID": 14627060, "seriesPosition": 1 },
+      { "workKey": "/works/OL27479W", "title": "The Two Towers", "author": "J.R.R. Tolkien", "coverID": 14627564, "seriesPosition": 2 },
+      { "workKey": "/works/OL27455W", "title": "The Return of the King", "author": "J.R.R. Tolkien", "coverID": 14627062, "seriesPosition": 3 }
+    ]
+  },
+  {
+    "id": "harry-potter",
+    "name": "Harry Potter",
+    "author": "J.K. Rowling",
+    "books": [
+      { "workKey": "/works/OL82563W", "title": "Harry Potter and the Philosopher's Stone", "author": "J.K. Rowling", "coverID": 15155833, "seriesPosition": 1 },
+      { "workKey": "/works/OL82537W", "title": "Harry Potter and the Chamber of Secrets", "author": "J.K. Rowling", "coverID": 15158664, "seriesPosition": 2 },
+      { "workKey": "/works/OL82536W", "title": "Harry Potter and the Prisoner of Azkaban", "author": "J.K. Rowling", "coverID": 10580435, "seriesPosition": 3 },
+      { "workKey": "/works/OL82560W", "title": "Harry Potter and the Goblet of Fire", "author": "J.K. Rowling", "coverID": 12059372, "seriesPosition": 4 },
+      { "workKey": "/works/OL82548W", "title": "Harry Potter and the Order of the Phoenix", "author": "J.K. Rowling", "coverID": 15158666, "seriesPosition": 5 },
+      { "workKey": "/works/OL82565W", "title": "Harry Potter and the Half-Blood Prince", "author": "J.K. Rowling", "coverID": 10716273, "seriesPosition": 6 },
+      { "workKey": "/works/OL82586W", "title": "Harry Potter and the Deathly Hallows", "author": "J.K. Rowling", "coverID": 15158660, "seriesPosition": 7 }
+    ]
+  },
+  {
+    "id": "a-song-of-ice-and-fire",
+    "name": "A Song of Ice and Fire",
+    "author": "George R.R. Martin",
+    "books": [
+      { "workKey": "/works/OL257943W", "title": "A Game of Thrones", "author": "George R.R. Martin", "coverID": 9269962, "seriesPosition": 1 },
+      { "workKey": "/works/OL257939W", "title": "A Clash of Kings", "author": "George R.R. Martin", "coverID": 8231751, "seriesPosition": 2 },
+      { "workKey": "/works/OL257914W", "title": "A Storm of Swords", "author": "George R.R. Martin", "coverID": 15124196, "seriesPosition": 3 },
+      { "workKey": "/works/OL257948W", "title": "A Feast for Crows", "author": "George R.R. Martin", "coverID": 6501256, "seriesPosition": 4 },
+      { "workKey": "/works/OL1955906W", "title": "A Dance with Dragons", "author": "George R.R. Martin", "coverID": 11298743, "seriesPosition": 5 }
+    ]
+  },
+  {
+    "id": "dune",
+    "name": "Dune",
+    "author": "Frank Herbert",
+    "books": [
+      { "workKey": "/works/OL893415W", "title": "Dune", "author": "Frank Herbert", "coverID": 11481354, "seriesPosition": 1 },
+      { "workKey": "/works/OL893526W", "title": "Dune Messiah", "author": "Frank Herbert", "coverID": 2421405, "seriesPosition": 2 },
+      { "workKey": "/works/OL893516W", "title": "Children of Dune", "author": "Frank Herbert", "coverID": 6976407, "seriesPosition": 3 },
+      { "workKey": "/works/OL893515W", "title": "God Emperor of Dune", "author": "Frank Herbert", "coverID": 6711531, "seriesPosition": 4 },
+      { "workKey": "/works/OL893502W", "title": "Heretics of Dune", "author": "Frank Herbert", "coverID": 284530, "seriesPosition": 5 },
+      { "workKey": "/works/OL893508W", "title": "Chapterhouse: Dune", "author": "Frank Herbert", "coverID": 5536140, "seriesPosition": 6 }
+    ]
+  },
+  {
+    "id": "hitchhikers-guide",
+    "name": "The Hitchhiker's Guide to the Galaxy",
+    "author": "Douglas Adams",
+    "books": [
+      { "workKey": "/works/OL2163649W", "title": "The Hitchhiker's Guide to the Galaxy", "author": "Douglas Adams", "coverID": 12986869, "seriesPosition": 1 },
+      { "workKey": "/works/OL2163655W", "title": "The Restaurant at the End of the Universe", "author": "Douglas Adams", "coverID": 12714921, "seriesPosition": 2 },
+      { "workKey": "/works/OL2163623W", "title": "Life, the Universe and Everything", "author": "Douglas Adams", "coverID": 8569244, "seriesPosition": 3 },
+      { "workKey": "/works/OL2163719W", "title": "So Long, and Thanks for All the Fish", "author": "Douglas Adams", "coverID": 11465415, "seriesPosition": 4 },
+      { "workKey": "/works/OL2163638W", "title": "Mostly Harmless", "author": "Douglas Adams", "coverID": 11465755, "seriesPosition": 5 }
+    ]
+  },
+  {
+    "id": "discworld",
+    "name": "Discworld",
+    "author": "Terry Pratchett",
+    "books": [
+      { "workKey": "/works/OL453657W", "title": "The Colour of Magic", "author": "Terry Pratchett", "coverID": 14647238, "seriesPosition": 1 },
+      { "workKey": "/works/OL453680W", "title": "The Light Fantastic", "author": "Terry Pratchett", "coverID": 6531015, "seriesPosition": 2 },
+      { "workKey": "/works/OL453670W", "title": "Equal Rites", "author": "Terry Pratchett", "coverID": 6925774, "seriesPosition": 3 },
+      { "workKey": "/works/OL453658W", "title": "Mort", "author": "Terry Pratchett", "coverID": 14648805, "seriesPosition": 4 },
+      { "workKey": "/works/OL453659W", "title": "Sourcery", "author": "Terry Pratchett", "coverID": 6927508, "seriesPosition": 5 },
+      { "workKey": "/works/OL453660W", "title": "Wyrd Sisters", "author": "Terry Pratchett", "coverID": 14648051, "seriesPosition": 6 },
+      { "workKey": "/works/OL453661W", "title": "Pyramids", "author": "Terry Pratchett", "coverID": 14646151, "seriesPosition": 7 },
+      { "workKey": "/works/OL453735W", "title": "Guards! Guards!", "author": "Terry Pratchett", "coverID": 13095550, "seriesPosition": 8 },
+      { "workKey": "/works/OL453718W", "title": "Eric", "author": "Terry Pratchett", "coverID": 14648940, "seriesPosition": 9 },
+      { "workKey": "/works/OL453749W", "title": "Moving Pictures", "author": "Terry Pratchett", "coverID": 14647546, "seriesPosition": 10 }
+    ]
+  },
+  {
+    "id": "chronicles-of-narnia",
+    "name": "The Chronicles of Narnia",
+    "author": "C.S. Lewis",
+    "books": [
+      { "workKey": "/works/OL71037W", "title": "The Lion, the Witch and the Wardrobe", "author": "C.S. Lewis", "coverID": 8441376, "seriesPosition": 1 },
+      { "workKey": "/works/OL71069W", "title": "Prince Caspian", "author": "C.S. Lewis", "coverID": 45897, "seriesPosition": 2 },
+      { "workKey": "/works/OL71132W", "title": "The Voyage of the Dawn Treader", "author": "C.S. Lewis", "coverID": 9184719, "seriesPosition": 3 },
+      { "workKey": "/works/OL71078W", "title": "The Silver Chair", "author": "C.S. Lewis", "coverID": 6950992, "seriesPosition": 4 },
+      { "workKey": "/works/OL71058W", "title": "The Horse and His Boy", "author": "C.S. Lewis", "coverID": 9184792, "seriesPosition": 5 },
+      { "workKey": "/works/OL71042W", "title": "The Magician's Nephew", "author": "C.S. Lewis", "coverID": 1072931, "seriesPosition": 6 },
+      { "workKey": "/works/OL71124W", "title": "The Last Battle", "author": "C.S. Lewis", "coverID": 6529226, "seriesPosition": 7 }
+    ]
+  },
+  {
+    "id": "his-dark-materials",
+    "name": "His Dark Materials",
+    "author": "Philip Pullman",
+    "books": [
+      { "workKey": "/works/OL28988W", "title": "Northern Lights", "author": "Philip Pullman", "coverID": 8747028, "seriesPosition": 1 },
+      { "workKey": "/works/OL28993W", "title": "The Subtle Knife", "author": "Philip Pullman", "coverID": 12614549, "seriesPosition": 2 },
+      { "workKey": "/works/OL28996W", "title": "The Amber Spyglass", "author": "Philip Pullman", "coverID": 12613246, "seriesPosition": 3 }
+    ]
+  },
+  {
+    "id": "foundation",
+    "name": "Foundation",
+    "author": "Isaac Asimov",
+    "books": [
+      { "workKey": "/works/OL46125W", "title": "Foundation", "author": "Isaac Asimov", "coverID": 14612610, "seriesPosition": 1 },
+      { "workKey": "/works/OL46224W", "title": "Foundation and Empire", "author": "Isaac Asimov", "coverID": 9300695, "seriesPosition": 2 },
+      { "workKey": "/works/OL46309W", "title": "Second Foundation", "author": "Isaac Asimov", "coverID": 9261324, "seriesPosition": 3 },
+      { "workKey": "/works/OL46302W", "title": "Foundation's Edge", "author": "Isaac Asimov", "coverID": 6700720, "seriesPosition": 4 },
+      { "workKey": "/works/OL46347W", "title": "Foundation and Earth", "author": "Isaac Asimov", "coverID": 9304027, "seriesPosition": 5 },
+      { "workKey": "/works/OL46172W", "title": "Prelude to Foundation", "author": "Isaac Asimov", "coverID": 12816973, "seriesPosition": 6 },
+      { "workKey": "/works/OL46299W", "title": "Forward the Foundation", "author": "Isaac Asimov", "coverID": 9300894, "seriesPosition": 7 }
+    ]
+  },
+  {
+    "id": "hunger-games",
+    "name": "The Hunger Games",
+    "author": "Suzanne Collins",
+    "books": [
+      { "workKey": "/works/OL5735363W", "title": "The Hunger Games", "author": "Suzanne Collins", "coverID": 12646537, "seriesPosition": 1 },
+      { "workKey": "/works/OL5735360W", "title": "Catching Fire", "author": "Suzanne Collins", "coverID": 12646539, "seriesPosition": 2 },
+      { "workKey": "/works/OL14908941W", "title": "Mockingjay", "author": "Suzanne Collins", "coverID": 12646459, "seriesPosition": 3 },
+      { "workKey": "/works/OL20716197W", "title": "The Ballad of Songbirds and Snakes", "author": "Suzanne Collins", "coverID": 14421833, "seriesPosition": 4 }
+    ]
+  },
+  {
+    "id": "percy-jackson",
+    "name": "Percy Jackson and the Olympians",
+    "author": "Rick Riordan",
+    "books": [
+      { "workKey": "/works/OL492658W", "title": "The Lightning Thief", "author": "Rick Riordan", "coverID": 7239831, "seriesPosition": 1 },
+      { "workKey": "/works/OL492646W", "title": "The Sea of Monsters", "author": "Rick Riordan", "coverID": 108909, "seriesPosition": 2 },
+      { "workKey": "/works/OL492647W", "title": "The Titan's Curse", "author": "Rick Riordan", "coverID": 14601475, "seriesPosition": 3 },
+      { "workKey": "/works/OL492640W", "title": "The Battle of the Labyrinth", "author": "Rick Riordan", "coverID": 6274739, "seriesPosition": 4 },
+      { "workKey": "/works/OL492642W", "title": "The Last Olympian", "author": "Rick Riordan", "coverID": 6624107, "seriesPosition": 5 }
+    ]
+  },
+  {
+    "id": "mistborn",
+    "name": "Mistborn",
+    "author": "Brandon Sanderson",
+    "books": [
+      { "workKey": "/works/OL5738148W", "title": "Mistborn: The Final Empire", "author": "Brandon Sanderson", "coverID": 14658160, "seriesPosition": 1 },
+      { "workKey": "/works/OL5738150W", "title": "The Well of Ascension", "author": "Brandon Sanderson", "coverID": 14658341, "seriesPosition": 2 },
+      { "workKey": "/works/OL5738154W", "title": "The Hero of Ages", "author": "Brandon Sanderson", "coverID": 14658094, "seriesPosition": 3 },
+      { "workKey": "/works/OL16597059W", "title": "The Alloy of Law", "author": "Brandon Sanderson", "coverID": 14658081, "seriesPosition": 4 },
+      { "workKey": "/works/OL17349393W", "title": "Shadows of Self", "author": "Brandon Sanderson", "coverID": 14658321, "seriesPosition": 5 },
+      { "workKey": "/works/OL17349394W", "title": "The Bands of Mourning", "author": "Brandon Sanderson", "coverID": 14658335, "seriesPosition": 6 }
+    ]
+  },
+  {
+    "id": "wheel-of-time",
+    "name": "The Wheel of Time",
+    "author": "Robert Jordan",
+    "books": [
+      { "workKey": "/works/OL7924103W", "title": "The Eye of the World", "author": "Robert Jordan", "coverID": 980232, "seriesPosition": 1 },
+      { "workKey": "/works/OL7924135W", "title": "The Great Hunt", "author": "Robert Jordan", "coverID": 182352, "seriesPosition": 2 },
+      { "workKey": "/works/OL7924143W", "title": "The Dragon Reborn", "author": "Robert Jordan", "coverID": 603239, "seriesPosition": 3 },
+      { "workKey": "/works/OL7924199W", "title": "The Shadow Rising", "author": "Robert Jordan", "coverID": 603240, "seriesPosition": 4 },
+      { "workKey": "/works/OL7924172W", "title": "The Fires of Heaven", "author": "Robert Jordan", "coverID": 603821, "seriesPosition": 5 },
+      { "workKey": "/works/OL7924208W", "title": "Lord of Chaos", "author": "Robert Jordan", "coverID": 182398, "seriesPosition": 6 },
+      { "workKey": "/works/OL7924161W", "title": "A Crown of Swords", "author": "Robert Jordan", "coverID": 10293497, "seriesPosition": 7 },
+      { "workKey": "/works/OL1946687W", "title": "The Path of Daggers", "author": "Robert Jordan", "coverID": 182462, "seriesPosition": 8 },
+      { "workKey": "/works/OL7924207W", "title": "Winter's Heart", "author": "Robert Jordan", "coverID": 5021142, "seriesPosition": 9 },
+      { "workKey": "/works/OL7924099W", "title": "Crossroads of Twilight", "author": "Robert Jordan", "coverID": 604208, "seriesPosition": 10 },
+      { "workKey": "/works/OL7924194W", "title": "Knife of Dreams", "author": "Robert Jordan", "coverID": 871816, "seriesPosition": 11 },
+      { "workKey": "/works/OL1946681W", "title": "The Gathering Storm", "author": "Robert Jordan", "coverID": 14658062, "seriesPosition": 12 },
+      { "workKey": "/works/OL15414340W", "title": "Towers of Midnight", "author": "Robert Jordan", "coverID": 14658162, "seriesPosition": 13 },
+      { "workKey": "/works/OL16799133W", "title": "A Memory of Light", "author": "Robert Jordan", "coverID": 14658328, "seriesPosition": 14 }
+    ]
+  },
+  {
+    "id": "a-court-of-thorns-and-roses",
+    "name": "A Court of Thorns and Roses",
+    "author": "Sarah J. Maas",
+    "books": [
+      { "workKey": "/works/OL17352669W", "title": "A Court of Thorns and Roses", "author": "Sarah J. Maas", "coverID": 8738585, "seriesPosition": 1 },
+      { "workKey": "/works/OL24611849W", "title": "A Court of Mist and Fury", "author": "Sarah J. Maas", "coverID": 11279902, "seriesPosition": 2 },
+      { "workKey": "/works/OL17823218W", "title": "A Court of Wings and Ruin", "author": "Sarah J. Maas", "coverID": 8506724, "seriesPosition": 3 },
+      { "workKey": "/works/OL19655889W", "title": "A Court of Frost and Starlight", "author": "Sarah J. Maas", "coverID": 8569939, "seriesPosition": 4 },
+      { "workKey": "/works/OL21703979W", "title": "A Court of Silver Flames", "author": "Sarah J. Maas", "coverID": 10643508, "seriesPosition": 5 }
+    ]
+  },
+  {
+    "id": "bridgerton",
+    "name": "Bridgerton",
+    "author": "Julia Quinn",
+    "books": [
+      { "workKey": "/works/OL554620W", "title": "The Duke and I", "author": "Julia Quinn", "coverID": 6492549, "seriesPosition": 1 },
+      { "workKey": "/works/OL8464993W", "title": "The Viscount Who Loved Me", "author": "Julia Quinn", "coverID": 492893, "seriesPosition": 2 },
+      { "workKey": "/works/OL554608W", "title": "An Offer From a Gentleman", "author": "Julia Quinn", "coverID": 237294, "seriesPosition": 3 },
+      { "workKey": "/works/OL554615W", "title": "Romancing Mister Bridgerton", "author": "Julia Quinn", "coverID": 237493, "seriesPosition": 4 },
+      { "workKey": "/works/OL554603W", "title": "To Sir Phillip, With Love", "author": "Julia Quinn", "coverID": 237494, "seriesPosition": 5 },
+      { "workKey": "/works/OL554621W", "title": "When He Was Wicked", "author": "Julia Quinn", "coverID": 27787, "seriesPosition": 6 },
+      { "workKey": "/works/OL554612W", "title": "It's in His Kiss", "author": "Julia Quinn", "coverID": 1473370, "seriesPosition": 7 },
+      { "workKey": "/works/OL554614W", "title": "On the Way to the Wedding", "author": "Julia Quinn", "coverID": 27790, "seriesPosition": 8 }
+    ]
+  }
+]
