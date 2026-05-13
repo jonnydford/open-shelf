@@ -285,13 +285,13 @@ struct BookDetailView: View {
                     .font(.caption)
                     .fontWeight(.medium)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.vertical, 8)
                     .background(shelfColor.opacity(0.15))
                     .foregroundStyle(shelfColor)
                     .clipShape(Capsule())
                 }
                 .accessibilityLabel("Shelf: \(book.shelf.displayName)")
-                .accessibilityHint("Double tap to change shelf")
+                .accessibilityHint("Tap to change shelf")
 
                 Spacer()
 
