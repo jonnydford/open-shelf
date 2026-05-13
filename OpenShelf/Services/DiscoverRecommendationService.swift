@@ -15,6 +15,7 @@ final class DiscoverRecommendationService {
     private(set) var isLoading = false
 
     private var lastRefresh: Date?
+    private var lastLanguages: [String]?
     private static let cooldown: TimeInterval = 5 * 60
 
     func refreshIfNeeded(
@@ -23,9 +24,11 @@ final class DiscoverRecommendationService {
         languages: [String],
         using repository: BookRepository
     ) async {
-        if let last = lastRefresh, Date.now.timeIntervalSince(last) < Self.cooldown {
+        let languagesChanged = lastLanguages != languages
+        if let last = lastRefresh, Date.now.timeIntervalSince(last) < Self.cooldown, !languagesChanged {
             return
         }
+        lastLanguages = languages
 
         let readBooks = library.filter { $0.shelf == .read }
         guard readBooks.count >= 3 else {
