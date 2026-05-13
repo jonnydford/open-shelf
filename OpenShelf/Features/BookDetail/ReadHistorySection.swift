@@ -56,7 +56,7 @@ struct ReadHistorySection: View {
 
                     Spacer()
 
-                    if let rating = entry.rating {
+                    if !isExpanded, let rating = entry.rating {
                         compactRatingDisplay(rating)
                     }
 
@@ -142,7 +142,7 @@ struct ReadHistorySection: View {
         VStack(alignment: .leading, spacing: 6) {
             Divider()
 
-            ReadEntryRatingEditor(entry: entry, book: book, modelContext: modelContext)
+            ReadEntryRatingEditor(entry: entry, book: book)
 
             if let dnfReason = entry.dnfReason, !dnfReason.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
@@ -164,14 +164,21 @@ struct ReadHistorySection: View {
 private struct ReadEntryRatingEditor: View {
     let entry: ReadEntry
     let book: Book?
-    let modelContext: ModelContext
+
+    @Environment(\.modelContext) private var modelContext
+
+    private var isLatestRead: Bool {
+        book?.latestRead?.persistentModelID == entry.persistentModelID
+    }
 
     private var ratingBinding: Binding<Double?> {
         Binding(
             get: { entry.rating },
             set: { newValue in
                 entry.rating = newValue
-                syncToBook(newValue)
+                if isLatestRead {
+                    book?.userRating = newValue
+                }
                 try? modelContext.save()
             }
         )
@@ -183,18 +190,14 @@ private struct ReadEntryRatingEditor: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            RatingPicker(rating: ratingBinding, mode: .interactive)
+            RatingPicker(rating: ratingBinding, mode: .compactInteractive)
                 .accessibilityLabel("Rating for this read")
-        }
-    }
 
-    private func syncToBook(_ rating: Double?) {
-        guard let book else { return }
-        let sorted = (book.reads ?? []).sorted {
-            ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast)
-        }
-        if sorted.first?.persistentModelID == entry.persistentModelID {
-            book.userRating = rating
+            if isLatestRead {
+                Text("Also shown as your book rating")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
         }
     }
 }

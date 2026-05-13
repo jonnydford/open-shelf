@@ -327,10 +327,6 @@ struct BookDetailView: View {
             get: { book.userRating },
             set: { newValue in
                 repository.updateRating(book, rating: newValue)
-                let latest = (book.reads ?? [])
-                    .sorted { ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast) }
-                    .first
-                latest?.rating = newValue
             }
         )
     }
@@ -1329,14 +1325,9 @@ struct BookDetailView: View {
     // MARK: - Actions
 
     private func startReread() {
-        // Snapshot the current rating onto the most recent ReadEntry if it has none
-        if let currentRating = book.userRating {
-            let latestEntry = (book.reads ?? [])
-                .sorted { ($0.finishDate ?? $0.startDate ?? .distantPast) > ($1.finishDate ?? $1.startDate ?? .distantPast) }
-                .first
-            if let entry = latestEntry, entry.rating == nil {
-                entry.rating = currentRating
-            }
+        if let currentRating = book.userRating,
+           let latest = book.latestRead, latest.rating == nil {
+            latest.rating = currentRating
         }
 
         book.dateStarted = .now
