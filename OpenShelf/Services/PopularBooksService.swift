@@ -24,6 +24,7 @@ final class PopularBooksService {
     private(set) var isLoading = false
 
     private var lastRefresh: Date?
+    private var lastLanguages: [String]?
     private static let cooldown: TimeInterval = 60 * 60
 
     func refreshIfNeeded(
@@ -35,12 +36,14 @@ final class PopularBooksService {
     ) async {
         guard !isLoading else { return }
 
-        if let last = lastRefresh, Date.now.timeIntervalSince(last) < Self.cooldown {
+        let languagesChanged = lastLanguages != languages
+        if let last = lastRefresh, Date.now.timeIntervalSince(last) < Self.cooldown, !languagesChanged {
             return
         }
 
         isLoading = true
         defer { isLoading = false }
+        lastLanguages = languages
 
         let excludeKeys = libraryKeys.union(dismissedKeys)
         let sorted = Self.sortedGenres(by: genreCounts)

@@ -108,16 +108,18 @@ struct DiscoverSection: View {
     @Query private var libraryBooks: [Book]
     @Query private var dismissedBooks: [DismissedBook]
 
-    @AppStorage("preferredLanguages") private var preferredLanguagesData: Data = {
-        (try? JSONEncoder().encode(["eng"])) ?? Data()
-    }()
+    @AppStorage("preferredLanguages") private var preferredLanguagesJSON: String = "[\"eng\"]"
 
     @State private var lists: [CuratedList] = []
     @State private var seriesList: [FamousSeries] = []
     @State private var selectedRecommendation: SearchResult?
 
     private var preferredLanguages: [String] {
-        (try? JSONDecoder().decode([String].self, from: preferredLanguagesData)) ?? ["eng"]
+        guard let data = preferredLanguagesJSON.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+            return ["eng"]
+        }
+        return decoded
     }
 
     private var groupedLists: [(category: CuratedListCategory, lists: [CuratedList])] {
