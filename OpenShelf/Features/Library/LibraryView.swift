@@ -489,6 +489,17 @@ struct LibraryView: View {
 
     // MARK: - Up Next Queue
 
+    private var isAllFilter: Bool {
+        if case .all = selectedFilter { return true }
+        return false
+    }
+
+    private var currentlyReadingBooks: [Book] {
+        allBooks
+            .filter { $0.shelf == .reading && (!$0.isPrivate || showPrivateBooks) }
+            .sorted { ($0.dateStarted ?? $0.dateAdded) > ($1.dateStarted ?? $1.dateAdded) }
+    }
+
     private var queuedBooks: [Book] {
         filteredBooks
             .filter { $0.queuePosition != nil }
@@ -508,6 +519,10 @@ struct LibraryView: View {
 
     private var bookList: some View {
         List {
+            if isAllFilter && !currentlyReadingBooks.isEmpty {
+                currentlyReadingStrip
+            }
+
             if isWantToReadShelf && !queuedBooks.isEmpty {
                 upNextSection
             }
@@ -583,6 +598,58 @@ struct LibraryView: View {
             Label("Up Next", systemImage: "text.line.first.and.arrowtriangle.forward")
                 .font(.subheadline)
                 .fontWeight(.semibold)
+        }
+    }
+
+    private var currentlyReadingStrip: some View {
+        Section {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 12) {
+                    ForEach(currentlyReadingBooks) { book in
+                        NavigationLink {
+                            BookDetailView(book: book)
+                        } label: {
+                            currentlyReadingCover(book)
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            contextMenuItems(for: book)
+                        }
+                    }
+                }
+                .scrollTargetLayout()
+                .padding(.horizontal)
+                .padding(.vertical, 4)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .listRowInsets(EdgeInsets())
+        } header: {
+            Label("Currently Reading (\(currentlyReadingBooks.count))", systemImage: "book.fill")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+        }
+    }
+
+    private func currentlyReadingCover(_ book: Book) -> some View {
+        VStack(spacing: 4) {
+            CoverImage(coverID: book.coverImageID, size: .small)
+                .frame(width: 60, height: 90)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.small))
+
+            Text(book.title)
+                .font(.caption2)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(width: 60)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(book.title)
+        .accessibilityHint("Double tap to view details")
+        .accessibilityAction(named: "Mark as Read") {
+            moveBook(book, to: .read)
+        }
+        .accessibilityAction(named: "Did Not Finish") {
+            moveBook(book, to: .dnf)
         }
     }
 
